@@ -1,0 +1,394 @@
+// xoxo/events/discord/interactionCreate.ts
+//
+// Routes all incoming interactions:
+//   • ChatInputCommand → slashExecute
+//   • Button / StringSelectMenu with customId 'debug:*' → debug nav handler
+//   • Button / StringSelectMenu with customId 'help:*'  → help nav handler
+
+import { MessageFlags } from 'discord.js';
+import type { LevitateClient } from '../../structures/LevitateClient.js';
+import webhookLogger from '../../utils/webhookLogger.js';
+import {
+  debugSessions,
+  resetDebugTimeout,
+  buildDebugHomePayload,
+  buildDebugCategoryPayload,
+  buildDebugAllStatsPayload,
+} from '../../messages/debug.js';
+import { gatherDebugStats } from '../../helpers/debugStats.js';
+import {
+  helpSessions,
+  resetHelpTimeout,
+  buildHelpMenuPayload,
+  buildAllCommandsPayload,
+  buildCategoryPayload,
+} from '../../components/helpMenu.js';
+import {
+  handleViewDataSelect,
+  handleViewDataPage,
+} from '../../components/viewDataMenu.js';
+import { handlePhHelpNav } from '../../components/placeholderHelp.js';
+import {
+  handleDeleteDataSelect,
+  handleDeleteDataPage,
+  handleDeleteDataConfirm,
+  handleDeleteDataCancel,
+} from '../../components/deleteDataMenu.js';
+import {
+  handleSendDataSelect,
+  handleSendDataPage,
+} from '../../components/sendDataMenu.js';
+import { handleUnTimeoutSelect } from '../../components/moderation/untimeout.js';
+import { handleUnbanSelect } from '../../components/moderation/unban.js';
+import {
+  handleListSelect,
+  handleListBack,
+  handleListPage,
+} from '../../components/utility/list.js';
+import {
+  handleRolePickerSelect,
+  handleRolePickerPage,
+  handleRolePickerApply,
+  handleRolePickerCancel,
+} from '../../components/moderation/roleSelect.js';
+import {
+  handleServerListSelect,
+  handleServerListBack,
+  handleServerListPage,
+} from '../../components/serverlist.js';
+import { handleLogConfigInteraction }  from '../../components/logging/logMenu.js';
+import { handleNsInteraction }         from '../../components/utility/namestyle.js';
+import { handleVanityRoleInteraction } from '../../components/utility/vanityrole.js';
+import { handleAutoroleInteraction }   from '../../components/utility/autorole.js';
+import { handleRpsInteraction }       from '../../components/fun/rpsHandler.js';
+import { handleImageInteraction }     from '../../components/fun/imageHandler.js';
+
+export const name = 'interactionCreate';
+export const once = false;
+
+// ── customId prefix registry ────────────────────────────────────────────────
+// Every top-level `prefix:action` customId namespace routed below (and in the
+// button/select-menu switches further down) must be listed here exactly once.
+// This is a guard against the class of bug where two unrelated panels reuse
+// the same short prefix and silently misroute one another — add your new
+// prefix to this list whenever you introduce one, and this assertion will
+// throw at boot if it collides with an existing one instead of failing
+// silently at runtime.
+const REGISTERED_CUSTOM_ID_PREFIXES = [
+  'logcfg', 'rps', 'image', 'ns', 'vr', 'vr-modal', 'ar',
+  'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
+  'serverlist', 'rolepick', 'list', 'untimeout', 'unban',
+] as const;
+
+(function assertNoCustomIdPrefixCollisions(): void {
+  const seen = new Set<string>();
+  for (const prefix of REGISTERED_CUSTOM_ID_PREFIXES) {
+    if (seen.has(prefix)) {
+      throw new Error(`[interactionCreate] Duplicate customId prefix registered: "${prefix}". Two unrelated panels cannot share a prefix — rename one.`);
+    }
+    seen.add(prefix);
+  }
+})();
+
+export async function execute(interaction: any, client: LevitateClient): Promise<void> {
+
+  // ── Logging config panel (button / string / channel / role / user selects) ──
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('logcfg:')) {
+    await handleLogConfigInteraction(interaction, client);
+    return;
+  }
+
+  // ── Rock Paper Scissors (buttons only) ──────────────────────────────────────
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('rps:')) {
+    await handleRpsInteraction(interaction, client);
+    return;
+  }
+
+  // ── Image search navigation (buttons only) ────────────────────────────────
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('image:')) {
+    await handleImageInteraction(interaction, client);
+    return;
+  }
+
+  // ── Name style wizard (buttons + select menus; modals handled inline) ──────
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('ns:') && !interaction.isModalSubmit?.()) {
+    await handleNsInteraction(interaction, client);
+    return;
+  }
+
+  // ── Vanity role panels (buttons, role/channel selects, modals) ─────────────
+  if (typeof interaction.customId === 'string' &&
+      (interaction.customId.startsWith('vr:') || interaction.customId.startsWith('vr-modal:'))) {
+    try {
+      await handleVanityRoleInteraction(interaction, client);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[interactionCreate] Error in vanity role panel: ${msg}`);
+      const errPayload = { content: 'Something went wrong while handling this panel.', flags: 64 };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errPayload).catch((): null => null);
+      } else {
+        await interaction.reply(errPayload).catch((): null => null);
+      }
+    }
+    return;
+  }
+
+  // ── Autorole panel (buttons + role selects) ─────────────────────────────────
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('ar:')) {
+    try {
+      await handleAutoroleInteraction(interaction, client);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[interactionCreate] Error in autorole panel: ${msg}`);
+      const errPayload = { content: 'Something went wrong while handling this panel.', flags: 64 };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errPayload).catch((): null => null);
+      } else {
+        await interaction.reply(errPayload).catch((): null => null);
+      }
+    }
+    return;
+  }
+
+  // ── Slash commands ─────────────────────────────────────────────────────────
+  if (interaction.isChatInputCommand()) {
+    const command = client.slashCommands.get(interaction.commandName.toLowerCase());
+    if (!command) return;
+
+    const developers: [string, string][] = client.config.developers;
+    if (command.options?.owner && !developers.some(([, id]: [string, string]) => id === interaction.user.id)) return;
+
+    // Build a readable string of slash options for the webhook log
+    const slashArgs: string[] = [];
+    if (interaction.options && interaction.options.data) {
+      for (const opt of interaction.options.data as any[]) {
+        const val = opt.value ?? '';
+        slashArgs.push(`${opt.name}: ${val}`);
+      }
+    }
+
+    webhookLogger.logCommand(interaction.commandName, interaction.user, interaction.guild, slashArgs, {
+      prefix: '/',
+      type:   'Slash',
+    }, null, interaction.channelId);
+
+    try {
+      await command.slashExecute(interaction, client);
+      client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[interactionCreate] Error in "${interaction.commandName}": ${msg}`);
+      const errPayload = { content: 'Something went wrong while running this command.', flags: MessageFlags.Ephemeral };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errPayload).catch((): null => null);
+      } else {
+        await interaction.reply(errPayload).catch((): null => null);
+      }
+    }
+    return;
+  }
+
+  // ── Button navigation ─────────────────────────────────────────────────────
+  if (interaction.isButton()) {
+    const [prefix, action] = (interaction.customId as string).split(':');
+    if (prefix === 'debug') {
+      await handleDebugNav(interaction, action, client);
+      return;
+    }
+    if (prefix === 'help') {
+      await handleHelpNav(interaction, action, client);
+      return;
+    }
+    if (prefix === 'phhelp') {
+      if (action === 'prev') await handlePhHelpNav(interaction, -1);
+      else if (action === 'next') await handlePhHelpNav(interaction, 1);
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    if (prefix === 'viewdata') {
+      if (action === 'prev') {
+        await handleViewDataPage(interaction, -1, client);
+      } else if (action === 'next') {
+        await handleViewDataPage(interaction, 1, client);
+      }
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    if (prefix === 'deldata') {
+      if (action === 'prev') {
+        await handleDeleteDataPage(interaction, -1, client);
+      } else if (action === 'next') {
+        await handleDeleteDataPage(interaction, 1, client);
+      } else if (action === 'confirm') {
+        await handleDeleteDataConfirm(interaction, client);
+      } else if (action === 'cancel') {
+        await handleDeleteDataCancel(interaction, client);
+      }
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    if (prefix === 'senddata') {
+      if (action === 'prev') {
+        await handleSendDataPage(interaction, -1, client);
+      } else if (action === 'next') {
+        await handleSendDataPage(interaction, 1, client);
+      }
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    if (prefix === 'serverlist') {
+      if (action === 'back') {
+        await handleServerListBack(interaction, client);
+      } else if (action === 'prev') {
+        await handleServerListPage(interaction, client, -1);
+      } else if (action === 'next') {
+        await handleServerListPage(interaction, client, 1);
+      }
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    if (prefix === 'rolepick') {
+      if (action === 'prev') {
+        await handleRolePickerPage(interaction, 'prev', client);
+      } else if (action === 'next') {
+        await handleRolePickerPage(interaction, 'next', client);
+      } else if (action === 'apply') {
+        await handleRolePickerApply(interaction, client);
+      } else if (action === 'cancel') {
+        await handleRolePickerCancel(interaction, client);
+      }
+      return;
+    }
+    if (prefix === 'list') {
+      if (action === 'prev') {
+        await handleListPage(interaction, -1);
+      } else if (action === 'next') {
+        await handleListPage(interaction, 1);
+      } else if (action === 'back') {
+        await handleListBack(interaction);
+      }
+      // 'noop' (page counter button) — do nothing
+      return;
+    }
+    return;
+  }
+
+  // ── Dropdown navigation ────────────────────────────────────────────────────
+  if (interaction.isStringSelectMenu()) {
+    if (interaction.customId === 'debug:nav') {
+      const category = interaction.values[0] as string;
+      await handleDebugNav(interaction, category, client);
+      return;
+    }
+    if (interaction.customId === 'help:nav') {
+      const category = interaction.values[0] as string;
+      await handleHelpNav(interaction, category, client);
+      return;
+    }
+    if (interaction.customId === 'viewdata:select') {
+      await handleViewDataSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'deldata:select') {
+      await handleDeleteDataSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'senddata:select') {
+      await handleSendDataSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'untimeout:select') {
+      await handleUnTimeoutSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'unban:select') {
+      await handleUnbanSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'serverlist:select') {
+      await handleServerListSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'rolepick:select') {
+      await handleRolePickerSelect(interaction, client);
+      return;
+    }
+    if (interaction.customId === 'list:select') {
+      await handleListSelect(interaction);
+      return;
+    }
+  }
+}
+
+// ── Debug nav handler ──────────────────────────────────────────────────────
+
+async function handleDebugNav(interaction: any, action: string, client: LevitateClient): Promise<void> {
+  const messageId = interaction.message?.id;
+  const session   = messageId ? debugSessions.get(messageId) : undefined;
+
+  if (!session) {
+    await interaction.reply({ content: 'This debug session has expired.', flags: MessageFlags.Ephemeral })
+      .catch((): null => null);
+    return;
+  }
+
+  if (interaction.user.id !== session.userId) {
+    await interaction.reply({ content: 'Only the person who ran this command can navigate it.', flags: MessageFlags.Ephemeral })
+      .catch((): null => null);
+    return;
+  }
+
+  const stats  = await gatherDebugStats(client, session.stats.latency.apiMs);
+
+  let payload: any;
+  if (action === 'home') {
+    payload = buildDebugHomePayload(stats, session.authorUsername, session.prefix, false, client);
+    session.page = 'home';
+  } else if (action === 'allstats') {
+    payload = buildDebugAllStatsPayload(stats, session.authorUsername, session.prefix, false, client);
+    session.page = 'allstats';
+  } else {
+    payload = buildDebugCategoryPayload(stats, action, session.authorUsername, session.prefix, false, client);
+    session.page = action;
+  }
+
+  session.stats = stats;
+
+  await interaction.update(payload).catch((): null => null);
+  resetDebugTimeout(messageId, interaction);
+}
+
+// ── Help nav handler ───────────────────────────────────────────────────────
+
+async function handleHelpNav(interaction: any, action: string, client: LevitateClient): Promise<void> {
+  const messageId = interaction.message?.id;
+  const session   = messageId ? helpSessions.get(messageId) : undefined;
+
+  if (!session) {
+    await interaction.reply({ content: 'This help session has expired.', flags: MessageFlags.Ephemeral })
+      .catch((): null => null);
+    return;
+  }
+
+  if (interaction.user.id !== session.userId) {
+    await interaction.reply({ content: 'Only the person who ran this command can navigate it.', flags: MessageFlags.Ephemeral })
+      .catch((): null => null);
+    return;
+  }
+
+  let payload: any;
+  if (action === 'home') {
+    payload = await buildHelpMenuPayload(client, session.userId, session.guildId, false);
+    session.page = 'home';
+  } else if (action === 'allcommands') {
+    payload = await buildAllCommandsPayload(client, session.userId, session.guildId, false);
+    session.page = 'allcommands';
+  } else {
+    payload = await buildCategoryPayload(client, session.userId, action, session.guildId, false);
+    session.page = action;
+  }
+
+  await interaction.update(payload).catch((): null => null);
+  resetHelpTimeout(messageId);
+}

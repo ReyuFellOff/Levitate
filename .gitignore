@@ -1,0 +1,5 @@
+package-lock.json
+dist/
+Levitate-Typeshit/
+.env
+*.zip

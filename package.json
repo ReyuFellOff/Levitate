@@ -1,0 +1,28 @@
+{
+  "name": "levitate",
+  "version": "1.0.0",
+  "description": "Levitate Discord Bot",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rm -rf dist && ./node_modules/.bin/tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.2",
+    "discord-hybrid-sharding": "^3.0.1",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
+    "mongodb": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
