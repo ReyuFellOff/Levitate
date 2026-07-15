@@ -281,6 +281,45 @@ export interface AutoresponderDoc {
   updated_at:    Date;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Automod
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AutomodModuleKey =
+  | 'antiSpam'
+  | 'antiLink'
+  | 'antiInvite'
+  | 'antiBadWords'
+  | 'antiMassMention'
+  | 'antiCaps'
+  | 'antiPing';
+
+export type AutomodPunishment = 'delete' | 'warn' | 'timeout' | 'kick' | 'ban';
+
+export interface AutomodWhitelistEntry {
+  id:       string;
+  type:     'user' | 'role' | 'channel';
+  added_by: string;
+  added_at: Date;
+}
+
+export interface AutomodConfigDoc {
+  guild_id:         string;
+  enabled:          boolean;
+  log_channel_id:   string | null;
+  punishment:       AutomodPunishment;
+  timeout_duration: number; // seconds
+  modules:          Record<AutomodModuleKey, boolean>;
+  spam_threshold:   number;
+  spam_interval:    number;
+  mention_limit:    number;
+  caps_percentage:  number;
+  caps_min_length:  number;
+  bad_words:        string[];
+  whitelist:        AutomodWhitelistEntry[];
+  updated_at:       Date;
+}
+
 export interface VanityRoleSettingsDoc {
   guild_id:              string;
   // Status / bio keyword trigger
@@ -1876,6 +1915,153 @@ export class Database {
       { $set: { is_global: isGlobal, updated_at: new Date() } },
     );
     return result.matchedCount > 0;
+  }
+
+  // ── Automod ──────────────────────────────────────────────────────────────────
+  // Collection: `automod_configs` — one document per guild.
+
+  private defaultAutomodConfig(guildId: string): AutomodConfigDoc {
+    return {
+      guild_id:         guildId,
+      enabled:          false,
+      log_channel_id:   null,
+      punishment:       'delete',
+      timeout_duration: 300,
+      modules: {
+        antiSpam:        false,
+        antiLink:        false,
+        antiInvite:      false,
+        antiBadWords:    false,
+        antiMassMention: false,
+        antiCaps:        false,
+        antiPing:        false,
+      },
+      spam_threshold:  5,
+      spam_interval:   5,
+      mention_limit:   5,
+      caps_percentage: 70,
+      caps_min_length: 10,
+      bad_words:       [],
+      whitelist:       [],
+      updated_at:      new Date(),
+    };
+  }
+
+  async getAutomodConfig(guildId: string): Promise<AutomodConfigDoc> {
+    await this.connect();
+    const doc = await this.col<AutomodConfigDoc>('automod_configs').findOne({ guild_id: guildId });
+    if (!doc) return this.defaultAutomodConfig(guildId);
+    // Backfill any missing fields
+    const defaults = this.defaultAutomodConfig(guildId);
+    for (const key of Object.keys(defaults.modules) as AutomodModuleKey[]) {
+      if (doc.modules[key] === undefined) doc.modules[key] = false;
+    }
+    doc.bad_words ??= [];
+    doc.whitelist  ??= [];
+    return doc;
+  }
+
+  private async saveAutomodDoc(doc: AutomodConfigDoc): Promise<void> {
+    await this.connect();
+    doc.updated_at = new Date();
+    await this.col<AutomodConfigDoc>('automod_configs').replaceOne(
+      { guild_id: doc.guild_id },
+      doc,
+      { upsert: true },
+    );
+  }
+
+  async setAutomodEnabled(guildId: string, enabled: boolean): Promise<AutomodConfigDoc> {
+    const doc = await this.getAutomodConfig(guildId);
+    doc.enabled = enabled;
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async saveAutomodConfig(
+    guildId: string,
+    data: {
+      modules:        Record<AutomodModuleKey, boolean>;
+      punishment:     AutomodPunishment;
+      log_channel_id: string | null;
+    },
+  ): Promise<AutomodConfigDoc> {
+    const doc = await this.getAutomodConfig(guildId);
+    doc.modules        = data.modules;
+    doc.punishment     = data.punishment;
+    doc.log_channel_id = data.log_channel_id;
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async setAutomodThresholds(
+    guildId: string,
+    data: {
+      spam_threshold:   number;
+      spam_interval:    number;
+      mention_limit:    number;
+      caps_percentage:  number;
+      timeout_duration: number;
+    },
+  ): Promise<AutomodConfigDoc> {
+    const doc = await this.getAutomodConfig(guildId);
+    Object.assign(doc, data);
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async addAutomodBadWords(guildId: string, words: string[]): Promise<AutomodConfigDoc> {
+    const doc      = await this.getAutomodConfig(guildId);
+    const existing = new Set(doc.bad_words.map((w) => w.toLowerCase()));
+    for (const w of words) {
+      const lower = w.toLowerCase();
+      if (!existing.has(lower)) { doc.bad_words.push(lower); existing.add(lower); }
+    }
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async removeAutomodBadWords(guildId: string, words: string[]): Promise<AutomodConfigDoc> {
+    const doc   = await this.getAutomodConfig(guildId);
+    const toRem = new Set(words.map((w) => w.toLowerCase()));
+    doc.bad_words = doc.bad_words.filter((w) => !toRem.has(w.toLowerCase()));
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async clearAutomodBadWords(guildId: string): Promise<AutomodConfigDoc> {
+    const doc = await this.getAutomodConfig(guildId);
+    doc.bad_words = [];
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async addAutomodWhitelistEntry(
+    guildId: string,
+    entry: { id: string; type: 'user' | 'role' | 'channel'; added_by: string },
+  ): Promise<AutomodConfigDoc | 'duplicate'> {
+    const doc = await this.getAutomodConfig(guildId);
+    if (doc.whitelist.some((e) => e.id === entry.id && e.type === entry.type)) return 'duplicate';
+    doc.whitelist.push({ ...entry, added_at: new Date() });
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async removeAutomodWhitelistEntries(
+    guildId:  string,
+    entries:  { type: 'user' | 'role' | 'channel'; id: string }[],
+  ): Promise<AutomodConfigDoc> {
+    const doc  = await this.getAutomodConfig(guildId);
+    const toRem = entries.map((e) => `${e.type}:${e.id}`);
+    doc.whitelist = doc.whitelist.filter((e) => !toRem.includes(`${e.type}:${e.id}`));
+    await this.saveAutomodDoc(doc);
+    return doc;
+  }
+
+  async resetAutomodConfig(guildId: string): Promise<AutomodConfigDoc> {
+    const doc = this.defaultAutomodConfig(guildId);
+    await this.saveAutomodDoc(doc);
+    return doc;
   }
 
 }

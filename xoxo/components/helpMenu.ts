@@ -70,12 +70,27 @@ export function resetHelpTimeout(messageId: string): void {
 
 function getCategoryMap(client: LevitateClient): Map<string, string[]> {
   const map = new Map<string, string[]>();
-  for (const cmd of (client.commands?.values() ?? [])) {
+  const seen = new Set<string>();
+
+  // Union of prefix and slash commands — a command like `lockdown-lift`
+  // (slash-only) is still a real command and must count once, alongside
+  // every prefix-loadable command. Deduped by name so commands that expose
+  // both a prefix and slash handler (the common case) aren't counted twice.
+  const allCommands = [
+    ...(client.commands?.values() ?? []),
+    ...(client.slashCommands?.values() ?? []),
+  ];
+
+  for (const cmd of allCommands) {
+    const name: string = (cmd as any).options?.name as string;
     const cat: string = (cmd as any).options?.category as string;
     if (!cat || excludedCategories.includes(cat.toLowerCase())) continue;
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+
     const key = cat.toLowerCase();
     if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push((cmd as any).options?.name as string);
+    map.get(key)!.push(name);
   }
   return map;
 }
@@ -84,10 +99,10 @@ function buildHeaderSection(client: LevitateClient, compact = false): SectionBui
   const avatarUrl = client.user?.displayAvatarURL({ forceStatic: false }) ?? '';
   const descContent = compact
     ? `**Built for your server.**`
-    : `**Built for your server.**\nModeration, antinuke, and utility — all in one place.`;
+    : `Ascend above the noise. A quiet vanguard of precision and grace—shaping an effortless, elevated sanctuary for your community.`;
 
   const section = new SectionBuilder().addTextDisplayComponents(
-    new TextDisplayBuilder().setContent(`# __${client.config.botName}__ ${emojis.blackButterfly}`),
+    new TextDisplayBuilder().setContent(`# __${client.config.botName}__ ${emojis.brownishSparkles}`),
     new TextDisplayBuilder().setContent(descContent),
   );
   if (avatarUrl) {
@@ -112,11 +127,13 @@ function buildNavRow(page: string, disabled = false): ActionRowBuilder<ButtonBui
       .setLabel('Home')
       .setStyle(ButtonStyle.Secondary)
       .setCustomId('help:home')
+      .setEmoji({ id: '1494789744717074543', name: 'ChemtrailsGrey_VINYL', animated: true })
       .setDisabled(disabled || page === 'home'),
     new ButtonBuilder()
       .setLabel('All commands')
       .setStyle(ButtonStyle.Secondary)
       .setCustomId('help:allcommands')
+      .setEmoji({ id: '1494789896567525416', name: 'LustForLife_VINYL', animated: true })
       .setDisabled(disabled || page === 'allcommands'),
   );
 }

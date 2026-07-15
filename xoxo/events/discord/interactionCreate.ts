@@ -62,6 +62,7 @@ import { handleVanityRoleInteraction } from '../../components/utility/vanityrole
 import { handleAutoroleInteraction }   from '../../components/utility/autorole.js';
 import { handleRpsInteraction }       from '../../components/fun/rpsHandler.js';
 import { handleImageInteraction }     from '../../components/fun/imageHandler.js';
+import { handleAutomodInteraction }   from '../../components/automod/automodHandler.js';
 
 export const name = 'interactionCreate';
 export const once = false;
@@ -78,6 +79,7 @@ const REGISTERED_CUSTOM_ID_PREFIXES = [
   'logcfg', 'rps', 'image', 'ns', 'vr', 'vr-modal', 'ar',
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
   'serverlist', 'rolepick', 'list', 'untimeout', 'unban',
+  'am', 'am-modal',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -141,6 +143,26 @@ export async function execute(interaction: any, client: LevitateClient): Promise
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[interactionCreate] Error in autorole panel: ${msg}`);
+      const errPayload = { content: 'Something went wrong while handling this panel.', flags: 64 };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errPayload).catch((): null => null);
+      } else {
+        await interaction.reply(errPayload).catch((): null => null);
+      }
+    }
+    return;
+  }
+
+  // ── AutoMod panel (buttons, selects, modals) ────────────────────────────────
+  if (
+    typeof interaction.customId === 'string' &&
+    (interaction.customId.startsWith('am:') || interaction.customId.startsWith('am-modal:'))
+  ) {
+    try {
+      await handleAutomodInteraction(interaction, client);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[interactionCreate] Error in automod panel: ${msg}`);
       const errPayload = { content: 'Something went wrong while handling this panel.', flags: 64 };
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(errPayload).catch((): null => null);

@@ -16,6 +16,7 @@ import {
 import { updateSticky } from '../../helpers/stickyHelper.js';
 import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/afk.js';
 import { dispatchAutoresponders } from '../../helpers/autoresponderDispatch.js';
+import { runAutomod } from '../../helpers/automodEngine.js';
 
 export const name = 'messageCreate';
 export const once = false;
@@ -32,6 +33,9 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
   // ── Autoresponders: trigger words → message/reaction responses ─────────────
   dispatchAutoresponders(client, message).catch((): void => undefined);
+
+  // ── AutoMod: real-time message scanning ────────────────────────────────────
+  runAutomod(message, client).catch((): void => undefined);
 
   // ── AFK: removal + notice ──────────────────────────────────────────────────
   if (client.db) {

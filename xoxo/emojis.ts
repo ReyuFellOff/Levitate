@@ -61,6 +61,7 @@ export const emojis = {
   pinkHearts:   '<a:pinkHearts:1522180594350559314>',
   gayHeart: '<:gayHeart:1522469195302830100>',
   greenTick: '<:greenTick:1495228086265057280>',
+  brownishSparkles: '<a:brownishSparkles:1526846190342377472>',
 
   // Butterflies
   butterflyDarkBlue:    '<a:butterflyDarkBlue:1494790001559343214>',

@@ -23,8 +23,8 @@ export const categories: CategoryInfo[] = [
   },
   {
     index: 3,
-    name: 'antinuke',
-    displayName: 'Antinuke',
+    name: 'security',
+    displayName: 'Security',
     description: 'Protect your server from nukes and malicious actions.',
   },
   {
@@ -37,7 +37,7 @@ export const categories: CategoryInfo[] = [
     index: 5,
     name: 'utility',
     displayName: 'Utility',
-    description: 'Handy utility commands — embeds, webhooks, roles, AFK, and more.',
+    description: 'Handy utility commands — roles, AFK, stickies, and more.',
   },
   {
     index: 6,
@@ -53,36 +53,24 @@ export const categories: CategoryInfo[] = [
   },
   {
     index: 8,
-    name: 'welcomer',
-    displayName: 'Welcomer',
-    description: 'Welcome new members and celebrate birthdays automatically.',
+    name: 'features',
+    displayName: 'Features',
+    description: 'Greet, birthdays, autoresponders, logging, embeds, webhooks, and containers.',
   },
   {
     index: 9,
-    name: 'logging',
-    displayName: 'Logging',
-    description: 'Configure logging for channels, members, roles, voice, messages, and server changes.',
-  },
-  {
-    index: 10,
-    name: 'autoresponder',
-    displayName: 'Autoresponder',
-    description: 'Automatically react or reply when specific words are said.',
-  },
-  {
-    index: 11,
     name: 'data',
     displayName: 'Data',
     description: 'Save, send, and manage custom messages, embeds, and CV2 payloads.',
   },
   {
-    index: 12,
+    index: 10,
     name: 'customisation',
     displayName: 'Customisation',
     description: 'Personalise the bot\'s profile — avatar, banner, bio, and display name.',
   },
   {
-    index: 13,
+    index: 11,
     name: 'fun',
     displayName: 'Fun',
     description: 'Fun commands — ship, games, image macros, and more.',
