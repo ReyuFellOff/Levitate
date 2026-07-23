@@ -16,7 +16,7 @@ import {
 import { updateSticky } from '../../helpers/stickyHelper.js';
 import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/afk.js';
 import { dispatchAutoresponders } from '../../helpers/autoresponderDispatch.js';
-import { runAutomod } from '../../helpers/automodEngine.js';
+import { dispatchCustomRole }     from '../../helpers/customRoleDispatch.js';
 
 export const name = 'messageCreate';
 export const once = false;
@@ -33,9 +33,6 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
   // ── Autoresponders: trigger words → message/reaction responses ─────────────
   dispatchAutoresponders(client, message).catch((): void => undefined);
-
-  // ── AutoMod: real-time message scanning ────────────────────────────────────
-  runAutomod(message, client).catch((): void => undefined);
 
   // ── AFK: removal + notice ──────────────────────────────────────────────────
   if (client.db) {
@@ -246,7 +243,15 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     if (userAliased) command = client.commands.get(userAliased);
   }
 
-  if (!command) return;
+  if (!command) {
+    // ── Custom role dispatch ─────────────────────────────────────────────────
+    // Only fires when a real prefix was used (never on noprefix — usedPrefix
+    // is '' for noprefix, which is the enforced restriction by design).
+    if (usedPrefix !== '' && client.db) {
+      await dispatchCustomRole(message, commandName, args, client).catch((): null => null);
+    }
+    return;
+  }
 
   // ── Developer-only gate ────────────────────────────────────────────────────
   // Commands use `owner: true` (xoxo convention). We also accept

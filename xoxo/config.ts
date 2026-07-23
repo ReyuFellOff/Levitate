@@ -96,7 +96,27 @@ export interface Config {
     commandLog: string | undefined;
   };
 
-  // 8. Default presence
+  // 8. Music
+  /**
+   * Default Lavalink search prefix used when the user's query is plain text
+   * (not a URL and not already prefixed).
+   *   "ytsearch"  — YouTube
+   *   "ytmsearch" — YouTube Music
+   *   "scsearch"  — SoundCloud
+   *   "spsearch"  — Spotify     (requires LavaSrc on the node)
+   *   "dzsearch"  — Deezer      (requires LavaSrc on the node)
+   */
+  defaultSource: string;
+  /** Lavalink node connection list. */
+  nodes: Array<{
+    host: string;
+    port: number;
+    name: string;
+    auth: string;
+    secure: boolean;
+  }>;
+
+  // 9. Default presence
   /**
    * Fallback presence — applied only when no entry in
    * `xoxo/config/botInstances.ts` matches the running clientId.
@@ -173,6 +193,32 @@ export const config: Config = {
     errorLog: process.env["ERROR_LOG_WEBHOOK_URL"],
     commandLog: process.env["COMMAND_LOG_WEBHOOK_URL"],
   },
+
+  // ── 8b. Music ──────────────────────────────────────────────────────────────
+  defaultSource: 'ytmsearch',
+  nodes: [
+    {
+      host:   'lavalinkv4.serenetia.com',
+      port:   443,
+      name:   'Serenetia',
+      auth:   'https://seretia.link/discord',
+      secure: true,
+    },
+    {
+      host:   'lavalink.jirayu.net',
+      port:   13592,
+      name:   'Jirayu',
+      auth:   'youshallnotpass',
+      secure: false,
+    },
+    {
+      host:   '89.106.84.59',
+      port:   4000,
+      name:   'HeavenCloud',
+      auth:   'heavencloud.in',
+      secure: false,
+    },
+  ],
 
   // ── 8. Default presence ────────────────────────────────────────────────────
   // Fallback only — used when no botInstances.ts entry matches the running

@@ -22,7 +22,7 @@ import { developerPanelConfig as dev } from '../../config/developerPanel.js';
 
 export const options = {
   name:        'developer',
-  aliases:     ['dev', 'owner', 'creator'] as string[],
+  aliases:     ['dev', 'creator'] as string[],
   description: 'Shows info about the developer behind this bot.',
   usage:       'developer',
   category:    'info',

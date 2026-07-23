@@ -45,7 +45,7 @@ import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 const SAVE_NAME_MAX = 50;
 const MAX_FIELDS     = 25;
 const MAX_BUTTONS    = 5; // Discord's limit for Link buttons in a single action row
-const SESSION_MS     = 10 * 60_000;
+const SESSION_MS     = 30 * 60_000;
 /** Lavender — used whenever no color has been explicitly set. */
 const DEFAULT_COLOR  = 0xB19CD9;
 

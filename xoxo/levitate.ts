@@ -88,6 +88,12 @@ async function bootstrap(): Promise<void> {
     await loadCachedDataBlock(client);
   }
 
+  // ── Kazagumo (music) ─────────────────────────────────────────────────────────
+  // Must be initialized BEFORE loadAllEvents() so the eventLoader can attach
+  // player/node events to client.kazagumo and client.kazagumo.shoukaku.
+  client.initKazagumo();
+  console.log('[MUSIC] Kazagumo initialized with', ((client.config as any).nodes?.length ?? 0), 'Lavalink node(s)');
+
   // ── Loaders ──────────────────────────────────────────────────────────────────
   await loadAllEvents(client);
   client.helpers = await loadHelpers(client);

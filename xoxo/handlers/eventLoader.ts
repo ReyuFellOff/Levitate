@@ -1,13 +1,17 @@
 // xoxo/handlers/eventLoader.ts
 //
-// Scans `dist/xoxo/events/**/*.js` recursively and registers every event file
-// on the client. Events are organised into subdirectories (e.g. `discord/`,
-// `shard/`) — the loader doesn't care about folder structure, only the file's
-// exported shape.
+// Scans `dist/xoxo/events/**/*.js` recursively and registers every event file.
+// Events are organised into subdirectories — the loader inspects the optional
+// `type` export to decide where to attach:
+//
+//   type === 'player'  → client.kazagumo  (Kazagumo player events)
+//   type === 'node'    → client.kazagumo.shoukaku  (Shoukaku node events)
+//   (else / omitted)  → client  (Discord.js events, default)
 //
 // Event file contract:
 //   export const name: string = 'messageCreate';
-//   export const once: boolean = false;   // optional, defaults to false
+//   export const type?: string;           // 'player' | 'node' | 'discord' | undefined
+//   export const once?: boolean;          // optional, defaults to false
 //   export async function execute(...args) { ... }
 
 import { readdirSync } from 'fs';
@@ -19,6 +23,7 @@ import type { LevitateClient } from '../structures/LevitateClient.js';
 
 interface EventModule {
   name:     string;
+  type?:    string;
   once?:    boolean;
   execute:  (...args: any[]) => Promise<void> | void;
 }
@@ -65,10 +70,17 @@ async function scanDir(
         continue;
       }
 
+      const emitter = resolveEmitter(client, event.type);
+      if (!emitter) {
+        // Kazagumo not yet initialized — skip player/node events gracefully
+        console.warn(`[EVENT LOADER] Skipping ${entry.name}: emitter not ready (type=${event.type})`);
+        continue;
+      }
+
       if (event.once) {
-        client.once(event.name, (...args) => event.execute!(...args, client));
+        emitter.once(event.name, (...args: any[]) => event.execute!(...args, client));
       } else {
-        client.on(event.name, (...args) => event.execute!(...args, client));
+        emitter.on(event.name, (...args: any[]) => event.execute!(...args, client));
       }
 
       onLoad();
@@ -76,4 +88,15 @@ async function scanDir(
       console.error(`[EVENT LOADER] Failed to load ${entry.name}:`, err);
     }
   }
+}
+
+function resolveEmitter(client: LevitateClient, type?: string): any {
+  if (type === 'player') {
+    return (client as any).kazagumo ?? null;
+  }
+  if (type === 'node') {
+    return (client as any).kazagumo?.shoukaku ?? null;
+  }
+  // 'discord', undefined, or any other value → attach to the Discord client
+  return client;
 }

@@ -24,6 +24,18 @@ export async function execute(oldState: any, newState: any, client: LevitateClie
   const member = newState.member ?? oldState.member;
   if (!member) return;
 
+  // ── 24/7 bot reconnect logic ─────────────────────────────────────────────
+  // If the bot was forcibly disconnected from a VC, and 24/7 is enabled for
+  // this guild, schedule a rejoin to the stored 24/7 channel.
+  if (member.id === client.user?.id && oldState.channelId && !newState.channelId) {
+    // The bot was just disconnected (not moved)
+    const is247 = await (client as any).db?.get24Seven?.(guild.id).catch((): null => null);
+    if (is247?.enabled) {
+      const { scheduleRejoin } = await import('../../helpers/twentyFourSeven.js');
+      scheduleRejoin(client, guild.id, is247.channelId, 2 * 60 * 1000);
+    }
+  }
+
   const oldChannel = oldState.channel;
   const newChannel = newState.channel;
 

@@ -43,7 +43,7 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { emojis } from '../../emojis.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 
-const SESSION_MS = 10 * 60_000;
+const SESSION_MS = 30 * 60_000;
 const MODAL_MS   = 120_000;
 const MAX_LISTED = 25; // Discord select menu option cap
 
@@ -566,7 +566,7 @@ async function withModal(opts: {
  * Supported types:
  *   message — sent as plain text content (chunked at 2000 chars if needed)
  *   embed   — sent as Discord embeds JSON
- *   cv2     — NOT supported by the webhook execute API; returns a clear error
+ *   cv2     — sent as a Components V2 message via the webhook execute API
  */
 async function resolveAndSendSavedData(
   s:             Session,
@@ -577,13 +577,6 @@ async function resolveAndSendSavedData(
 
   const entry = await client.db.getSavedData(s.guild.id, dataNameLower).catch((): null => null);
   if (!entry) return `${emojis.redcross} Could not find that saved-data entry.`;
-
-  if (entry.type === 'cv2') {
-    return (
-      `${emojis.redcross} **${entry.name}** is a CV2 (Components V2) block — ` +
-      `Discord's webhook API doesn't support CV2. Use \`$send-data\` instead.`
-    );
-  }
 
   // ── Fetch the file from the storage channel ────────────────────────────────
   const storageChannelId: string = (client.config as any).savedDataChannelId ?? '';
@@ -643,6 +636,25 @@ async function resolveAndSendSavedData(
       return null;
     });
     if (!ok) return `${emojis.redcross} Discord rejected the embed payload — check the embed structure.`;
+    return `${emojis.greentick} **${entry.name}** sent via **${s.selected.name}**.`;
+  }
+
+  if (entry.type === 'cv2') {
+    let parsed: any;
+    try { parsed = JSON.parse(raw); }
+    catch (err: any) { return `${emojis.redcross} Invalid CV2 JSON: \`${err.message}\``; }
+
+    // Saved CV2 data is the raw ContainerBuilder.toJSON() (type 17) or an array.
+    const components = Array.isArray(parsed) ? parsed : [parsed];
+    const ok = await s.selected.send({
+      components,
+      flags:           MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] },
+    }).catch((err: any): null => {
+      console.error(`[webhook] senddata (cv2) failed via ${s.selected?.id}: ${err?.message ?? err}`);
+      return null;
+    });
+    if (!ok) return `${emojis.redcross} Discord rejected the CV2 payload.`;
     return `${emojis.greentick} **${entry.name}** sent via **${s.selected.name}**.`;
   }
 

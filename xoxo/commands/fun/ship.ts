@@ -38,10 +38,39 @@ export const options = {
 };
 
 // ── Love percentage ───────────────────────────────────────────────────────────
-// Deterministic hash of sorted user IDs — same pair always gives the same %.
+// Deterministic hash of sorted, normalised display names — same pair always
+// gives the same result regardless of argument order.
 
-function getLovePercentage(id1: string, id2: string): number {
-  const [a, b] = [id1, id2].sort();
+/**
+ * Strip characters that could interfere with consistent hashing:
+ *  • NFD-decompose so accented letters become base + combining mark
+ *  • Drop combining diacritics (é → e, ñ → n, etc.)
+ *  • Drop anything that isn't a Unicode letter, digit, or space
+ *  • Lowercase + trim
+ * Falls back to the raw lowercased name if normalisation produces an empty string.
+ */
+function normalizeDisplayName(raw: string): string {
+  const cleaned = raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')        // strip combining diacritics
+    .replace(/[^\p{L}\p{N} ]/gu, '')        // keep letters, digits, spaces (all scripts)
+    .trim()
+    .toLowerCase();
+  return cleaned || raw.trim().toLowerCase();
+}
+
+/**
+ * DJB2-XOR hash — same algorithm as the classic djb2 but with XOR mixing.
+ * Steps:
+ *   1. Normalise both display names (see above).
+ *   2. Sort them lexicographically so order doesn't matter.
+ *   3. Concatenate: "<nameA><nameB>".
+ *   4. Seed h = 5381.
+ *   5. For each character: h = ((h * 33) XOR charCode) mod 2^32  (unsigned).
+ *   6. percentage = h mod 101   → 0–100.
+ */
+function getLovePercentage(name1: string, name2: string): number {
+  const [a, b] = [normalizeDisplayName(name1), normalizeDisplayName(name2)].sort();
   const str = a + b;
   let h = 5381;
   for (let i = 0; i < str.length; i++) {
@@ -154,7 +183,10 @@ export async function prefixExecute(
   } else if (isSelf) {
     pct = 95 + (parseInt(user1.id.slice(-1), 10) % 6);
   } else {
-    pct = getLovePercentage(user1.id, user2.id);
+    pct = getLovePercentage(
+      user1.displayName ?? user1.globalName ?? user1.username,
+      user2.displayName ?? user2.globalName ?? user2.username,
+    );
   }
 
   const payload = await buildShipPayload({
@@ -198,7 +230,10 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   const isSelf = user1.id === user2.id;
   const pct    = isSelf
     ? 95 + (parseInt(user1.id.slice(-1), 10) % 6)
-    : getLovePercentage(user1.id, user2.id);
+    : getLovePercentage(
+        user1.displayName ?? user1.globalName ?? user1.username,
+        user2.displayName ?? user2.globalName ?? user2.username,
+      );
 
   const payload = await buildShipPayload({
     user1, user2, pct, isSelf,

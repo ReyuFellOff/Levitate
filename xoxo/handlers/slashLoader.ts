@@ -22,13 +22,13 @@ interface SlashCommandModule {
   slashExecute: (interaction: any, client: LevitateClient) => Promise<void> | void;
 }
 
-interface LoadStats { loaded: number; skipped: number; }
+interface LoadStats { loaded: number; devLoaded: number; skipped: number; }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export async function loadSlashCommands(client: LevitateClient): Promise<void> {
   const dir   = join(process.cwd(), 'dist', 'xoxo', 'commands');
-  const stats = { loaded: 0, skipped: 0 } satisfies LoadStats;
+  const stats = { loaded: 0, devLoaded: 0, skipped: 0 } satisfies LoadStats;
 
   try {
     await scanDir(client, dir, stats);

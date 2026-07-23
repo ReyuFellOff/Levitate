@@ -29,7 +29,10 @@ async function handle(
   const targetMember = await guild.members.fetch(targetUser.id).catch((): null => null);
   if (!targetMember) return sendError(ctx, 'Could not find that user in this server.');
 
-  if (!targetMember.voice?.channel) {
+  // Use voiceStates cache directly — member.voice?.channel can read stale data
+  // when the member object was freshly fetched from the REST API.
+  const voiceState = guild.voiceStates.cache.get(targetUser.id);
+  if (!voiceState?.channelId) {
     return sendError(
       ctx,
       targetUser.id === commandUserId
@@ -38,7 +41,7 @@ async function handle(
     );
   }
 
-  const sourceChannel = targetMember.voice.channel;
+  const sourceChannel = voiceState.channel ?? guild.channels.cache.get(voiceState.channelId);
   const disconnected = await targetMember.voice.disconnect().catch((): null => null);
   if (!disconnected) return sendError(ctx, 'Failed to disconnect that member.');
 

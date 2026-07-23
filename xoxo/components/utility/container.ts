@@ -109,7 +109,7 @@ const PALETTE_LABELS: Record<string, string> = {
 };
 
 const MAX_BLOCKS  = 20;
-const SESSION_MS  = 10 * 60_000;
+const SESSION_MS  = 30 * 60_000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Session registry

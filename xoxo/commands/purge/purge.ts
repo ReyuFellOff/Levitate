@@ -424,7 +424,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   }
 
   // ── purge bot ─────────────────────────────────────────────────────────────
-  if (sub === 'bot') {
+  if (sub === 'bot' || sub === 'bots') {
     const maxCount = args[1] && /^\d+$/.test(args[1]) ? parseInt(args[1], 10) : null;
     if (maxCount !== null && maxCount <= 0) return sendError(statusCtx, 'Amount must be a positive number.');
     const desc = maxCount !== null

@@ -5,7 +5,13 @@
 //   • Button / StringSelectMenu with customId 'debug:*' → debug nav handler
 //   • Button / StringSelectMenu with customId 'help:*'  → help nav handler
 
-import { MessageFlags } from 'discord.js';
+import {
+  ActionRowBuilder,
+  MessageFlags,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+} from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 import {
@@ -62,7 +68,12 @@ import { handleVanityRoleInteraction } from '../../components/utility/vanityrole
 import { handleAutoroleInteraction }   from '../../components/utility/autorole.js';
 import { handleRpsInteraction }       from '../../components/fun/rpsHandler.js';
 import { handleImageInteraction }     from '../../components/fun/imageHandler.js';
-import { handleAutomodInteraction }   from '../../components/automod/automodHandler.js';
+import {
+  buildQueuePayload,
+  queueSessions,
+  resetQueueTimeout,
+} from '../../components/music/queueMenu.js';
+import { jumpTo } from '../../helpers/sessionQueue.js';
 
 export const name = 'interactionCreate';
 export const once = false;
@@ -78,8 +89,7 @@ export const once = false;
 const REGISTERED_CUSTOM_ID_PREFIXES = [
   'logcfg', 'rps', 'image', 'ns', 'vr', 'vr-modal', 'ar',
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
-  'serverlist', 'rolepick', 'list', 'untimeout', 'unban',
-  'am', 'am-modal',
+  'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -153,25 +163,6 @@ export async function execute(interaction: any, client: LevitateClient): Promise
     return;
   }
 
-  // ── AutoMod panel (buttons, selects, modals) ────────────────────────────────
-  if (
-    typeof interaction.customId === 'string' &&
-    (interaction.customId.startsWith('am:') || interaction.customId.startsWith('am-modal:'))
-  ) {
-    try {
-      await handleAutomodInteraction(interaction, client);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[interactionCreate] Error in automod panel: ${msg}`);
-      const errPayload = { content: 'Something went wrong while handling this panel.', flags: 64 };
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(errPayload).catch((): null => null);
-      } else {
-        await interaction.reply(errPayload).catch((): null => null);
-      }
-    }
-    return;
-  }
 
   // ── Slash commands ─────────────────────────────────────────────────────────
   if (interaction.isChatInputCommand()) {
@@ -293,6 +284,10 @@ export async function execute(interaction: any, client: LevitateClient): Promise
       // 'noop' (page counter button) — do nothing
       return;
     }
+    if (prefix === 'queue') {
+      await handleQueueButton(interaction, action, client);
+      return;
+    }
     return;
   }
 
@@ -340,6 +335,165 @@ export async function execute(interaction: any, client: LevitateClient): Promise
       await handleListSelect(interaction);
       return;
     }
+    if (interaction.customId === 'queue:jump') {
+      await handleQueueJump(interaction, client);
+      return;
+    }
+  }
+
+  // ── Modal submissions ─────────────────────────────────────────────────────
+  if (interaction.isModalSubmit?.()) {
+    // queue:goto-modal:<messageId> — jump to a specific page in the queue panel
+    if ((interaction.customId as string).startsWith('queue:goto-modal:')) {
+      await handleQueueGotoModal(interaction, client);
+      return;
+    }
+  }
+}
+
+// ── Queue button handler ───────────────────────────────────────────────────
+
+async function handleQueueButton(interaction: any, action: string, client: LevitateClient): Promise<void> {
+  const messageId = interaction.message?.id;
+  const session = messageId ? queueSessions.get(messageId) : undefined;
+
+  if (!session) {
+    await interaction.deferUpdate().catch((): null => null);
+    return;
+  }
+  if (interaction.user.id !== session.userId) {
+    await interaction.reply({
+      content: 'Only the user who opened this queue can navigate it.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  // 'goto' opens a modal so the user can type any page number directly.
+  if (action === 'goto') {
+    const modal = new ModalBuilder()
+      .setCustomId(`queue:goto-modal:${messageId}`)
+      .setTitle('Jump to page')
+      .addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(
+          new TextInputBuilder()
+            .setCustomId('page')
+            .setLabel('Page number')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(5)
+            .setPlaceholder('e.g. 3'),
+        ),
+      );
+    await interaction.showModal(modal).catch((): null => null);
+    return;
+  }
+
+  await interaction.deferUpdate();
+  if (action === 'prev') session.page = Math.max(1, session.page - 1);
+  else if (action === 'next') session.page = session.page + 1;
+  // 'refresh' just re-renders the current page
+
+  resetQueueTimeout(messageId);
+  const player = (client as any).kazagumo.players.get(session.guildId);
+  const payload = buildQueuePayload(player, session, false);
+  await interaction.editReply(payload as any).catch((): null => null);
+}
+
+// ── Queue jump select-menu handler ─────────────────────────────────────────
+
+async function handleQueueJump(interaction: any, client: LevitateClient): Promise<void> {
+  const messageId = interaction.message?.id;
+  const session = messageId ? queueSessions.get(messageId) : undefined;
+
+  if (!session) {
+    await interaction.deferUpdate().catch((): null => null);
+    return;
+  }
+  if (interaction.user.id !== session.userId) {
+    await interaction.reply({
+      content: 'Only the user who opened this queue can jump tracks.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  const player = (client as any).kazagumo.players.get(session.guildId);
+  if (!player) {
+    await interaction.reply({
+      content: 'There is no active player in this server.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  const memberVoiceId = (interaction.member as any)?.voice?.channelId;
+  if (!memberVoiceId || memberVoiceId !== player.voiceId) {
+    await interaction.reply({
+      content: 'You must be in the same voice channel as the bot to jump tracks.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  await interaction.deferUpdate();
+  const target = parseInt(interaction.values[0] as string, 10);
+  if (!isNaN(target)) jumpTo(player, target);
+
+  resetQueueTimeout(messageId);
+  const payload = buildQueuePayload(player, session, false);
+  await interaction.editReply(payload as any).catch((): null => null);
+}
+
+// ── Queue goto-modal submit handler ───────────────────────────────────────
+
+async function handleQueueGotoModal(interaction: any, client: LevitateClient): Promise<void> {
+  const messageId = (interaction.customId as string).slice('queue:goto-modal:'.length);
+  const session = queueSessions.get(messageId);
+
+  if (!session) {
+    await interaction.reply({
+      content: 'This queue panel is no longer active.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+  if (interaction.user.id !== session.userId) {
+    await interaction.reply({
+      content: 'Only the user who opened this queue can navigate it.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  const raw = interaction.fields.getTextInputValue('page').trim();
+  const page = parseInt(raw, 10);
+  if (!Number.isFinite(page) || page < 1) {
+    await interaction.reply({
+      content: `\`${raw}\` is not a valid page number.`,
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  session.page = page; // buildQueuePayload clamps to [1, totalPages]
+  resetQueueTimeout(messageId);
+
+  const player = (client as any).kazagumo.players.get(session.guildId);
+  const payload = buildQueuePayload(player, session, false);
+
+  // ModalSubmit doesn't reference the original message — fetch and edit it.
+  try {
+    const channel = await client.channels.fetch(session.channelId);
+    const msg = await (channel as any).messages.fetch(messageId);
+    await msg.edit(payload);
+    await interaction.deferUpdate().catch((): null => null);
+  } catch {
+    await interaction.reply({
+      content: 'Failed to update the queue panel.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
   }
 }
 

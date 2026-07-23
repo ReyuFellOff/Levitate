@@ -281,45 +281,6 @@ export interface AutoresponderDoc {
   updated_at:    Date;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Automod
-// ─────────────────────────────────────────────────────────────────────────────
-
-export type AutomodModuleKey =
-  | 'antiSpam'
-  | 'antiLink'
-  | 'antiInvite'
-  | 'antiBadWords'
-  | 'antiMassMention'
-  | 'antiCaps'
-  | 'antiPing';
-
-export type AutomodPunishment = 'delete' | 'warn' | 'timeout' | 'kick' | 'ban';
-
-export interface AutomodWhitelistEntry {
-  id:       string;
-  type:     'user' | 'role' | 'channel';
-  added_by: string;
-  added_at: Date;
-}
-
-export interface AutomodConfigDoc {
-  guild_id:         string;
-  enabled:          boolean;
-  log_channel_id:   string | null;
-  punishment:       AutomodPunishment;
-  timeout_duration: number; // seconds
-  modules:          Record<AutomodModuleKey, boolean>;
-  spam_threshold:   number;
-  spam_interval:    number;
-  mention_limit:    number;
-  caps_percentage:  number;
-  caps_min_length:  number;
-  bad_words:        string[];
-  whitelist:        AutomodWhitelistEntry[];
-  updated_at:       Date;
-}
-
 export interface VanityRoleSettingsDoc {
   guild_id:              string;
   // Status / bio keyword trigger
@@ -344,6 +305,22 @@ export interface AutoroleConfigDoc {
   member_role_ids: string[]; // roles given to new human members
   bot_role_ids:    string[]; // roles given to new bot members
   updated_at:      Date;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom Roles
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * One document per (guild_id + keyword). The keyword acts as a virtual command
+ * name — typing `<prefix><keyword> @users` assigns all linked roles.
+ */
+export interface CustomRoleDoc {
+  guild_id:   string;
+  keyword:    string;    // always lowercase; uniqueness key per guild
+  role_ids:   string[];  // 1–5 role IDs
+  created_by: string;    // user ID of whoever ran $customrole create
+  created_at: Date;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1475,6 +1452,9 @@ export class Database {
   static readonly ALIAS_MAX_PER_USER = 15;
   static readonly ALIAS_MAX_LEN = 14;
 
+  static readonly CUSTOM_ROLE_MAX_PER_GUILD = 15;
+  static readonly CUSTOM_ROLE_MAX_ROLES     = 5;
+
   private async ensureAliasIndexes(): Promise<void> {
     const col = this.col<UserCommandAliasDoc>('user_command_aliases');
     await col.createIndex({ user_id: 1, alias_lower: 1 }, { unique: true }).catch((): null => null);
@@ -1917,151 +1897,68 @@ export class Database {
     return result.matchedCount > 0;
   }
 
-  // ── Automod ──────────────────────────────────────────────────────────────────
-  // Collection: `automod_configs` — one document per guild.
+  // ── Custom Roles ──────────────────────────────────────────────────────────────
+  // Collection: `custom_roles` — one document per (guild_id + keyword).
 
-  private defaultAutomodConfig(guildId: string): AutomodConfigDoc {
-    return {
-      guild_id:         guildId,
-      enabled:          false,
-      log_channel_id:   null,
-      punishment:       'delete',
-      timeout_duration: 300,
-      modules: {
-        antiSpam:        false,
-        antiLink:        false,
-        antiInvite:      false,
-        antiBadWords:    false,
-        antiMassMention: false,
-        antiCaps:        false,
-        antiPing:        false,
-      },
-      spam_threshold:  5,
-      spam_interval:   5,
-      mention_limit:   5,
-      caps_percentage: 70,
-      caps_min_length: 10,
-      bad_words:       [],
-      whitelist:       [],
-      updated_at:      new Date(),
+  async getCustomRole(guildId: string, keyword: string): Promise<CustomRoleDoc | null> {
+    await this.connect();
+    return this.col<CustomRoleDoc>('custom_roles').findOne({
+      guild_id: guildId,
+      keyword:  keyword.toLowerCase(),
+    });
+  }
+
+  async getCustomRoles(guildId: string): Promise<CustomRoleDoc[]> {
+    await this.connect();
+    return this.col<CustomRoleDoc>('custom_roles')
+      .find({ guild_id: guildId })
+      .sort({ created_at: 1 })
+      .toArray();
+  }
+
+  async createCustomRole(
+    guildId:   string,
+    keyword:   string,
+    roleIds:   string[],
+    createdBy: string,
+  ): Promise<CustomRoleDoc | 'exists' | 'limit'> {
+    await this.connect();
+    const lower = keyword.toLowerCase();
+
+    const existing = await this.col<CustomRoleDoc>('custom_roles').findOne({ guild_id: guildId, keyword: lower });
+    if (existing) return 'exists';
+
+    const count = await this.col<CustomRoleDoc>('custom_roles').countDocuments({ guild_id: guildId });
+    if (count >= Database.CUSTOM_ROLE_MAX_PER_GUILD) return 'limit';
+
+    const doc: CustomRoleDoc = {
+      guild_id:   guildId,
+      keyword:    lower,
+      role_ids:   roleIds.slice(0, Database.CUSTOM_ROLE_MAX_ROLES),
+      created_by: createdBy,
+      created_at: new Date(),
     };
-  }
-
-  async getAutomodConfig(guildId: string): Promise<AutomodConfigDoc> {
-    await this.connect();
-    const doc = await this.col<AutomodConfigDoc>('automod_configs').findOne({ guild_id: guildId });
-    if (!doc) return this.defaultAutomodConfig(guildId);
-    // Backfill any missing fields
-    const defaults = this.defaultAutomodConfig(guildId);
-    for (const key of Object.keys(defaults.modules) as AutomodModuleKey[]) {
-      if (doc.modules[key] === undefined) doc.modules[key] = false;
-    }
-    doc.bad_words ??= [];
-    doc.whitelist  ??= [];
+    await this.col<CustomRoleDoc>('custom_roles').insertOne(doc);
     return doc;
   }
 
-  private async saveAutomodDoc(doc: AutomodConfigDoc): Promise<void> {
+  async deleteCustomRole(guildId: string, keyword: string): Promise<boolean> {
     await this.connect();
-    doc.updated_at = new Date();
-    await this.col<AutomodConfigDoc>('automod_configs').replaceOne(
-      { guild_id: doc.guild_id },
-      doc,
-      { upsert: true },
+    const result = await this.col<CustomRoleDoc>('custom_roles').deleteOne({
+      guild_id: guildId,
+      keyword:  keyword.toLowerCase(),
+    });
+    return result.deletedCount > 0;
+  }
+
+  async setCustomRoleRoles(guildId: string, keyword: string, roleIds: string[]): Promise<CustomRoleDoc | null> {
+    await this.connect();
+    const result = await this.col<CustomRoleDoc>('custom_roles').findOneAndUpdate(
+      { guild_id: guildId, keyword: keyword.toLowerCase() },
+      { $set: { role_ids: roleIds.slice(0, Database.CUSTOM_ROLE_MAX_ROLES) } },
+      { returnDocument: 'after' },
     );
-  }
-
-  async setAutomodEnabled(guildId: string, enabled: boolean): Promise<AutomodConfigDoc> {
-    const doc = await this.getAutomodConfig(guildId);
-    doc.enabled = enabled;
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async saveAutomodConfig(
-    guildId: string,
-    data: {
-      modules:        Record<AutomodModuleKey, boolean>;
-      punishment:     AutomodPunishment;
-      log_channel_id: string | null;
-    },
-  ): Promise<AutomodConfigDoc> {
-    const doc = await this.getAutomodConfig(guildId);
-    doc.modules        = data.modules;
-    doc.punishment     = data.punishment;
-    doc.log_channel_id = data.log_channel_id;
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async setAutomodThresholds(
-    guildId: string,
-    data: {
-      spam_threshold:   number;
-      spam_interval:    number;
-      mention_limit:    number;
-      caps_percentage:  number;
-      timeout_duration: number;
-    },
-  ): Promise<AutomodConfigDoc> {
-    const doc = await this.getAutomodConfig(guildId);
-    Object.assign(doc, data);
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async addAutomodBadWords(guildId: string, words: string[]): Promise<AutomodConfigDoc> {
-    const doc      = await this.getAutomodConfig(guildId);
-    const existing = new Set(doc.bad_words.map((w) => w.toLowerCase()));
-    for (const w of words) {
-      const lower = w.toLowerCase();
-      if (!existing.has(lower)) { doc.bad_words.push(lower); existing.add(lower); }
-    }
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async removeAutomodBadWords(guildId: string, words: string[]): Promise<AutomodConfigDoc> {
-    const doc   = await this.getAutomodConfig(guildId);
-    const toRem = new Set(words.map((w) => w.toLowerCase()));
-    doc.bad_words = doc.bad_words.filter((w) => !toRem.has(w.toLowerCase()));
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async clearAutomodBadWords(guildId: string): Promise<AutomodConfigDoc> {
-    const doc = await this.getAutomodConfig(guildId);
-    doc.bad_words = [];
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async addAutomodWhitelistEntry(
-    guildId: string,
-    entry: { id: string; type: 'user' | 'role' | 'channel'; added_by: string },
-  ): Promise<AutomodConfigDoc | 'duplicate'> {
-    const doc = await this.getAutomodConfig(guildId);
-    if (doc.whitelist.some((e) => e.id === entry.id && e.type === entry.type)) return 'duplicate';
-    doc.whitelist.push({ ...entry, added_at: new Date() });
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async removeAutomodWhitelistEntries(
-    guildId:  string,
-    entries:  { type: 'user' | 'role' | 'channel'; id: string }[],
-  ): Promise<AutomodConfigDoc> {
-    const doc  = await this.getAutomodConfig(guildId);
-    const toRem = entries.map((e) => `${e.type}:${e.id}`);
-    doc.whitelist = doc.whitelist.filter((e) => !toRem.includes(`${e.type}:${e.id}`));
-    await this.saveAutomodDoc(doc);
-    return doc;
-  }
-
-  async resetAutomodConfig(guildId: string): Promise<AutomodConfigDoc> {
-    const doc = this.defaultAutomodConfig(guildId);
-    await this.saveAutomodDoc(doc);
-    return doc;
+    return result ?? null;
   }
 
 }

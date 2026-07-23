@@ -38,6 +38,16 @@ export const emojis = {
   loop:       '🔁',
   autoplay:   '🔄',
 
+  // Music platform source emojis (unicode fallbacks — replace with custom emoji IDs if available)
+  youtube:      '▶️',
+  youtubeMusic: '🎵',
+  spotify:      '💚',
+  deezer:       '🎧',
+  appleMusic:   '🍎',
+  soundcloud:   '🔶',
+  music:        '🎶',
+  musicHeartNote: '🎵',
+
   // Utility
   info:         '<a:info:1494980677169316004>',
   blackcrown:   '<a:blackCrown:1494980662141259877>',

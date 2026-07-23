@@ -109,6 +109,22 @@ export function formatCreatedAt(date: Date): string {
   return `${day}, ${time}, ${dateNum} ${month}, ${year}`;
 }
 
+/**
+ * Extract a thumbnail/artwork URL from a Kazagumo track.
+ * Kazagumo tracks carry a built-in `.thumbnail` property; this helper falls
+ * back to deriving a YouTube thumbnail from the identifier when that's absent.
+ */
+export function extractThumbnail(track: any): string | null {
+  if (!track) return null;
+  if (track.thumbnail && typeof track.thumbnail === 'string') return track.thumbnail;
+  // YouTube tracks: derive maxresdefault from the video identifier
+  const id = track.identifier ?? track.info?.identifier;
+  if (id && (track.sourceName === 'youtube' || track.sourceName === 'youtubemusic')) {
+    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+  }
+  return null;
+}
+
 export function formatOrdinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;

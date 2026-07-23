@@ -29,6 +29,8 @@ import {
 } from 'discord.js';
 import { SimpleShardingStrategy } from '@discordjs/ws';
 import { ClusterClient, getInfo } from 'discord-hybrid-sharding';
+import { Kazagumo } from 'kazagumo';
+import { Connectors } from 'shoukaku';
 import config from '../config.js';
 import type { Database } from '../database/database.js';
 import {
@@ -122,6 +124,8 @@ export class LevitateClient extends Client {
   public statusManager: StatusManager | undefined;
   /** The BotInstance entry matched at construction time (or null if none matched). */
   public matchedInstance: BotInstance | null;
+  /** Kazagumo music player manager — initialized by initKazagumo() after login. */
+  public kazagumo!: Kazagumo;
 
   constructor() {
     const { matched, ws } = buildClientOptions();
@@ -131,6 +135,7 @@ export class LevitateClient extends Client {
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
@@ -154,6 +159,37 @@ export class LevitateClient extends Client {
     this.slashCommands = new Collection();
     this.aliases       = new Collection();
     this.cooldowns     = new Collection();
+  }
+
+  /**
+   * Initialize Kazagumo / Shoukaku and connect to all configured Lavalink nodes.
+   * Must be called after login so the Discord gateway is available for voice payloads.
+   */
+  initKazagumo(): void {
+    const nodes = (this.config as any).nodes ?? [];
+    this.kazagumo = new Kazagumo(
+      {
+        defaultSearchEngine: 'youtube',
+        send: (guildId: string, payload: any) => {
+          const guild = this.guilds.cache.get(guildId);
+          if (guild) guild.shard.send(payload);
+        },
+      },
+      new Connectors.DiscordJS(this as any),
+      nodes.map((node: any) => ({
+        name:   node.name,
+        url:    `${node.host}:${node.port}`,
+        auth:   node.auth,
+        secure: node.secure ?? false,
+      })),
+      {
+        moveOnDisconnect: true,
+        resume:           false,
+        resumeTimeout:    30,
+        reconnectTries:   Infinity,
+        restTimeout:      60,
+      },
+    );
   }
 
   /** Returns true if this instance is configured to show the mobile indicator. */

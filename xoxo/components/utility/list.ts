@@ -39,6 +39,7 @@ export type ListType =
   | 'roles'
   | 'members'
   | 'bots'
+  | 'boosters'
   | 'emojis'
   | 'stickers'
   | 'channels'
@@ -49,6 +50,7 @@ const TYPE_EMOJI: Record<ListType, string> = {
   roles:    emojis.blackCards,
   members:  emojis.whiteCards,
   bots:     emojis.blackButterfly,
+  boosters: emojis.blackflower,
   emojis:   emojis.blackflower,
   stickers: emojis.whiteArrow,
   channels: emojis.blackcrown,
@@ -60,6 +62,7 @@ const TYPE_LABEL: Record<ListType, string> = {
   roles:    'Roles',
   members:  'Members',
   bots:     'Bots',
+  boosters: 'Boosters',
   emojis:   'Emojis',
   stickers: 'Stickers',
   channels: 'Channels',
@@ -140,6 +143,11 @@ export async function fetchListItems(guild: any, type: ListType): Promise<any[]>
           (a.user?.username ?? '').localeCompare(b.user?.username ?? ''),
         );
     }
+    case 'boosters': {
+      return [...guild.members.cache.values()]
+        .filter((m: any) => m.premiumSince != null)
+        .sort((a: any, b: any) => (a.premiumSinceTimestamp ?? 0) - (b.premiumSinceTimestamp ?? 0));
+    }
     case 'emojis': {
       return [...guild.emojis.cache.values()];
     }
@@ -215,6 +223,13 @@ function formatListLine(type: ListType, item: any, index: number): string {
         : 'date unknown';
       return `**${n}.** **${username}** (\`${item.user?.id ?? item.id}\`) — ${joined}`;
     }
+    case 'boosters': {
+      const name = item.nickname ?? item.user?.globalName ?? item.user?.username ?? 'Unknown';
+      const since = item.premiumSinceTimestamp
+        ? `boosting since <t:${Math.floor(item.premiumSinceTimestamp / 1000)}:R>`
+        : 'start date unknown';
+      return `**${n}.** **${name}** (\`${item.user?.username ?? item.user?.id ?? item.id}\`) — ${since}`;
+    }
     case 'emojis': {
       const ext  = item.animated ? 'gif' : 'png';
       const url  = item.imageURL?.({ size: 32, extension: ext }) ?? item.url;
@@ -262,6 +277,10 @@ function selectDescription(type: ListType, item: any): string {
       return `ID: ${item.user?.id ?? item.id}`;
     case 'bots':
       return `ID: ${item.user?.id ?? item.id}`;
+    case 'boosters':
+      return item.premiumSinceTimestamp
+        ? `Boosting since ${new Date(item.premiumSinceTimestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`
+        : 'Booster';
     case 'emojis':
       return item.animated ? 'Animated emoji' : 'Static emoji';
     case 'stickers':
@@ -290,6 +309,7 @@ function selectLabel(type: ListType, item: any): string {
     case 'roles':     return item.name.slice(0, 100);
     case 'members':   return (item.nickname ?? item.user?.globalName ?? item.user?.username ?? 'Unknown').slice(0, 100);
     case 'bots':      return (item.user?.username ?? 'Unknown').slice(0, 100);
+    case 'boosters':  return (item.nickname ?? item.user?.globalName ?? item.user?.username ?? 'Unknown').slice(0, 100);
     case 'emojis':    return item.name.slice(0, 100);
     case 'stickers':  return item.name.slice(0, 100);
     case 'channels':  return `#${item.name}`.slice(0, 100);
@@ -300,9 +320,10 @@ function selectLabel(type: ListType, item: any): string {
 
 function selectValue(type: ListType, item: any): string {
   // GuildBan objects expose .id via a getter (== user.id); fall back to user.id for safety
-  if (type === 'bans')    return item.user?.id ?? item.id ?? '';
-  if (type === 'bots')    return item.id;
-  if (type === 'invites') return item.code;
+  if (type === 'bans')     return item.user?.id ?? item.id ?? '';
+  if (type === 'bots')     return item.id;
+  if (type === 'boosters') return item.id;
+  if (type === 'invites')  return item.code;
   return item.id;
 }
 
@@ -648,6 +669,57 @@ function buildDetailPayload(session: ListSession, item: any, disabled = false): 
         keyPerms.length
           ? `\n${emojis.whiteArrow} **__Key Permissions__**\n${keyPerms.map((p: string) => `\`${p}\``).join(', ')}`
           : null,
+      ].filter(Boolean).join('\n');
+
+      if (avatarUrl) {
+        container.addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(infoLines))
+            .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl)),
+        );
+      } else {
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(infoLines));
+      }
+      break;
+    }
+
+    // ── Booster ───────────────────────────────────────────────────────────────
+    case 'boosters': {
+      const user       = item.user;
+      const joined     = item.joinedTimestamp ? ts(item.joinedTimestamp) : 'Unknown';
+      const registered = user?.createdTimestamp ? ts(user.createdTimestamp) : 'Unknown';
+      const boostSince = item.premiumSinceTimestamp ? ts(item.premiumSinceTimestamp) : 'Unknown';
+
+      // Roles (excluding @everyone)
+      const memberRoles: any[] = item.roles?.cache
+        ? [...item.roles.cache.values()]
+            .filter((r: any) => r.id !== session.guildId)
+            .sort((a: any, b: any) => b.position - a.position)
+        : [];
+
+      const rolesDisplay = memberRoles.length
+        ? memberRoles.slice(0, 15).map((r: any) => `<@&${r.id}>`).join(' ')
+            + (memberRoles.length > 15 ? `\n*…and ${memberRoles.length - 15} more*` : '')
+        : 'None';
+
+      const avatarUrl = item.avatar
+        ? (item.avatarURL?.({ size: 256 }) ?? user?.displayAvatarURL?.({ size: 256 }) ?? null)
+        : (user?.displayAvatarURL?.({ size: 256 }) ?? null);
+
+      const infoLines = [
+        `${emojis.whiteArrow} **__Booster Info__**`,
+        `**Name:** ${user?.globalName ?? user?.username ?? 'Unknown'}`,
+        `**Username:** \`${user?.username ?? 'Unknown'}\``,
+        `**User ID:** \`${user?.id ?? item.id}\``,
+        `**Nickname:** ${item.nickname ?? 'None'}`,
+        '',
+        `${emojis.whiteArrow} **__Timestamps__**`,
+        `**Account Created:** ${registered}`,
+        `**Joined Server:** ${joined}`,
+        `**Boosting Since:** ${boostSince}`,
+        '',
+        `${emojis.whiteArrow} **__Roles (${memberRoles.length})__**`,
+        `**Roles:** ${rolesDisplay}`,
       ].filter(Boolean).join('\n');
 
       if (avatarUrl) {
