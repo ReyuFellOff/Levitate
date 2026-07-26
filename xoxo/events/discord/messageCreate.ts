@@ -12,6 +12,7 @@ import {
   blacklistedServer,
   sendInfo,
   sendError,
+  reservedForDeveloper,
 } from '../../components/statusMessages.js';
 import { updateSticky } from '../../helpers/stickyHelper.js';
 import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/afk.js';
@@ -171,7 +172,10 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
         const devOnly =
           mentionCmd.options?.owner === true ||
           mentionCmd.options?.isDeveloper === true;
-        if (devOnly && !isDeveloper) return;
+        if (devOnly && !isDeveloper) {
+          await reservedForDeveloper({ message }).catch((): null => null);
+          return;
+        }
 
         message.commandRawArgs = rest.slice(mentionCmdName.length).trimStart();
 
@@ -257,7 +261,10 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
   // Commands use `owner: true` (xoxo convention). We also accept
   // `isDeveloper: true` for compatibility.
   const devOnly = command.options?.owner === true || command.options?.isDeveloper === true;
-  if (devOnly && !isDeveloper) return;
+  if (devOnly && !isDeveloper) {
+    await reservedForDeveloper({ message }).catch((): null => null);
+    return;
+  }
 
   // ── Attach raw args to message for commands that need real newlines ────────
   // Strips the prefix + commandName token, preserving actual whitespace/newlines.
@@ -288,8 +295,11 @@ async function hasNoPrefixAccess(
   client: LevitateClient,
   isDeveloper: boolean,
 ): Promise<boolean> {
-  // Developers always have no-prefix access
-  if (isDeveloper) return true;
+  // Developers have no-prefix access unless they've self-disabled it via $mynop off
+  if (isDeveloper) {
+    const selfDisabled = await client.db?.isDevNoprefixSelfDisabled(message.author.id).catch((): boolean => false) ?? false;
+    return !selfDisabled;
+  }
 
   // If DB isn't wired, no-prefix is unavailable for non-devs
   if (!client.db) return false;

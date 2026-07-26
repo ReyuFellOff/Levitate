@@ -165,8 +165,15 @@ export class LevitateClient extends Client {
    * Initialize Kazagumo / Shoukaku and connect to all configured Lavalink nodes.
    * Must be called after login so the Discord gateway is available for voice payloads.
    */
-  initKazagumo(): void {
-    const nodes = (this.config as any).nodes ?? [];
+  /**
+   * Initialize Kazagumo / Shoukaku and connect to all configured Lavalink nodes.
+   * Must be called after login so the Discord gateway is available for voice payloads.
+   *
+   * Pass an empty array (or omit) to create Kazagumo with no nodes yet.
+   * Use connectLavalinkNodes() after event handlers are registered to actually
+   * connect, so the 'error' event from Shoukaku is caught cleanly.
+   */
+  initKazagumo(nodes: Array<{ name: string; url: string; auth: string; secure: boolean }> = []): void {
     this.kazagumo = new Kazagumo(
       {
         defaultSearchEngine: 'youtube',
@@ -176,12 +183,7 @@ export class LevitateClient extends Client {
         },
       },
       new Connectors.DiscordJS(this as any),
-      nodes.map((node: any) => ({
-        name:   node.name,
-        url:    `${node.host}:${node.port}`,
-        auth:   node.auth,
-        secure: node.secure ?? false,
-      })),
+      nodes,
       {
         moveOnDisconnect: true,
         resume:           false,
@@ -190,6 +192,27 @@ export class LevitateClient extends Client {
         restTimeout:      60,
       },
     );
+  }
+
+  /** Add all configured Lavalink nodes. Call AFTER event handlers are registered. */
+  connectLavalinkNodes(): void {
+    // shoukaku.id is set by connector.ready() → this.manager.id = this.getId().
+    // Because initKazagumo() is called inside the Discord ready handler, that
+    // once("ready") listener won't fire again, leaving shoukaku.id = null.
+    // Populate it manually so node.connect() doesn't throw "UserId missing".
+    if (!this.kazagumo.shoukaku.id) {
+      (this.kazagumo.shoukaku as any).id = this.user?.id ?? null;
+    }
+
+    const cfgNodes: any[] = (this.config as any).nodes ?? [];
+    for (const n of cfgNodes) {
+      this.kazagumo.shoukaku.addNode({
+        name:   n.name,
+        url:    `${n.host}:${n.port}`,
+        auth:   n.auth,
+        secure: n.secure ?? false,
+      });
+    }
   }
 
   /** Returns true if this instance is configured to show the mobile indicator. */

@@ -74,11 +74,15 @@ function resetTimeout(messageId: string): void {
  * Returns roles that both the bot AND the invoker can manage.
  * Excludes @everyone, managed/integration roles, roles at or above the bot's
  * highest role, and roles at or above the invoker's highest role.
+ * Server owners are treated as having Infinity position — they own all roles
+ * the bot can reach, regardless of their actual top role.
  */
 export function getEligibleRoles(guild: any, invokerMember?: any): any[] {
   const botMember = guild.members.me;
   const botTop    = botMember?.roles?.highest?.position ?? 0;
-  const invokerTop = invokerMember?.roles?.highest?.position ?? Infinity;
+  // Server owner implicitly outranks every role; skip the invoker ceiling for them.
+  const invokerIsOwner = invokerMember && invokerMember.id === guild.ownerId;
+  const invokerTop = invokerIsOwner ? Infinity : (invokerMember?.roles?.highest?.position ?? Infinity);
   // Both the bot and the invoker must be above the role
   const ceiling = Math.min(botTop, invokerTop);
 

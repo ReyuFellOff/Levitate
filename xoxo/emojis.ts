@@ -38,15 +38,16 @@ export const emojis = {
   loop:       '🔁',
   autoplay:   '🔄',
 
-  // Music platform source emojis (unicode fallbacks — replace with custom emoji IDs if available)
-  youtube:      '▶️',
-  youtubeMusic: '🎵',
-  spotify:      '💚',
-  deezer:       '🎧',
-  appleMusic:   '🍎',
-  soundcloud:   '🔶',
-  music:        '🎶',
-  musicHeartNote: '🎵',
+  // Music platform source emojis
+  youtube:        '<:sourceYoutube:1494790366920970331>',
+  youtubeMusic:   '<:sourceYoutubeMusic:1494790392304894033>',
+  spotify:        '<:sourceSpotify:1494790317201690945>',
+  deezer:         '<:sourceDeezer:1494790418976473102>',
+  appleMusic:     '<:sourceAppleMusic:1494790296851054744>',
+  soundcloud:     '<:sourceSoundcloud:1494790340220293323>',
+  music:          '<a:blackstar:1457639037803434037>',
+  musicHeartNote: '<:MusicHeartNote:1494636552763084800>',
+  cutemusic:      '<a:listening_to_music:1471739860099399720>',
 
   // Utility
   info:         '<a:info:1494980677169316004>',

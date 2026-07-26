@@ -1,6 +1,6 @@
 # Levitate — Project Bible (`grace.md`)
 
-> **Last updated:** 2026-07-08 (added default namestyle from support server + user self-prefix system — see §§ 5, 17, 12, 13 for details)  
+> **Last updated:** 2026-07-26 (server-owner role hierarchy bypass, help prefix label, bot-tag user resolution)  
 > This document is the exhaustive reference for the Levitate Discord bot codebase. It covers every layer: architecture, startup, structures, loaders, events, commands, components, helpers, utilities, configuration, and database. Read it before touching anything. Keep it updated whenever you make a non-trivial change.
 
 ---
@@ -613,8 +613,7 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$nick` | — | Change a member's nickname |
 | `$massnick` | — | Change all members' nicknames with confirm prompt |
 | `$masskick` | — | Kick all members matching criteria with confirm prompt |
-| `$roleadd` | `rolegive`, `giverole`, `ra` | Add a role to a member; omit role to open a multi-select picker |
-| `$roleremove` | `removerole`, `rr` | Remove a role from a member; omit role to open a multi-select picker |
+ | `$role` | — | `$role add <user> [role]` adds a role, `$role remove <user> [role]` removes one, and `$role <user>` opens the combined add/remove role picker |
 | `$roleall` | `allrole`, `giveall` | Give a role to all/humans/bots — button panel chooses target group; rate-limit-safe batching (10/sec) |
 | `$slowmode` | `$sm`, `$ratelimit` | Set channel slowmode — accepts duration format (`30s`, `5m`, `2h 30m`) |
 | `$reactionmute` | `rmute`, `reactmute` | Prevent a member from adding reactions anywhere in the server |
@@ -755,6 +754,7 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$restart-bot` | — | Restart the bot process (saves pending channel to DB) |
 | `$stop-bot` | `s-bot` | Stop the bot process. Confirm prompt shows the current hosting provider; writes a `.stop-flag` file (`dist/.stop-flag`) before exiting so a host watchdog force-respawn re-exits immediately instead of fully coming back online — see §31 gotchas. |
 | `$steal` | `snag`, `copyemoji` | Steal an emoji, sticker, or image URL into one or more mutual servers. Resolves by emoji markdown/ID/name or sticker ID/name; images ask emoji-or-sticker type. Multi-select server dropdown, then name prompt (`$default` uses original name). Up to 3 re-prompts on invalid names. |
+| `$fixbotroles` | `fixbotrole`, `renamebotrole` | Developer-only. Renames the bot's managed integration role in every guild to the current `config.botName` (e.g. after a rebrand from "Roxanne"). Skips guilds where the bot lacks ManageRoles or the role is already correct. |
 | `$special-afk` | `specialafk`, `devafk` | Set AFK with a custom Since/Till time |
 | `$special-purge` | — | Developer-level purge with extended options |
 | `$global-ar` | `gar`, `globalar` | Manage global autoresponders across all guilds — paged multi-select panel to toggle `is_global` per trigger |
@@ -895,7 +895,11 @@ Reusable CV2 panel for displaying an avatar or banner with "Send in DM" and "Dow
 
 ### `userResolver.ts`
 
-Resolves user mentions/IDs/usernames to a discord.js User or GuildMember object.
+Resolves user mentions/IDs/usernames to a discord.js User or GuildMember object. Accepted formats (in precedence order):
+1. Mention `<@id>` / `<@!id>`
+2. Snowflake ID (17–20 digits)
+3. `Username#discriminator` tag — covers bot tags like `BotName#0000`; searches guild members first, then the client user cache
+4. Plain username or display name (guild member search)
 
 ### `purgeHelper.ts`
 
@@ -1225,6 +1229,11 @@ Four payload builders:
 
 Footer links: Support Server + Invite link (built from `clientId`).
 
+Developer-only commands are excluded from all help pages. If a user explicitly requests
+one with `$help <command>` (including an alias), help responds that the command belongs
+to developers only instead of revealing its usage. Direct prefix and slash attempts by
+non-developers receive the same response.
+
 ---
 
 ## 22. Sticky Messages
@@ -1391,6 +1400,7 @@ Allows specific users to run commands without the prefix.
 - **Per-guild disabled list** — individual guilds can opt out.
 - **Developers always have no-prefix access**, regardless of the toggle.
 - Managed by `$noprefix add/remove/list/global/guild` (developer-only).
+- **User self-toggle** — `$mynop` (alias `mynoprefix`, category `utility`, no permission): any user who has an active, non-expired noprefix entry can disable or re-enable it for themselves. Stored as `selfDisabled: boolean` on their `NoPrefixUserDoc`. `isNoPrefixUser()` returns `false` when `selfDisabled === true`, so the no-prefix path is suppressed without touching the expiry or the entry itself. Developers bypass this entirely (always have access, told so if they run the command). Self-disabling does **not** extend or reset the expiry window.
 
 ---
 
@@ -1501,9 +1511,14 @@ This applies everywhere: `sendSuccess`, `sendError`, direct `channel.send`, conf
 - `sendInfo(ctx, text)` — for neutral information
 - `sendLoading(ctx, text)` — for in-progress states
 - `sendWrongUsage(ctx, name, usage)` — for usage errors
+- `reservedForDeveloper(ctx)` — **must** be used for all developer-only gate rejections (uses `blackcrown` emoji, never `redcross`)
+- `blacklistedUser(ctx)` — for blacklisted users
+- `blacklistedServer(ctx, guild, client)` — for blacklisted servers
 - A hand-built CV2 `ContainerBuilder` payload (for rich panels like confirmations)
 
 **Never** use `channel.send({ content: '...' })`, `message.reply('...')`, or any plain-text send for user-visible output. All status/feedback must be CV2.
+
+**Critical:** When a non-developer invokes a developer-only command, always call `reservedForDeveloper(ctx)` — **never** `sendError`. This applies in `messageCreate` (both prefix and mention-prefix paths) and `interactionCreate` (slash command path). Using `sendError` here is a regression — it shows the wrong emoji (`redcross` instead of `blackcrown`).
 
 ### Rule 3 — No specific response layout unless requested
 Do not add decorative headers, sections, or layout changes unless explicitly asked. If the user wants a specific message format or layout, they will describe it. Match the existing style of nearby commands.
@@ -1513,6 +1528,12 @@ Command files (`xoxo/commands/**/*.ts`) must only hold: `options`, data-fetching
 
 ### Rule 5 — Restart the bot after every change
 After every build/code change, always run `npm run build` and restart the bot workflow so the user can immediately test the result. Continue doing this for every change until the user **explicitly says** to stop restarting. Never leave a code change sitting undeployed.
+
+### Rule 6 — One non-developer command inventory
+The prefix loader, help menu, and website must expose the same set of non-developer
+command names. The repository check `npm run check:command-parity` compares the
+source command metadata with the website catalog; command subcommands may be listed
+as documentation rows, but they count once by their base command name.
 
 ---
 

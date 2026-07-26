@@ -1,13 +1,14 @@
 // xoxo/events/discord/voiceStateUpdate.ts
 //
-// Logging: fires on voice channel join/leave/move and mute/deafen changes.
-// Exceptions for the `vc` category are voice-channel IDs. For a move, the
-// event is only suppressed if BOTH the origin and destination channels are
-// in the exceptions list (per spec: a move involving a non-excepted channel
-// is still visible).
+// Handles voice state changes for ALL members:
+//   - Bot disconnect: destroy player first, then schedule 24/7 rejoin (this
+//     order is critical — playerDestroy fires while no rejoin is pending, so
+//     its clearRejoin() call is a no-op, and the rejoin survives).
+//   - All members: join/leave/move/mute/deafen logging.
 
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
+import { scheduleRejoin } from '../../helpers/twentyFourSeven.js';
 import {
   buildVoiceJoinPayload,
   buildVoiceLeavePayload,
@@ -25,15 +26,19 @@ export async function execute(oldState: any, newState: any, client: LevitateClie
   if (!member) return;
 
   // ── 24/7 bot reconnect logic ─────────────────────────────────────────────
-  // If the bot was forcibly disconnected from a VC, and 24/7 is enabled for
-  // this guild, schedule a rejoin to the stored 24/7 channel.
+  // Only fires when the bot itself is disconnected from a VC.
+  // We destroy the player FIRST so that playerDestroy fires (and its
+  // clearRejoin() runs) BEFORE we schedule the rejoin. This avoids the race
+  // where clearRejoin() would cancel the rejoin we're about to schedule.
   if (member.id === client.user?.id && oldState.channelId && !newState.channelId) {
-    // The bot was just disconnected (not moved)
+    const player = client.kazagumo?.players?.get(guild.id);
+    if (player) await player.destroy().catch((): null => null);
+
     const is247 = await (client as any).db?.get24Seven?.(guild.id).catch((): null => null);
     if (is247?.enabled) {
-      const { scheduleRejoin } = await import('../../helpers/twentyFourSeven.js');
-      scheduleRejoin(client, guild.id, is247.channelId, 2 * 60 * 1000);
+      scheduleRejoin(client, guild.id, is247.channelId, 2000);
     }
+    // Fall through so leave is still logged below.
   }
 
   const oldChannel = oldState.channel;

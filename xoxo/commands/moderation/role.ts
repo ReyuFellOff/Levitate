@@ -1,13 +1,13 @@
 // xoxo/commands/moderation/role.ts
 //
-// $roleadd / $rolegive — add a role to a member, or open the multi-select picker.
+// $role — manage one member's roles.
 //
 // Usage:
-//   $roleadd  <@user|ID|username> [@role|ID|name]
-//   $rolegive <@user|ID|username> [@role|ID|name]   (alias)
+//   $role add <@user|ID|username> [@role|ID|name]
+//   $role remove <@user|ID|username> [@role|ID|name]
+//   $role <@user|ID|username>
 //
-// Omitting the role opens the interactive picker (xoxo/components/moderation/roleSelect.ts).
-// See $roleremove for removing and $roleall for mass assignment.
+// When no role is supplied, all three forms open the combined role picker.
 
 import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
@@ -16,10 +16,10 @@ import { resolveUser } from '../../helpers/userResolver.js';
 import { sendRolePickerPanel } from '../../components/moderation/roleSelect.js';
 
 export const options = {
-  name:        'roleadd',
-  aliases:     ['rolegive', 'giverole', 'ra'] as string[],
-  description: 'Add a role to a member. Omit the role to open an interactive multi-select picker.',
-  usage:       'roleadd <@user|ID|username> [@role|ID|name]',
+  name:        'role',
+  aliases:     [] as string[],
+  description: 'Add or remove a role from a member, or open the combined role manager.',
+  usage:       'role add <user> [role]\nrole remove <user> [role]\nrole <user>',
   category:    'moderation',
   owner:       false,
   cooldown:    3,
@@ -39,9 +39,34 @@ function validateRole(guild: any, role: any, invokerMember?: any): string | null
   const botMember = guild.members.me;
   if (botMember && role.position >= botMember.roles.highest.position)
     return "I can't manage a role that is at or above my highest role.";
-  if (invokerMember && role.position >= invokerMember.roles.highest.position)
+  // Server owners implicitly outrank every role — skip the hierarchy check for them.
+  const invokerIsOwner = invokerMember && invokerMember.id === guild.ownerId;
+  if (!invokerIsOwner && invokerMember && role.position >= invokerMember.roles.highest.position)
     return "You can't assign a role that is at or above your own highest role.";
   return null;
+}
+
+async function resolveTargetMember(
+  message: any,
+  args: string[],
+  client: LevitateClient,
+): Promise<{ targetUser: any; member: any } | null> {
+  const targetUser = await resolveUser(client, message.guild, args[0]);
+  if (!targetUser) {
+    await sendError(
+      { message },
+      'User not found. Try a mention, user ID, or username.',
+    );
+    return null;
+  }
+
+  const member = await message.guild.members.fetch(targetUser.id).catch((): null => null);
+  if (!member) {
+    await sendError({ message }, 'That user is not a member of this server.');
+    return null;
+  }
+
+  return { targetUser, member };
 }
 
 export async function prefixExecute(
@@ -62,24 +87,39 @@ export async function prefixExecute(
 
   if (!args[0]) return sendError(ctx, `Usage: \`${options.usage}\``);
 
-  const targetUser = await resolveUser(client, guild, args[0]);
-  if (!targetUser) return sendError(ctx, 'User not found. Try a mention, user ID, or username.');
+  const action = args[0].toLowerCase();
+  const hasAction = action === 'add' || action === 'remove';
+  const targetArg = hasAction ? args[1] : args[0];
+  const roleArg = hasAction ? args[2] : undefined;
 
-  const member = await guild.members.fetch(targetUser.id).catch((): null => null);
-  if (!member) return sendError(ctx, 'That user is not a member of this server.');
+  if (!targetArg || (!hasAction && args.length > 1)) {
+    return sendError(ctx, `Usage: \`${options.usage}\``);
+  }
 
-  // No role given — open the interactive multi-select picker.
-  if (!args[1]) {
+  const resolved = await resolveTargetMember(message, [targetArg], client);
+  if (!resolved) return;
+  const { targetUser, member } = resolved;
+
+  // No role given — every prefix form uses the same combined picker.
+  if (!roleArg) {
     return sendRolePickerPanel({ channel: message.channel }, guild, member, message.author.id, invokerMember);
   }
 
-  const role = resolveRole(guild, args[1]);
+  const role = resolveRole(guild, roleArg);
   const roleErr = validateRole(guild, role, invokerMember);
   if (roleErr) return sendError(ctx, roleErr);
 
-  if (member.roles.cache.has(role.id))
-    return sendInfo(ctx, `**${targetUser.username}** already has the <@&${role.id}> role.`);
+  if (action === 'remove') {
+    if (!member.roles.cache.has(role.id)) {
+      return sendInfo(ctx, `**${targetUser.username}** doesn't have the <@&${role.id}> role.`);
+    }
+    await member.roles.remove(role, `Role remove by ${message.author.username}`);
+    return sendSuccess(ctx, `Removed <@&${role.id}> from **${targetUser.username}**.`);
+  }
 
+  if (member.roles.cache.has(role.id)) {
+    return sendInfo(ctx, `**${targetUser.username}** already has the <@&${role.id}> role.`);
+  }
   await member.roles.add(role, `Role add by ${message.author.username}`);
   return sendSuccess(ctx, `Added <@&${role.id}> to **${targetUser.username}**.`);
 }

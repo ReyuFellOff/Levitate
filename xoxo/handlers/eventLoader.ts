@@ -77,10 +77,18 @@ async function scanDir(
         continue;
       }
 
+      // Player and node events receive client as the FIRST argument (execute(client, ...args)).
+      // Discord events receive client as the LAST argument (execute(...args, client)).
+      // This matches the convention used in all event files.
+      const isPlayerOrNode = event.type === 'player' || event.type === 'node';
+      const handler = isPlayerOrNode
+        ? (...args: any[]) => event.execute!(client, ...args)
+        : (...args: any[]) => event.execute!(...args, client);
+
       if (event.once) {
-        emitter.once(event.name, (...args: any[]) => event.execute!(...args, client));
+        emitter.once(event.name, handler);
       } else {
-        emitter.on(event.name, (...args: any[]) => event.execute!(...args, client));
+        emitter.on(event.name, handler);
       }
 
       onLoad();

@@ -91,11 +91,20 @@ async function bootstrap(): Promise<void> {
   // ── Kazagumo (music) ─────────────────────────────────────────────────────────
   // Must be initialized BEFORE loadAllEvents() so the eventLoader can attach
   // player/node events to client.kazagumo and client.kazagumo.shoukaku.
+  // Step 1 — create Kazagumo with NO nodes yet, so the Shoukaku 'error' event
+  // can't fire before our nodeError handler is registered.
   client.initKazagumo();
-  console.log('[MUSIC] Kazagumo initialized with', ((client.config as any).nodes?.length ?? 0), 'Lavalink node(s)');
 
   // ── Loaders ──────────────────────────────────────────────────────────────────
   await loadAllEvents(client);
+
+  // Step 2 — now that nodeError.ts is wired up on client.kazagumo.shoukaku,
+  // add the Lavalink nodes. Any connection errors will be caught cleanly.
+  {
+    const cfgNodes: any[] = (client.config as any).nodes ?? [];
+    client.connectLavalinkNodes();
+    console.log('[MUSIC] Connecting to', cfgNodes.length, 'Lavalink node(s)...');
+  }
   client.helpers = await loadHelpers(client);
   await loadPrefixCommands(client);
   await loadSlashCommands(client);

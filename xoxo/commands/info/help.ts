@@ -5,7 +5,7 @@ import {
   buildCommandInfoPayload,
   registerHelpSession,
 } from '../../components/helpMenu.js';
-import { sendError } from '../../components/statusMessages.js';
+import { sendError, reservedForDeveloper } from '../../components/statusMessages.js';
 
 export const options = {
   name: 'help',
@@ -28,6 +28,14 @@ export async function prefixExecute(message: any, args: string[], client: Levita
 
     if (!resolvedName) {
       await sendError({ message }, `No command called \`${input}\` found.`);
+      return;
+    }
+
+    const command = (client.commands as any)?.get(resolvedName);
+    const isDevCommand = command?.options?.owner === true || command?.options?.isDeveloper === true;
+    const invokerIsDev = client.config.developers.some(([, id]: [string, string]) => id === message.author.id);
+    if (isDevCommand && !invokerIsDev) {
+      await reservedForDeveloper({ message });
       return;
     }
 

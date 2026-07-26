@@ -53,24 +53,30 @@ export const categories: CategoryInfo[] = [
   },
   {
     index: 8,
+    name: 'music',
+    displayName: 'Music',
+    description: 'Play music, manage queues, and control the voice player.',
+  },
+  {
+    index: 9,
     name: 'features',
     displayName: 'Features',
     description: 'Greet, birthdays, autoresponders, logging, embeds, webhooks, and containers.',
   },
   {
-    index: 9,
+    index: 10,
     name: 'data',
     displayName: 'Data',
     description: 'Save, send, and manage custom messages, embeds, and CV2 payloads.',
   },
   {
-    index: 10,
+    index: 11,
     name: 'customisation',
     displayName: 'Customisation',
     description: 'Personalise the bot\'s profile — avatar, banner, bio, and display name.',
   },
   {
-    index: 11,
+    index: 12,
     name: 'fun',
     displayName: 'Fun',
     description: 'Fun commands — ship, games, image macros, and more.',

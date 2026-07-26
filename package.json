@@ -7,7 +7,8 @@
   "scripts": {
     "build": "rm -rf dist && ./node_modules/.bin/tsc",
     "start": "node dist/index.js",
-    "dev": "tsx index.ts"
+    "dev": "tsx index.ts",
+    "check:command-parity": "node scripts/check-command-parity.mjs"
   },
   "keywords": [],
   "author": "",

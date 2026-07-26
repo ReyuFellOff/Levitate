@@ -195,7 +195,7 @@ export const config: Config = {
   },
 
   // ── 8b. Music ──────────────────────────────────────────────────────────────
-  defaultSource: 'ytmsearch',
+  defaultSource: 'dzsearch',
   nodes: [
     {
       host:   'lavalinkv4.serenetia.com',

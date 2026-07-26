@@ -164,13 +164,16 @@ function buildNavDropdown(
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
 }
 
-async function resolvePrefix(client: LevitateClient, guildId?: string | null): Promise<string> {
-  let prefix = client.config?.prefix ?? '$';
-  if (guildId && client.helpers?.getGuildPrefix) {
-    const guildPrefix = await client.helpers.getGuildPrefix(guildId);
-    if (guildPrefix) prefix = guildPrefix;
+async function resolvePrefix(
+  client: LevitateClient,
+  guildId?: string | null,
+): Promise<{ prefix: string; isCustom: boolean }> {
+  const defaultPrefix = client.config?.prefix ?? '$';
+  if (guildId && (client as any).db?.getGuildPrefix) {
+    const guildPrefix = await (client as any).db.getGuildPrefix(guildId).catch((): null => null);
+    if (guildPrefix) return { prefix: guildPrefix, isCustom: true };
   }
-  return prefix;
+  return { prefix: defaultPrefix, isCustom: false };
 }
 
 // ─────────────────────────── Public payload builders ───────────────────────────
@@ -181,7 +184,7 @@ export async function buildHelpMenuPayload(
   guildId?: string | null,
   disabled = false,
 ) {
-  const prefix = await resolvePrefix(client, guildId);
+  const { prefix, isCustom } = await resolvePrefix(client, guildId);
   const categoryMap = getCategoryMap(client);
   const totalCommands = [...categoryMap.values()].reduce((sum, cmds) => sum + cmds.length, 0);
 
@@ -206,7 +209,7 @@ export async function buildHelpMenuPayload(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `**Hey** <@${userId}> ${emojis.gothicHeart}\n` +
-          `**Prefix:** \`${prefix}\`\n` +
+          `${isCustom ? '**Native prefix:**' : '**Prefix:**'} \`${prefix}\`\n` +
           `**Total commands:** ${totalCommands}`,
       ),
     )
@@ -332,7 +335,7 @@ export async function buildCommandInfoPayload(
   const description: string = opts.description ?? 'No description provided.';
   const usageRaw: string = opts.usage ?? name;
   const aliases: string[] = Array.isArray(opts.aliases) ? opts.aliases : [];
-  const prefix = await resolvePrefix(client, guildId);
+  const { prefix } = await resolvePrefix(client, guildId);
 
   const usageLines = usageRaw
     .split('\n')

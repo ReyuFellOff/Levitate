@@ -14,6 +14,7 @@ import {
 } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import webhookLogger from '../../utils/webhookLogger.js';
+import { sendError, reservedForDeveloper } from '../../components/statusMessages.js';
 import {
   debugSessions,
   resetDebugTimeout,
@@ -170,7 +171,13 @@ export async function execute(interaction: any, client: LevitateClient): Promise
     if (!command) return;
 
     const developers: [string, string][] = client.config.developers;
-    if (command.options?.owner && !developers.some(([, id]: [string, string]) => id === interaction.user.id)) return;
+    if (
+      (command.options?.owner === true || command.options?.isDeveloper === true) &&
+      !developers.some(([, id]: [string, string]) => id === interaction.user.id)
+    ) {
+      await reservedForDeveloper({ interaction });
+      return;
+    }
 
     // Build a readable string of slash options for the webhook log
     const slashArgs: string[] = [];

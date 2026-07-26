@@ -24,11 +24,13 @@ export interface GuildPrefixDoc {
 }
 
 export interface NoPrefixUserDoc {
-  user_id:   string;
-  addedAt:   Date;
-  addedBy?:  string;
+  user_id:      string;
+  addedAt:      Date;
+  addedBy?:     string;
   /** Null = permanent; Date = expires at that time. */
-  expiresAt: Date | null;
+  expiresAt:    Date | null;
+  /** Set by the user themselves via $mynop off — does NOT remove the entry or touch expiry. */
+  selfDisabled?: boolean;
 }
 
 export interface NoPrefixDisabledGuildDoc {
@@ -593,7 +595,18 @@ export class Database {
       await this.col<NoPrefixUserDoc>('noprefix_users').deleteOne({ user_id: userId });
       return false;
     }
+    // Respect user's own self-disable toggle ($mynop off)
+    if (doc.selfDisabled === true) return false;
     return true;
+  }
+
+  async setSelfNoPrefixDisabled(userId: string, disabled: boolean): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<NoPrefixUserDoc>('noprefix_users').updateOne(
+      { user_id: userId },
+      { $set: { selfDisabled: disabled } },
+    );
+    return result.matchedCount > 0;
   }
 
   async getNoPrefixUserEntry(userId: string): Promise<NoPrefixUserDoc | null> {
@@ -646,6 +659,30 @@ export class Database {
   async getNoPrefixDisabledGuilds(): Promise<NoPrefixDisabledGuildDoc[]> {
     await this.connect();
     return this.col<NoPrefixDisabledGuildDoc>('noprefix_disabled_guilds').find().sort({ disabledAt: 1 }).toArray();
+  }
+
+  /** Check if a developer has self-disabled their own noprefix via $mynop off. */
+  async isDevNoprefixSelfDisabled(userId: string): Promise<boolean> {
+    await this.connect();
+    const doc = await this.col<{ _id?: string; user_ids: string[] }>('settings').findOne({ _id: 'noprefix_dev_self_disabled' } as any);
+    return doc?.user_ids?.includes(userId) ?? false;
+  }
+
+  /** Set or clear a developer's self-disable flag for noprefix. */
+  async setDevNoprefixSelfDisabled(userId: string, disabled: boolean): Promise<void> {
+    await this.connect();
+    if (disabled) {
+      await this.col('settings').updateOne(
+        { _id: 'noprefix_dev_self_disabled' } as any,
+        { $addToSet: { user_ids: userId } } as any,
+        { upsert: true },
+      );
+    } else {
+      await this.col('settings').updateOne(
+        { _id: 'noprefix_dev_self_disabled' } as any,
+        { $pull: { user_ids: userId } } as any,
+      );
+    }
   }
 
   // ── User Blacklist ─────────────────────────────────────────────────────────
@@ -1959,6 +1996,38 @@ export class Database {
       { returnDocument: 'after' },
     );
     return result ?? null;
+  }
+
+  // ── 24/7 Mode ─────────────────────────────────────────────────────────────
+
+  async get24Seven(guildId: string): Promise<{ channelId: string; enabled: boolean } | null> {
+    await this.connect();
+    const doc = await this.col<{ guild_id: string; channelId: string; enabled: boolean }>('twentyfour_seven').findOne({ guild_id: guildId });
+    if (!doc) return null;
+    return { channelId: doc.channelId, enabled: doc.enabled };
+  }
+
+  async set24Seven(guildId: string, channelId: string): Promise<void> {
+    await this.connect();
+    await this.col<{ guild_id: string; channelId: string; enabled: boolean; updatedAt: Date }>('twentyfour_seven').updateOne(
+      { guild_id: guildId },
+      { $set: { channelId, enabled: true, updatedAt: new Date() } },
+      { upsert: true },
+    );
+  }
+
+  async clear24Seven(guildId: string): Promise<void> {
+    await this.connect();
+    await this.col<{ guild_id: string; channelId: string; enabled: boolean; updatedAt: Date }>('twentyfour_seven').updateOne(
+      { guild_id: guildId },
+      { $set: { enabled: false, updatedAt: new Date() } },
+    );
+  }
+
+  async getAllEnabled24Seven(): Promise<Array<{ guildId: string; channelId: string }>> {
+    await this.connect();
+    const docs = await this.col<{ guild_id: string; channelId: string; enabled: boolean }>('twentyfour_seven').find({ enabled: true }).toArray();
+    return docs.map(d => ({ guildId: d.guild_id, channelId: d.channelId }));
   }
 
 }

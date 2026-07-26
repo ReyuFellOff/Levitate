@@ -1,8 +1,8 @@
 // xoxo/commands/moderation/role-compat.ts
 //
-// Slash-command dispatch shim for the /role command registration.
-// Prefix users who type $role get a helpful redirect message.
-// Slash users get full /role add / remove / all behaviour.
+// Slash-command implementation for the /role command registration.
+// Prefix behaviour lives in role.ts; this file intentionally has no
+// prefixExecute export so it is not loaded as a second text command.
 
 import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
@@ -21,27 +21,12 @@ import { MessageFlags } from 'discord.js';
 export const options = {
   name:        'role',
   aliases:     [] as string[],
-  description: 'Use $roleadd, $roleremove, or $roleall.',
-  usage:       'role',
+  description: 'Add, remove, or mass-assign a role.',
+  usage:       'role add <user> [role]\nrole remove <user> [role]',
   category:    'moderation',
   owner:       false,
   cooldown:    3,
 };
-
-export async function prefixExecute(
-  message: any,
-  _args:   string[],
-  client:  LevitateClient,
-): Promise<any> {
-  const prefix = client.config.prefix;
-  return sendInfo(
-    { message },
-    `The \`${prefix}role\` command has been split into three commands:\n` +
-    `\`${prefix}roleadd <user> [role]\` — add a role\n` +
-    `\`${prefix}roleremove <user> [role]\` — remove a role\n` +
-    `\`${prefix}roleall <role>\` — give a role to all/humans/bots`,
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Slash execute — handles /role add | remove | all

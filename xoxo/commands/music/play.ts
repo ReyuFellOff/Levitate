@@ -82,8 +82,11 @@ async function handle(
     const firstTrack    = result.tracks[0];
     const playlistCount = result.tracks.length;
 
+    // ⚠ ORDER MATTERS — KazagumoQueue.add(tracks[]) calls shift() when there's
+    // no current track, dropping the first element from the array BEFORE we can
+    // tag it. Tag all tracks first, THEN hand the array to Kazagumo.
     addTracks(player, result.tracks, user);
-    for (const track of result.tracks) player.queue.add(track);
+    player.queue.add(result.tracks);
 
     const thumbnail = firstTrack?.thumbnail ?? extractThumbnail(firstTrack) ?? undefined;
 
