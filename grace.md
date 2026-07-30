@@ -455,8 +455,26 @@ All loaders read from `dist/` (compiled output), not source.
 - Collects all `data` exports (SlashCommandBuilder instances) from **`dist/xoxo/slashCommands/**/*.js`** — this is the builder-only directory.
 - Performs `REST PUT /applications/:id/commands` (global registration) once at boot.
 - Skips silently if `DISCORD_TOKEN` or `DISCORD_CLIENT_ID` are missing, or if no builders are found.
+- **User-install guard:** Before pushing to Discord, any builder whose `toJSON()` output lacks an `integration_types` array is automatically stamped with `integration_types: [0]` (GuildInstall only) + `contexts: [0]` (Guild only). This prevents Discord from surfacing guild-only commands (moderation, music, antinuke, etc.) to users who have the bot installed as a user app in servers the bot is not a member of. Builders that already call `setIntegrationTypes()` are left untouched.
 
 **Summary of the split:** `xoxo/commands/` holds runtime logic (`prefixExecute` + `slashExecute`); `xoxo/slashCommands/` holds only builder definitions (`data` export) used solely for REST registration. The slash loader reads the former; the slash registrar reads the latter.
+
+### User-Installable App
+
+The bot supports Discord's user-install model. Users can add the bot as a personal app (not just a guild app) and use a subset of commands anywhere — in servers the bot isn't in, in DMs, and in group DMs.
+
+**User-installable commands** (builders call `setIntegrationTypes([GuildInstall, UserInstall])` + `setContexts([Guild, BotDM, PrivateChannel])`):
+- Fun: `howgay`, `howcute`, `howrizz`, `howsimp`, `howintelligent`, `howautistic`, `ship`, `wanted`, `whowouldwin`, `rps`, `tictactoe`, `image`
+- Utility: `avatar`, `banner`, `userinfo`, `vanity`, `host-image`
+
+**Guild-less execution rules** (when `interaction.guild` is `null` — user-install in a non-member server):
+- `avatar` / `banner`: skip server-specific paths (server icon, server avatar/banner choice); show global avatar/banner only. The "Server Icon" / "Server Banner" targets return a clear message that the bot must be in the server for those.
+- `userinfo`: `fetchUserData` skips `guild.members.fetch()` and `isOwner` check; all user-level data (flags, badges, server tag, global avatar/banner) still works.
+- `howgay` / `howcute` / `howrizz` / `howsimp` / `howintelligent` / `howautistic`: member fetch for display name is null-safe; falls back to `globalName ?? username`.
+- `wanted` / `whowouldwin`: no guild data needed at all — guard removed.
+- `rps`: opponent member fetch for display name is null-safe; falls back to username.
+- `ship`: random-member mode requires a guild — if no guild and no users provided, returns a clear message asking to specify a user instead.
+- All other guild-only commands retain their `if (!guild) return error` guards because they are **not** user-installable.
 
 ---
 
@@ -723,12 +741,12 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | Command | Aliases | Description |
 |---|---|---|
 | `$ship` | — | Ship two users and generate a compatibility image |
-| `$gay` | `howgay` | See how gay someone is |
-| `$simp` | — | See how much of a simp someone is |
+| `$howgay` | `gay` | See how gay someone is |
+| `$howsimp` | `simp` | See how much of a simp someone is |
 | `$howcute` | `cute` | See how cute someone is |
-| `$autistic` | `howautistic` | See how autistic someone is |
-| `$intelligent` | `iq`, `howsmart`, `intelligence` | See how intelligent someone is |
-| `$rizz` | — | See how much rizz someone has |
+| `$howautistic` | `autistic` | See how autistic someone is |
+| `$howintelligent` | `intelligent`, `iq`, `howsmart`, `intelligence` | See how intelligent someone is |
+| `$howrizz` | `rizz` | See how much rizz someone has |
 | `$wanted` | — | Turn a user into a Wild West wanted poster |
 | `$whowouldwin` | `wwn` | See who would win in a battle between two users |
 | `$guessthenumber` | `gtn` | Try to guess the number the bot is thinking of |
@@ -1816,7 +1834,61 @@ The endpoint is `GET <VITE_STATS_API_URL>/api/stats`. The Stats page shows "Not 
 
 ---
 
-## 37. Developer Notes & Conventions
+## 37. Lavalink Node Management
+
+### Architecture
+
+The bot uses **sequential single-active-node failover** via `xoxo/helpers/nodeManager.ts`. Only ONE Lavalink node is ever connected at a time. If that node proves unhealthy the manager automatically tries the next one in priority order.
+
+This replaces the old "add all nodes at once" approach which caused Shoukaku's internal reconnect loop to spam the console with repeated `[NODE] 💀 ... closed. Code: 1006` messages — one per reconnect attempt, forever, with no backoff.
+
+### Priority order (best → fallback)
+
+| Priority | Name | Host | Secure |
+|---|---|---|---|
+| 1 | Serenetia | `lavalinkv4.serenetia.com:443` | Yes |
+| 2 | Jirayu | `lavalink.jirayu.net:13592` | No |
+
+HeavenCloud was removed — it was unreliable and the spam originated from it being in the list alongside Jirayu.
+
+### How failover works
+
+1. At boot `connectLavalinkNodes()` calls `startNodeManager(client, nodes)` in `nodeManager.ts`.
+2. The manager calls `shoukaku.addNode()` for only the first node (Serenetia).
+3. Every `close` and `error` event on that node calls `reportNodeFailure(client, nodeName)`.
+4. After **3 failures within 20 seconds**, the manager:
+   - Overwrites `node.connect = async () => {}` (no-op) to kill Shoukaku's built-in reconnect loop.
+   - Calls `shoukaku.removeNode(name)` to drop it from the pool.
+   - Calls `shoukaku.addNode()` for the next node in the list.
+5. Once all nodes have been tried, it waits **30 seconds** then restarts from the top of the list.
+6. When a node emits `ready`, `reportNodeReady(nodeName)` resets its failure counter.
+
+### Key constants (in `nodeManager.ts`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `UNHEALTHY_FAILURE_COUNT` | 3 | Failures within the window before failover |
+| `UNHEALTHY_WINDOW_MS` | 20 000 ms | Window to count failures in |
+| `WRAP_AROUND_COOLDOWN_MS` | 30 000 ms | Pause before retrying from top of list |
+
+### Node event files (`xoxo/events/node/`)
+
+| File | Shoukaku event | What it does |
+|---|---|---|
+| `nodeConnect.ts` | `ready` | Calls `reportNodeReady` + `clearNodeSilence`, logs connect/resume, triggers 24/7 boot restore |
+| `nodeDestroy.ts` | `close` | Calls `reportNodeFailure` — only logs if no failover was triggered |
+| `nodeError.ts` | `error` | Calls `reportNodeFailure` — only logs if no failover was triggered and the error code is new |
+| `nodeDisconnect.ts` | `disconnect` | Calls `reportNodeGaveUp` (immediate failover) for connection-lost; logs silently for player-move |
+| `nodeCreate.ts` | `nodeCreate` | Structural stub — this Shoukaku event never fires |
+| `nodeReconnect.ts` | `nodeReconnect` | Structural stub — Shoukaku uses `ready(resumed=true)` instead |
+
+### Developer command
+
+`$node-status` (`nodestatus`, `ns`) — developer-only. Shows which node is currently connected in Shoukaku's pool and which node the manager is targeting, plus the full configured priority list.
+
+---
+
+## 38. Developer Notes & Conventions
 
 - **Never change `displayStatus` in `botInstances.ts` unless explicitly asked to.** This value is managed by the bot owner.
 - **`Levitate-Web/` is a fully separate project.** It must never share files or imports with the bot codebase. Keep the two completely decoupled — no cross-directory imports.

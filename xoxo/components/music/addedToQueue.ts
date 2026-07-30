@@ -79,7 +79,7 @@ export async function sendTrackAddedMessage(ctx: Context, track: TrackInfo): Pro
   const container = new ContainerBuilder()
     .setAccentColor(0x2ecc71)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`# ${emojis.blacktick} **${titleLink}** added to queue.`),
+      new TextDisplayBuilder().setContent(`### ${emojis.blacktick} **${titleLink}** added to queue.`),
     )
     .addSeparatorComponents(new SeparatorBuilder())
     .addSectionComponents(detailsSection);
@@ -116,7 +116,7 @@ export async function sendPlaylistAddedMessage(
     .setAccentColor(0x1db954)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `# ${emojis.blacktick} Added **${playlist.trackCount}** tracks from **${titleLink}**`,
+        `### ${emojis.blacktick} Added **${playlist.trackCount}** tracks from **${titleLink}**`,
       ),
     )
     .addSeparatorComponents(new SeparatorBuilder())

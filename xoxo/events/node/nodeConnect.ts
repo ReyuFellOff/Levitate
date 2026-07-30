@@ -1,14 +1,30 @@
 // xoxo/events/node/nodeConnect.ts
-// Shoukaku event: 'ready' — fires when a node connects or resumes
+// Shoukaku event: 'ready' — fires when a node connects or resumes.
 // Args: (name: string, resumed: boolean)
+
+import { reconnectAllOnBoot } from '../../helpers/twentyFourSeven.js';
+import { reportNodeReady }    from '../../helpers/nodeManager.js';
+import { clearNodeSilence }   from './nodeError.js';
 
 export const name = 'ready';
 export const type = 'node';
 
-export const execute = (client: any, name: string, resumed: boolean): void => {
+export const execute = (client: any, nodeName: string, resumed: boolean): void => {
+  // Tell the node manager this node is healthy — resets its failure counter.
+  reportNodeReady(nodeName);
+  // Clear any per-error-code silencing so fresh errors are logged after recovery.
+  clearNodeSilence(nodeName);
+
   if (resumed) {
-    console.log(`[NODE] 🔄 Lavalink node "${name}" resumed session.`);
+    console.log(`[NODE] 🔄 Lavalink node "${nodeName}" resumed session.`);
   } else {
-    console.log(`[NODE] ✅ Lavalink node "${name}" connected!`);
+    console.log(`[NODE] ✅ Lavalink node "${nodeName}" connected!`);
   }
+
+  // createPlayer() needs a connected node, so this is the earliest safe
+  // point to restore any guild's 24/7 voice connection after boot.
+  // reconnectAllOnBoot() is internally guarded to run only once per process.
+  reconnectAllOnBoot(client).catch((err: Error) => {
+    console.error(`[24-7] Boot reconnect pass threw: ${err.message}`);
+  });
 };

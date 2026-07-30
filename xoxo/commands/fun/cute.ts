@@ -72,10 +72,11 @@ export async function prefixExecute(
 
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
-  if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
 
   const rawUser = interaction.options.getUser('user') ?? interaction.user;
-  const member  = await interaction.guild.members.fetch(rawUser.id).catch((): null => null);
+  const member  = interaction.guild
+    ? await interaction.guild.members.fetch(rawUser.id).catch((): null => null)
+    : null;
   const displayName: string = (member as any)?.displayName ?? rawUser.globalName ?? rawUser.username ?? '?';
 
   const pct = await resolveRatingPct(client, 'cute', rawUser.id, rollCuteness);

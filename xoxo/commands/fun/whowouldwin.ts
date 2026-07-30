@@ -59,7 +59,6 @@ export async function prefixExecute(
 
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
-  if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
 
   const rawTarget  = interaction.options.getUser('user') as any;
   const rawTarget2 = interaction.options.getUser('user2') ?? null;

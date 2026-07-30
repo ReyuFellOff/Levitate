@@ -1,6 +1,4 @@
 // xoxo/components/moderation/snipe.ts
-//
-// CV2 payload builder for $snipe — simple single-message display.
 
 import {
   ContainerBuilder,
@@ -9,11 +7,15 @@ import {
   MessageFlags,
   SectionBuilder,
   SeparatorBuilder,
+  SeparatorSpacingSize,
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import { emojis }                        from '../../emojis.js';
-import type { SnipedMessage }            from './snipeStore.js';
+import { emojis }             from '../../emojis.js';
+import type { SnipedMessage } from './snipeStore.js';
+
+const ACCENT_COLOR   = 0xECC2BB;
+const MAX_GALLERY_ITEMS = 10;
 
 function ts(ms: number): string {
   return `<t:${Math.floor(ms / 1000)}:R>`;
@@ -25,57 +27,92 @@ function isImageUrl(url: string): boolean {
          p.endsWith('.webp') || p.endsWith('.gif');
 }
 
-export function buildSnipePayload(snipe: SnipedMessage, channelId: string): any {
-  const container = new ContainerBuilder();
+function attachmentFileName(url: string): string {
+  try {
+    const clean = url.split('?')[0];
+    const name  = clean.split('/').pop();
+    return name ? decodeURIComponent(name) : url;
+  } catch {
+    return url;
+  }
+}
 
-  // Header
+export function buildSnipePayload(snipe: SnipedMessage, channelId: string): any {
+  const container = new ContainerBuilder().setAccentColor(ACCENT_COLOR);
+
+  // ── Header ────────────────────────────────────────────────────────────
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `## ${emojis.blackCards} Snipe — <#${channelId}>`,
+      `### ${emojis.blackCards} Snipe - <#${channelId}>`,
     ),
   );
-  container.addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+  container.addSeparatorComponents(
+    new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }),
+  );
 
-  // Content
-  const display = snipe.content
+  // ── Info section (with author avatar thumbnail) ───────────────────────
+  const textContent = snipe.content
     ? (snipe.content.length > 1500 ? snipe.content.slice(0, 1497) + '…' : snipe.content)
-    : '*No text content*';
+    : null;
 
-  const meta = [
+  const attachmentCount = snipe.attachments.length;
+
+  const bodyLines = [
     `**Author:** <@${snipe.authorId}> (\`${snipe.authorName}\`)`,
-    `**Sent:** ${ts(snipe.createdAt)}  •  **Deleted:** ${ts(snipe.deletedAt)}`,
-    snipe.replyTo
-      ? `**Reply to:** [Jump](https://discord.com/channels/${snipe.guildId}/${snipe.channelId}/${snipe.replyTo})`
-      : null,
-    snipe.sticker    ? `**Sticker:** ${snipe.sticker}` : null,
-    snipe.embedCount ? `**Embeds:** ${snipe.embedCount}` : null,
-    snipe.attachments.length
-      ? `**Attachments:** ${snipe.attachments.length}`
-      : null,
-    '',
-    display,
-  ].filter((l): l is string => l !== null).join('\n');
+    `**Sent at:** ${ts(snipe.createdAt)}`,
+    `**Deleted at:** ${ts(snipe.deletedAt)}`,
+    textContent
+      ? `**Text Content:**\n${textContent}`
+      : `**Text Content:** None`,
+    attachmentCount > 0
+      ? `**Attachments:** ${attachmentCount}`
+      : `**Attachments:** None.`,
+  ].join('\n');
 
   if (snipe.authorAvatar) {
     container.addSectionComponents(
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(meta))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
         .setThumbnailAccessory(new ThumbnailBuilder().setURL(snipe.authorAvatar)),
     );
   } else {
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(meta));
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines));
   }
 
-  // First image attachment if any
-  const img = snipe.attachments.find(isImageUrl);
-  if (img) {
-    container.addSeparatorComponents(new SeparatorBuilder().setDivider(false));
-    container.addMediaGalleryComponents(
-      new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(img)),
+  // ── Attachments (only when present) ───────────────────────────────────
+  if (attachmentCount > 0) {
+    container.addSeparatorComponents(
+      new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }),
     );
+
+    const images    = snipe.attachments.filter(isImageUrl);
+    const nonImages = snipe.attachments.filter((a) => !isImageUrl(a));
+
+    if (images.length) {
+      container.addMediaGalleryComponents(
+        new MediaGalleryBuilder().addItems(
+          ...images.slice(0, MAX_GALLERY_ITEMS).map((url) => new MediaGalleryItemBuilder().setURL(url)),
+        ),
+      );
+    }
+
+    if (attachmentCount > 1 || nonImages.length) {
+      const isMultiple = attachmentCount > 1;
+      const links = snipe.attachments
+        .map((url, i) =>
+          isMultiple
+            ? `[Attachment ${i + 1}](${url})`
+            : `[${attachmentFileName(url)}](${url})`,
+        )
+        .join('\n');
+      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(links));
+    }
   }
 
-  container.addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+  // ── Footer ────────────────────────────────────────────────────────────
+  container.addSeparatorComponents(
+    new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }),
+  );
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent('-# Snipe data is lost when the bot restarts.'),
   );

@@ -17,7 +17,7 @@ export const options = {
   aliases: [] as string[],
   description: "Remove this server's custom prefix and revert to the global default.",
   usage: 'resetprefix',
-  category: 'server',
+  category: 'utility',
   owner: false,
   cooldown: 5,
 };

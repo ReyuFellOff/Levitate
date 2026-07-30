@@ -22,7 +22,7 @@ export const options = {
   aliases:     ['ui', 'whois'] as string[],
   description: 'Show detailed information about a user.',
   usage:       'userinfo [@user | user ID | username]',
-  category:    'server',
+  category:    'utility',
   owner:       false,
   cooldown:    5,
 };
@@ -43,9 +43,12 @@ async function fetchUserData(
   if (!fullUser) return null;
 
   // Force-fetch member so their guild-specific avatar/banner are populated.
-  const member = await guild.members
-    .fetch({ user: fullUser.id, force: true })
-    .catch((): null => null);
+  // When the bot is not in the guild (user-install context), guild is null.
+  const member = guild
+    ? await guild.members
+        .fetch({ user: fullUser.id, force: true })
+        .catch((): null => null)
+    : null;
 
   const globalAvatarUrl: string       = fullUser.displayAvatarURL({ size: 4096 });
   const serverAvatarUrl: string | null =
@@ -54,7 +57,7 @@ async function fetchUserData(
   const globalBannerUrl: string | null = fullUser.bannerURL({ size: 4096 }) ?? null;
   const serverBannerUrl: string | null = member?.bannerURL?.({ size: 4096 }) ?? null;
 
-  const isOwner = guild.ownerId === fullUser.id;
+  const isOwner = guild ? guild.ownerId === fullUser.id : false;
 
   // ── Server-tag image URLs ────────────────────────────────────────────────
   // primaryGuild has: { identityGuildId, identityEnabled, tag, badge }
@@ -262,8 +265,7 @@ export async function slashExecute(
 ): Promise<any> {
   await interaction.deferReply();
   const ctx   = { interaction };
-  const guild = interaction.guild;
-  if (!guild) return sendError(ctx, 'This command can only be used in a server.');
+  const guild = interaction.guild ?? null;
 
   const rawUser = (interaction.options.getUser('user') as any) ?? interaction.user;
   const data    = await fetchUserData(client, guild, rawUser);

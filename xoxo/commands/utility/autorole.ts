@@ -19,7 +19,7 @@ export const options = {
   aliases:     ['ar', 'autoroles'] as string[],
   description: 'Configure roles automatically given to new members and bots when they join.',
   usage:       'autorole',
-  category:    'utility',
+  category:    'features',
   owner:       false,
   cooldown:    3,
 };

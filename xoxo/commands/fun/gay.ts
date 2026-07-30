@@ -19,8 +19,8 @@ import { resolveUser } from '../../helpers/userResolver.js';
 import { resolveRatingPct } from '../../helpers/ratingBias.js';
 
 export const options = {
-  name:        'gay',
-  aliases:     ['howgay'] as string[],
+  name:        'howgay',
+  aliases:     ['gay'] as string[],
   description: 'See how gay someone is.',
   usage:       'gay\ngay <@user|ID|username>',
   category:    'fun',
@@ -69,10 +69,11 @@ export async function prefixExecute(
 
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
-  if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
 
   const rawUser = interaction.options.getUser('user') ?? interaction.user;
-  const member  = await interaction.guild.members.fetch(rawUser.id).catch((): null => null);
+  const member  = interaction.guild
+    ? await interaction.guild.members.fetch(rawUser.id).catch((): null => null)
+    : null;
   const displayName: string = (member as any)?.displayName ?? rawUser.globalName ?? rawUser.username ?? '?';
 
   const pct = await resolveRatingPct(client, 'gay', rawUser.id, rollGay);

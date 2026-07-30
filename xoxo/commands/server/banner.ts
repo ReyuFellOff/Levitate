@@ -28,7 +28,7 @@ export const options = {
   banner <user ID>
   banner bot
   banner server`,
-  category: 'server',
+  category: 'utility',
   owner: false,
   cooldown: 3,
 };
@@ -93,9 +93,8 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   const sendFirst = (payload: any) => interaction.editReply(payload);
 
-  if (!guild) return sendError({ interaction }, 'This command can only be used in a server.');
-
   if (specialArg === 'server') {
+    if (!guild) return sendError({ interaction }, 'Server banner is not available outside a server the bot is in.');
     const bannerUrl = guild.bannerURL({ size: 4096 });
     if (!bannerUrl) return sendError({ interaction }, 'This server does not have a banner.');
     return sendImagePanel({ channel, sendAsReply: sendFirst, title: "Server's Banner", imageUrl: bannerUrl, requesterId, idPrefix: 'bn' });
@@ -103,7 +102,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   if (specialArg === 'bot') {
     const botUser = await client.users.fetch(client.user!.id, { force: true });
-    const botMember = await guild.members.fetch({ user: client.user!.id, force: true }).catch((): null => null);
+    const botMember = guild
+      ? await guild.members.fetch({ user: client.user!.id, force: true }).catch((): null => null)
+      : null;
     const globalBannerUrl: string | null = botUser.banner ? botUser.bannerURL({ size: 4096 }) : null;
     const serverBannerUrl: string | null = botMember?.banner ? botMember.bannerURL({ size: 4096 }) : null;
 
@@ -120,7 +121,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   const rawUser = targetOption ?? interaction.user;
   const fullUser = await client.users.fetch(rawUser.id, { force: true });
-  const member = await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null);
+  const member = guild
+    ? await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null)
+    : null;
   const globalBannerUrl: string | null = fullUser.banner ? fullUser.bannerURL({ size: 4096 }) : null;
   const serverBannerUrl: string | null = member?.banner ? member.bannerURL({ size: 4096 }) : null;
 

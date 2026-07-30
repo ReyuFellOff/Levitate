@@ -18,7 +18,7 @@ export const options = {
   aliases: ['memcount', 'mc'] as string[],
   description: "Show the server's member count breakdown.",
   usage: 'membercount',
-  category: 'server',
+  category: 'utility',
   owner: false,
   cooldown: 5,
 };

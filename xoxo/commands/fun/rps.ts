@@ -96,7 +96,6 @@ export async function prefixExecute(
 
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
-  if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
 
   const scopeId    = interaction.id;
   const authorName = (interaction.member as any)?.displayName ?? interaction.user.username;
@@ -111,7 +110,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
     if (mentionedUser.bot)
       return sendError({ interaction }, "You can't challenge a bot.");
 
-    const opponentMember = await interaction.guild.members.fetch(mentionedUser.id).catch((): null => null);
+    const opponentMember = interaction.guild
+      ? await interaction.guild.members.fetch(mentionedUser.id).catch((): null => null)
+      : null;
     const opponentName   = (opponentMember as any)?.displayName ?? mentionedUser.username;
 
     const msg = await interaction.editReply(

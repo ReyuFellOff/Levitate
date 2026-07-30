@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('vanity')
@@ -8,4 +8,6 @@ export const data = new SlashCommandBuilder()
       .setDescription('The vanity code or full discord.gg link to look up.')
       .setRequired(true)
       .setMaxLength(64),
-  );
+  )
+  .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

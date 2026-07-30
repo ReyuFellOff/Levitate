@@ -202,7 +202,6 @@ export async function prefixExecute(
 
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
-  if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
 
   const optUser1 = interaction.options.getUser('user')  ?? null;
   const optUser2 = interaction.options.getUser('user2') ?? null;
@@ -211,7 +210,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   let user2: any;
 
   if (!optUser1 && !optUser2) {
-    // No args — author × random non-bot member
+    // No args — author × random non-bot member (requires guild)
+    if (!interaction.guild)
+      return sendError({ interaction }, 'Provide a user to ship with when using this outside a server the bot is in.');
     user2 = await pickRandomMember(interaction.guild, [user1.id]);
     if (!user2) return sendError({ interaction }, 'There are no other non-bot members to ship with.');
   } else if (optUser1 && !optUser2) {

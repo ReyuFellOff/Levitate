@@ -22,7 +22,7 @@ export const options = {
   aliases:     ['si', 'guildinfo', 'guild'] as string[],
   description: 'Show detailed information about this server across 5 interactive tabs.',
   usage:       'serverinfo',
-  category:    'server',
+  category:    'utility',
   owner:       false,
   cooldown:    5,
 };

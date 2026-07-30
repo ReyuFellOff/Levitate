@@ -75,7 +75,7 @@ export function buildNowPlayingPayload(
   const isAutoplay = player.data?.get('isAutoplay') ?? false;
   const autoStyle  = !allDisabled && isAutoplay ? ButtonStyle.Primary : ButtonStyle.Secondary;
 
-  const requestedLine   = track.requestedBy ? `\n**Requested:** ${track.requestedBy}` : '';
+  const requestedLine   = track.requestedBy ? `\n**Requester:** ${track.requestedBy}` : '';
   const serverVolSuffix = track.isServerVolume ? ' (Server volume)' : '';
 
   const trackDetails = isPeek
@@ -162,6 +162,22 @@ export function buildNowPlayingPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerText));
 
   return { components: [mainContainer], flags: MessageFlags.IsComponentsV2 };
+}
+
+/** CV2 payload shown in place of the now-playing panel once `player:stop` is pressed. */
+export function buildPlayerStoppedPayload(trackTitle?: string): any {
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `${emojis.stop} Playback stopped${trackTitle ? ` — **${trackTitle}**` : ''}.`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent('-# Disconnected from the voice channel.'),
+    );
+
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
 }
 
 export async function sendNowPlaying(

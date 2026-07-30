@@ -41,6 +41,7 @@ import {
   type BotInstance,
 } from '../config/botInstances.js';
 import { StatusManager } from './StatusManager.js';
+import { startNodeManager } from '../helpers/nodeManager.js';
 
 function buildClientOptions() {
   const matched = findBotInstanceByClientId(process.env['DISCORD_CLIENT_ID'] ?? null);
@@ -194,7 +195,13 @@ export class LevitateClient extends Client {
     );
   }
 
-  /** Add all configured Lavalink nodes. Call AFTER event handlers are registered. */
+  /**
+   * Connect the first configured Lavalink node via the sequential node manager.
+   * The manager connects only ONE node at a time (best first) and fails over to
+   * the next one if that node proves unhealthy — this prevents the console spam
+   * caused by multiple nodes all retrying in parallel forever.
+   * Call AFTER event handlers are registered so 'error'/'close'/'ready' are wired.
+   */
   connectLavalinkNodes(): void {
     // shoukaku.id is set by connector.ready() → this.manager.id = this.getId().
     // Because initKazagumo() is called inside the Discord ready handler, that
@@ -205,14 +212,7 @@ export class LevitateClient extends Client {
     }
 
     const cfgNodes: any[] = (this.config as any).nodes ?? [];
-    for (const n of cfgNodes) {
-      this.kazagumo.shoukaku.addNode({
-        name:   n.name,
-        url:    `${n.host}:${n.port}`,
-        auth:   n.auth,
-        secure: n.secure ?? false,
-      });
-    }
+    startNodeManager(this, cfgNodes);
   }
 
   /** Returns true if this instance is configured to show the mobile indicator. */

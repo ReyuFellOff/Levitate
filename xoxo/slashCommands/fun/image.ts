@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('image')
@@ -8,4 +8,6 @@ export const data = new SlashCommandBuilder()
       .setDescription('What to search for.')
       .setRequired(true)
       .setMaxLength(200),
-  );
+  )
+  .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

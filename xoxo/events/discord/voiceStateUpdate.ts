@@ -8,7 +8,7 @@
 
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
-import { scheduleRejoin } from '../../helpers/twentyFourSeven.js';
+import { scheduleRejoin, clearRejoin } from '../../helpers/twentyFourSeven.js';
 import {
   buildVoiceJoinPayload,
   buildVoiceLeavePayload,
@@ -26,19 +26,42 @@ export async function execute(oldState: any, newState: any, client: LevitateClie
   if (!member) return;
 
   // ── 24/7 bot reconnect logic ─────────────────────────────────────────────
-  // Only fires when the bot itself is disconnected from a VC.
-  // We destroy the player FIRST so that playerDestroy fires (and its
-  // clearRejoin() runs) BEFORE we schedule the rejoin. This avoids the race
-  // where clearRejoin() would cancel the rejoin we're about to schedule.
-  if (member.id === client.user?.id && oldState.channelId && !newState.channelId) {
-    const player = client.kazagumo?.players?.get(guild.id);
-    if (player) await player.destroy().catch((): null => null);
-
+  // Fires when the bot itself is disconnected OR moved to a different VC.
+  if (member.id === client.user?.id && oldState.channelId && oldState.channelId !== newState.channelId) {
     const is247 = await (client as any).db?.get24Seven?.(guild.id).catch((): null => null);
-    if (is247?.enabled) {
-      scheduleRejoin(client, guild.id, is247.channelId, 2000);
+
+    if (!newState.channelId) {
+      // Full disconnect (kicked, channel deleted, etc).
+      // We destroy the player FIRST so that playerDestroy fires (and its
+      // clearRejoin() runs) BEFORE we schedule the rejoin. This avoids the
+      // race where clearRejoin() would cancel the rejoin we're about to
+      // schedule.
+      const player = client.kazagumo?.players?.get(guild.id);
+      if (player) await player.destroy().catch((): null => null);
+
+      if (is247?.enabled) {
+        scheduleRejoin(client, guild.id, is247.channelId, 2000);
+      }
+    } else if (is247?.enabled) {
+      // Moved to a different channel (e.g. dragged by a moderator) without
+      // ever fully disconnecting — the disconnect branch above never fires
+      // for this, so without this check the bot would just stay put forever.
+      if (newState.channelId === is247.channelId) {
+        // Moved right back into the 24/7 channel — nothing pending to cancel.
+        clearRejoin(guild.id);
+      } else {
+        const player = client.kazagumo?.players?.get(guild.id);
+        const isIdle = !player || (!player.playing && !player.paused);
+        if (isIdle) {
+          // Nothing playing to interrupt — pull it back promptly.
+          scheduleRejoin(client, guild.id, is247.channelId, 3000);
+        }
+        // Else: actively playing in the new channel — let queueEnd's own
+        // 24/7 check bring it back once that track/queue finishes, instead
+        // of yanking the bot mid-song.
+      }
     }
-    // Fall through so leave is still logged below.
+    // Fall through so the join/leave/move is still logged below.
   }
 
   const oldChannel = oldState.channel;

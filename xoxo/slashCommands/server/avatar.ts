@@ -1,5 +1,5 @@
 // xoxo/slashCommands/utility/avatar.ts
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('avatar')
@@ -17,4 +17,6 @@ export const data = new SlashCommandBuilder()
         { name: 'Bot', value: 'bot' },
         { name: 'Server Icon', value: 'server' },
       ),
-  );
+  )
+  .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

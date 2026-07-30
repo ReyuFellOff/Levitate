@@ -21,7 +21,7 @@ export const options = {
   aliases: ['prefix', 'changeprefix'],
   description: "Set or reset this server's custom command prefix.",
   usage: 'setprefix <new prefix | reset>',
-  category: 'server',
+  category: 'utility',
   owner: false,
   cooldown: 5,
 };

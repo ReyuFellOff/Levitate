@@ -1,10 +1,16 @@
 // xoxo/events/node/nodeError.ts
-// Shoukaku event: 'error' — fires when a node emits an error
-// Silences duplicate errors per node; clears on successful reconnect.
+// Shoukaku event: 'error' — fires when a node emits an error.
+//
+// Routes errors through the node manager's failure counter so persistent error
+// storms can trigger a failover to the next node. Also silences duplicate error
+// codes per node to avoid repeating the same error message endlessly.
+
+import { reportNodeFailure } from '../../helpers/nodeManager.js';
 
 // Set of "nodeName::code" keys we have already logged.
 const silenced = new Set<string>();
 
+/** Clear per-node error silencing when that node successfully (re)connects. */
 export function clearNodeSilence(nodeName: string): void {
   for (const key of silenced) {
     if (key.startsWith(`${nodeName}::`)) silenced.delete(key);
@@ -30,6 +36,11 @@ export const name = 'error';
 export const type = 'node';
 
 export const execute = (client: any, nodeName: string, error: any): void => {
+  // Notify the node manager — counts toward the failover threshold.
+  const failedOver = reportNodeFailure(client, nodeName);
+  if (failedOver) return; // Manager already logged a clear failover message.
+
+  // If another node is already connected, suppress noise from this one.
   if (hasConnectedNode(client, nodeName)) return;
 
   const code = errorCode(error);

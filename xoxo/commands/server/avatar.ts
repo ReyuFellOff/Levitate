@@ -76,7 +76,7 @@ export const options = {
   avatar <user ID>
   avatar bot
   avatar server`,
-  category: 'server',
+  category: 'utility',
   owner: false,
   cooldown: 3,
 };
@@ -203,9 +203,8 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   const sendFirst = (payload: any) => interaction.editReply(payload);
 
-  if (!guild) return sendError({ interaction }, 'This command can only be used in a server.');
-
   if (specialArg === 'server') {
+    if (!guild) return sendError({ interaction }, 'Server icon is not available outside a server the bot is in.' );
     const iconUrl = guild.iconURL({ size: 4096 });
     if (!iconUrl) return sendError({ interaction }, 'This server does not have an icon.');
     return sendImagePanel({ channel, sendAsReply: sendFirst, title: "Server's Icon", imageUrl: iconUrl, requesterId, idPrefix: 'av' });
@@ -213,7 +212,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   if (specialArg === 'bot') {
     const botUser = await client.users.fetch(client.user!.id, { force: true });
-    const botMember = await guild.members.fetch({ user: client.user!.id, force: true }).catch((): null => null);
+    const botMember = guild
+      ? await guild.members.fetch({ user: client.user!.id, force: true }).catch((): null => null)
+      : null;
     const hasServerAvatar = !!(botMember?.avatar);
     const globalUrl: string = botUser.displayAvatarURL({ size: 4096 });
     const serverUrl: string | null = botMember ? botMember.displayAvatarURL({ size: 4096 }) : null;
@@ -228,7 +229,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   const rawUser = targetOption ?? interaction.user;
   const fullUser = await client.users.fetch(rawUser.id, { force: true });
-  const member = await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null);
+  const member = guild
+    ? await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null)
+    : null;
   const hasServerAvatar = !!(member?.avatar);
   const globalUrl: string = fullUser.displayAvatarURL({ size: 4096 });
   const serverUrl: string | null = member ? member.displayAvatarURL({ size: 4096 }) : null;

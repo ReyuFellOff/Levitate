@@ -28,7 +28,11 @@ function resolveVoiceChannel(guild: any, raw: string | null): any | null {
   const idMatch = raw.match(/^<#(\d+)>$/) ?? raw.match(/^(\d{17,20})$/);
   const channelId = idMatch ? idMatch[1] : raw.trim();
   const channel = guild.channels.cache.get(channelId);
-  if (!channel || channel.type !== ChannelType.GuildVoice) return null;
+  // isVoiceBased() covers both regular voice and stage channels — the slash
+  // variant's addChannelTypes() already allows both, so the prefix path must
+  // match or `24/7 enable <stage-channel-id>` would silently reject a value
+  // the slash command happily accepts.
+  if (!channel || !channel.isVoiceBased?.()) return null;
   return channel;
 }
 
@@ -72,6 +76,15 @@ async function handleEnable(
     targetChannel = botVoice;
   }
 
+  // Check permissions up front — a bad Connect/Speak grant otherwise saves
+  // fine to the DB but the bot then silently fails to actually be there,
+  // and every future rejoin attempt (boot, disconnect, queue-end) fails too.
+  const botMember = guild.members.me;
+  const perms = botMember ? targetChannel.permissionsFor(botMember) : null;
+  if (!perms?.has('Connect') || !perms?.has('Speak')) {
+    return sendError(ctxObj, `I don't have permission to join or speak in <#${targetChannel.id}>. Please grant Connect and Speak first.`);
+  }
+
   // If already enabled in the same channel, skip.
   const current = await client.db?.get24Seven(guild.id).catch((): null => null);
   if (current?.enabled && current.channelId === targetChannel.id) {
@@ -96,8 +109,18 @@ async function handleEnable(
       deaf: true,
     }).catch((): null => null);
   } else if (player.voiceId !== targetChannel.id) {
-    // Bot is in a different VC — move immediately (delay 0).
-    scheduleRejoin(client, guild.id, targetChannel.id, 0);
+    // Bot is in a different VC — move the existing voice connection instead
+    // of destroying the player. scheduleRejoin(..., 0) used to be called
+    // here, which hard-destroys the player first — killing any in-progress
+    // playback/queue just because someone locked 24/7 to a new channel.
+    try {
+      player.setVoiceChannel(targetChannel.id);
+      player.textId = textId;
+    } catch {
+      // Fallback for a Kazagumo version without setVoiceChannel — still
+      // correct, just loses the current queue like the old behaviour.
+      scheduleRejoin(client, guild.id, targetChannel.id, 0);
+    }
   }
   // If already in targetChannel, nothing to do — bot stays.
 

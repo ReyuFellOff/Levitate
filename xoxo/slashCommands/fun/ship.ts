@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('ship')
@@ -12,4 +12,6 @@ export const data = new SlashCommandBuilder()
     o.setName('user2')
       .setDescription('Second user to ship. If omitted, a random member is picked.')
       .setRequired(false),
-  );
+  )
+  .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

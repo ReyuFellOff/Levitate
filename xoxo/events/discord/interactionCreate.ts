@@ -75,6 +75,10 @@ import {
   resetQueueTimeout,
 } from '../../components/music/queueMenu.js';
 import { jumpTo } from '../../helpers/sessionQueue.js';
+import { clearSession } from '../../helpers/sessionQueue.js';
+import { clearRejoin } from '../../helpers/twentyFourSeven.js';
+import { buildPlayerStoppedPayload } from '../../components/music/nowPlaying.js';
+import { clearPlayerState, updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
 
 export const name = 'interactionCreate';
 export const once = false;
@@ -90,7 +94,7 @@ export const once = false;
 const REGISTERED_CUSTOM_ID_PREFIXES = [
   'logcfg', 'rps', 'image', 'ns', 'vr', 'vr-modal', 'ar',
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
-  'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue',
+  'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue', 'player',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -293,6 +297,10 @@ export async function execute(interaction: any, client: LevitateClient): Promise
     }
     if (prefix === 'queue') {
       await handleQueueButton(interaction, action, client);
+      return;
+    }
+    if (prefix === 'player') {
+      await handlePlayerButton(interaction, action, client);
       return;
     }
     return;
@@ -502,6 +510,86 @@ async function handleQueueGotoModal(interaction: any, client: LevitateClient): P
       flags: MessageFlags.Ephemeral,
     }).catch((): null => null);
   }
+}
+
+// ── Now-playing player control buttons ──────────────────────────────────────
+
+const LOOP_CYCLE: Record<string, string> = { none: 'track', track: 'queue', queue: 'none' };
+
+async function handlePlayerButton(interaction: any, action: string, client: LevitateClient): Promise<void> {
+  const guildId = interaction.guildId as string;
+  const player  = (client as any).kazagumo?.players?.get(guildId);
+
+  if (!player?.queue?.current) {
+    await interaction.reply({
+      content: 'There is nothing currently playing.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
+
+  await interaction.deferUpdate().catch((): null => null);
+
+  try {
+    switch (action) {
+      case 'previous': {
+        // getPrevious(true) also removes it from queue.previous
+        const prevTrack = player.getPrevious ? player.getPrevious(true) : player.queue.previous?.shift();
+        if (prevTrack) {
+          player.queue.unshift(prevTrack);
+          player.skip(); // playerStart re-renders the now-playing message
+        } else {
+          await player.seek(0).catch((): null => null);
+          await updateNowPlayingMessage(client as any, player).catch((): null => null);
+        }
+        return;
+      }
+      case 'skip': {
+        if (player.queue.length > 0) player.skip(); // playerStart re-renders the now-playing message
+        return;
+      }
+      case 'pause': {
+        player.pause(!player.paused);
+        break;
+      }
+      case 'stop': {
+        const stoppedTitle = player.queue.current?.title;
+        clearPlayerState(guildId);
+        clearSession(player);
+        clearRejoin(guildId);
+        await player.destroy();
+        await interaction.editReply(buildPlayerStoppedPayload(stoppedTitle)).catch((): null => null);
+        return;
+      }
+      case 'volDown': {
+        const next = Math.max(0, (player.volume ?? 100) - 10);
+        await player.setVolume(next);
+        break;
+      }
+      case 'volUp': {
+        const next = Math.min(100, (player.volume ?? 100) + 10);
+        await player.setVolume(next);
+        break;
+      }
+      case 'loop': {
+        player.setLoop(LOOP_CYCLE[player.loop ?? 'none'] ?? 'track');
+        break;
+      }
+      case 'autoplay': {
+        const cur = player.data?.get('isAutoplay') ?? false;
+        player.data?.set('isAutoplay', !cur);
+        break;
+      }
+      default:
+        return;
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[interactionCreate] Error in player control "${action}": ${msg}`);
+    return;
+  }
+
+  await updateNowPlayingMessage(client as any, player).catch((): null => null);
 }
 
 // ── Debug nav handler ──────────────────────────────────────────────────────

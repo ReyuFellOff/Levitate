@@ -7,6 +7,7 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildChannelDeletePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
+import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 
 export const name = 'channelDelete';
 export const once = false;
@@ -19,6 +20,18 @@ export async function execute(channel: any, client: LevitateClient): Promise<voi
   await dispatchLog(client, channel.guild.id, 'channel', [channel.id], payload);
 
   const guild = channel.guild;
+
+  // If the deleted channel was the configured 24/7 channel, disable it —
+  // otherwise every future rejoin attempt (boot, disconnect, queue-end)
+  // keeps failing forever against a channel ID that no longer exists.
+  if (client.db) {
+    const is247 = await client.db.get24Seven(guild.id).catch((): null => null);
+    if (is247?.enabled && is247.channelId === channel.id) {
+      clearRejoin(guild.id);
+      await client.db.clear24Seven(guild.id).catch((): null => null);
+      console.log(`[24-7] Disabled in ${guild.name}: configured channel #${channel.name} was deleted.`);
+    }
+  }
   const snapshot = {
     name: channel.name,
     type: channel.type,

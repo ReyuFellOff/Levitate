@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('whowouldwin')
@@ -12,4 +12,6 @@ export const data = new SlashCommandBuilder()
     o.setName('user2')
       .setDescription('Second user. If omitted, you are the challenger.')
       .setRequired(false),
-  );
+  )
+  .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

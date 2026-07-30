@@ -52,7 +52,19 @@ export async function registerSlashCommands(client: LevitateClient): Promise<voi
 
   try {
     await rest.put(Routes.applicationCommands(clientId), {
-      body: builders.map((b) => b.toJSON()),
+      body: builders.map((b) => {
+        const json = b.toJSON() as Record<string, any>;
+        // If the builder didn't call setIntegrationTypes(), Discord (for apps
+        // with user-install enabled) may surface the command to user-install
+        // users in every server, even ones the bot isn't in.  Stamp it
+        // explicitly as GuildInstall-only (0) so it only appears where the bot
+        // is a guild member.
+        if (!Array.isArray(json.integration_types)) {
+          json.integration_types = [0];
+          json.contexts          = [0]; // Guild context only
+        }
+        return json;
+      }),
     });
     console.log(`[SLASH REG] Registered ${builders.length} slash command(s) globally.`);
     (client as any).slashCommandsSynced = true;

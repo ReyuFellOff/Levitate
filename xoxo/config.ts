@@ -211,13 +211,6 @@ export const config: Config = {
       auth:   'youshallnotpass',
       secure: false,
     },
-    {
-      host:   '89.106.84.59',
-      port:   4000,
-      name:   'HeavenCloud',
-      auth:   'heavencloud.in',
-      secure: false,
-    },
   ],
 
   // ── 8. Default presence ────────────────────────────────────────────────────
