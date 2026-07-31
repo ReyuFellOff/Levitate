@@ -195,22 +195,20 @@ export async function prefixExecute(message: any, args: string[], client: Levita
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
 
+  const sub: string = interaction.options.getSubcommand();
   const guild = interaction.guild;
   const requesterId: string = interaction.user.id;
   const channel = interaction.channel;
-  const targetOption: any = interaction.options.getUser('user') ?? null;
-  const specialArg: string | null = interaction.options.getString('target') ?? null;
-
   const sendFirst = (payload: any) => interaction.editReply(payload);
 
-  if (specialArg === 'server') {
-    if (!guild) return sendError({ interaction }, 'Server icon is not available outside a server the bot is in.' );
+  if (sub === 'server') {
+    if (!guild) return sendError({ interaction }, 'Server icon is not available outside a server the bot is in.');
     const iconUrl = guild.iconURL({ size: 4096 });
     if (!iconUrl) return sendError({ interaction }, 'This server does not have an icon.');
     return sendImagePanel({ channel, sendAsReply: sendFirst, title: "Server's Icon", imageUrl: iconUrl, requesterId, idPrefix: 'av' });
   }
 
-  if (specialArg === 'bot') {
+  if (sub === 'bot') {
     const botUser = await client.users.fetch(client.user!.id, { force: true });
     const botMember = guild
       ? await guild.members.fetch({ user: client.user!.id, force: true }).catch((): null => null)
@@ -218,7 +216,6 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
     const hasServerAvatar = !!(botMember?.avatar);
     const globalUrl: string = botUser.displayAvatarURL({ size: 4096 });
     const serverUrl: string | null = botMember ? botMember.displayAvatarURL({ size: 4096 }) : null;
-
     if (hasServerAvatar && serverUrl) {
       return sendWithChoice(channel, sendFirst, 'Bot', requesterId, (t) =>
         t === 'server' ? serverUrl : globalUrl,
@@ -227,7 +224,8 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
     return sendImagePanel({ channel, sendAsReply: sendFirst, title: avatarTitle('Bot', 'global'), imageUrl: globalUrl, requesterId, idPrefix: 'av' });
   }
 
-  const rawUser = targetOption ?? interaction.user;
+  // sub === 'user' | 'self'
+  const rawUser = sub === 'user' ? interaction.options.getUser('user') : interaction.user;
   const fullUser = await client.users.fetch(rawUser.id, { force: true });
   const member = guild
     ? await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null)

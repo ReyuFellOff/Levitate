@@ -1,6 +1,6 @@
 # Levitate — Project Bible (`grace.md`)
 
-> **Last updated:** 2026-07-26 (server-owner role hierarchy bypass, help prefix label, bot-tag user resolution)  
+> **Last updated:** 2026-07-31 (avatar/banner slash subcommands; seek try-catch; loading text size; duration snapshot; help mention removed; alias format + footer; invite command)  
 > This document is the exhaustive reference for the Levitate Discord bot codebase. It covers every layer: architecture, startup, structures, loaders, events, commands, components, helpers, utilities, configuration, and database. Read it before touching anything. Keep it updated whenever you make a non-trivial change.
 
 ---

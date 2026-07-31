@@ -27,7 +27,8 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
 
   clearPlayerState(guildId);
   clearSession(player);
-  clearRejoin(guildId);
+  // Do NOT clearRejoin here — if 24/7 is enabled, voiceStateUpdate will
+  // schedule a rejoin after the disconnect, and we must not pre-cancel it.
   await player.destroy();
 
   return sendSuccess(ctxObj, 'Stopped playback and disconnected.');

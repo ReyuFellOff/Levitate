@@ -44,9 +44,9 @@ export async function sendLoadingMessage(
 ): Promise<Message | void> {
   let content: string;
   switch (loadingType) {
-    case 'track':    content = `# ${emojis.loading} Adding **${query}**...`; break;
-    case 'playlist': content = `# ${emojis.loading} Adding the playlist **${query}**...`; break;
-    default:         content = `# ${emojis.loading} Searching for **"${query}"**...`;
+    case 'track':    content = `## ${emojis.loading} Adding **${query}**...`; break;
+    case 'playlist': content = `## ${emojis.loading} Adding the playlist **${query}**...`; break;
+    default:         content = `## ${emojis.loading} Searching for **"${query}"**...`;
   }
 
   const container = new ContainerBuilder().addTextDisplayComponents(

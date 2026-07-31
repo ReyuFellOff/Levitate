@@ -134,6 +134,12 @@ export interface Config {
 
 export const botName = "Levitate";
 
+/** Canonical bot invite link — no extra permission/scope query params. */
+export function getInviteUrl(clientId: string | undefined | null): string | null {
+  if (!clientId) return null;
+  return `https://discord.com/oauth2/authorize?client_id=${clientId}`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Config
 // ─────────────────────────────────────────────────────────────────────────────

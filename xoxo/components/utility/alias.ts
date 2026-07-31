@@ -121,7 +121,7 @@ function buildHomePayload(
   } else {
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        slice.map((d) => `${emojis.greentick} \`${d.alias}\` → \`${d.command}\``).join('\n'),
+        slice.map((d) => `${emojis.whiteArrow} **${d.command}** — \`${d.alias}\``).join('\n'),
       ),
     );
   }
@@ -157,12 +157,11 @@ function buildHomePayload(
   }
   container.addActionRowComponents(row);
 
-  container.addSeparatorComponents(new SeparatorBuilder().setDivider(true));
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       readOnly
-        ? `-# Aliases are private — only \`${targetTag}\` can use theirs.`
-        : `-# Private to you, global across all servers — max ${MAX_PER_USER}, one per command, ${MAX_ALIAS_LEN} chars max.`,
+        ? `-# Read-only — \`${targetTag}\`'s private aliases`
+        : `-# Personal aliases · max ${MAX_PER_USER} · global`,
     ),
   );
 

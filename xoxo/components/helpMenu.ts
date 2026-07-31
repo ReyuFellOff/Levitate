@@ -15,6 +15,9 @@ import {
 import type { LevitateClient } from '../structures/LevitateClient.js';
 import { emojis } from '../emojis.js';
 import { categories, excludedCategories } from '../config/categories.js';
+import { getInviteUrl } from '../config.js';
+
+const NO_USER_PING = { parse: [] as any[] };
 
 const INACTIVITY_MS = 3 * 60 * 1000;
 
@@ -114,10 +117,10 @@ function buildHeaderSection(client: LevitateClient, compact = false): SectionBui
 function buildFooterLinks(client: LevitateClient): string | null {
   const clientId = client.config?.clientId ?? '';
   const supportServer: string = (client.config as any).supportServer ?? '';
-  const inviteUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&integration_type=0&scope=bot`;
+  const inviteUrl = getInviteUrl(clientId);
   const parts: string[] = [];
   if (supportServer) parts.push(`[Support Server](${supportServer})`);
-  if (clientId) parts.push(`[Invite Me](${inviteUrl})`);
+  if (inviteUrl) parts.push(`[Invite Me](${inviteUrl})`);
   return parts.length ? parts.join(' • ') : null;
 }
 
@@ -232,6 +235,7 @@ export async function buildHelpMenuPayload(
   return {
     components: [container],
     flags: MessageFlags.IsComponentsV2 | MessageFlags.SuppressNotifications,
+    allowedMentions: NO_USER_PING,
   };
 }
 
@@ -335,6 +339,10 @@ export async function buildCommandInfoPayload(
   const description: string = opts.description ?? 'No description provided.';
   const usageRaw: string = opts.usage ?? name;
   const aliases: string[] = Array.isArray(opts.aliases) ? opts.aliases : [];
+  const categoryName: string = (opts.category ?? '').toLowerCase();
+  const categoryInfo = categories.find((c) => c.name.toLowerCase() === categoryName);
+  const categoryDisplay = categoryInfo?.displayName ??
+    (categoryName ? categoryName.charAt(0).toUpperCase() + categoryName.slice(1) : 'Uncategorised');
   const { prefix } = await resolvePrefix(client, guildId);
 
   const usageLines = usageRaw
@@ -355,6 +363,7 @@ export async function buildCommandInfoPayload(
 
   const body =
     `## ${name} command\n` +
+    `${emojis.whiteArrow} **Category:** ${categoryDisplay}\n` +
     `${emojis.whiteArrow} **Description:** ${description}\n` +
     `${usageBlock}\n` +
     `${emojis.whiteArrow} **Aliases:** ${aliasText}`;

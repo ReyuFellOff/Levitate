@@ -45,7 +45,11 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
     return sendError(ctxObj, `Seek position exceeds track duration (**${Math.floor(length / 1000)}s**).`);
   }
 
-  await player.seekTo(ms);
+  try {
+    await player.seekTo(ms);
+  } catch {
+    return sendError(ctxObj, 'Failed to seek. The track may not support seeking at this time.');
+  }
   await updateNowPlayingMessage(client as any, player).catch((): null => null);
 
   const secs = Math.floor(ms / 1000);
