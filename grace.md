@@ -1,6 +1,6 @@
 # Levitate — Project Bible (`grace.md`)
 
-> **Last updated:** 2026-07-31 (avatar/banner slash subcommands; seek try-catch; loading text size; duration snapshot; help mention removed; alias format + footer; invite command)  
+> **Last updated:** 2026-07-26 (server-owner role hierarchy bypass, help prefix label, bot-tag user resolution)  
 > This document is the exhaustive reference for the Levitate Discord bot codebase. It covers every layer: architecture, startup, structures, loaders, events, commands, components, helpers, utilities, configuration, and database. Read it before touching anything. Keep it updated whenever you make a non-trivial change.
 
 ---
@@ -120,7 +120,7 @@ xoxo/
     info/                   ← ping, debug, help
     moderation/             ← ban, kick, timeout, untimeout, unban, hackban, warn, warnings, clearwarnings, strip, lock, unlock, lockdown, lockdown-lift, …
     utility/                ← avatar, banner, sticky, purge, archive, setprefix, container, …
-    vcControls/             ← mute, unmute, deafen, undeafen, disconnect, shift
+    vcControls/             ← join, leave, rejoin, mute, unmute, deafen, undeafen, disconnect, shift
     welcomer/               ← greet, greet-channel, greet-message, greet-test, …
     customisation/          ← setavatar, setbanner, setbio, setname, resetprofile
     fun/                    ← ship
@@ -468,7 +468,7 @@ The bot supports Discord's user-install model. Users can add the bot as a person
 - Utility: `avatar`, `banner`, `userinfo`, `vanity`, `host-image`
 
 **Guild-less execution rules** (when `interaction.guild` is `null` — user-install in a non-member server):
-- `avatar` / `banner`: skip server-specific paths (server icon, server avatar/banner choice); show global avatar/banner only. The "Server Icon" / "Server Banner" targets return a clear message that the bot must be in the server for those.
+- `avatar` / `banner`: slash builders use **subcommands** (`user [user]`, `bot`, `server`) so options are mutually exclusive — no user+target confusion. In guild-less execution, the `server` subcommand returns a clear message; `user` and `bot` show global avatar/banner only.
 - `userinfo`: `fetchUserData` skips `guild.members.fetch()` and `isOwner` check; all user-level data (flags, badges, server tag, global avatar/banner) still works.
 - `howgay` / `howcute` / `howrizz` / `howsimp` / `howintelligent` / `howautistic`: member fetch for display name is null-safe; falls back to `globalName ?? username`.
 - `wanted` / `whowouldwin`: no guild data needed at all — guard removed.
@@ -692,11 +692,14 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 #### VC Controls
 | Command | Aliases | Description |
 |---|---|---|
+| `$join` | — | Make the bot join a voice channel (your current channel, or specify by name/mention) |
+| `$leave` | — | Make the bot leave the voice channel |
+| `$rejoin` | — | Make the bot rejoin its current voice channel (destroys and recreates the player) |
 | `$mute` | — | Server-mute a voice member |
 | `$unmute` | — | Remove server-mute |
 | `$deafen` | — | Server-deafen a voice member |
 | `$undeafen` | — | Remove server-deafen |
-| `$disconnect` | `$dc`, `$devoice` | Disconnect a member from VC |
+| `$disconnect` | `$dsc`, `$devoice` | Disconnect a member from VC |
 | `$shift` | — | Move a member to a different VC |
 
 #### Welcomer
@@ -896,8 +899,8 @@ Tries to find an emoji by ID in the guild's emoji cache, then the client's appli
 
 ### `parseDuration.ts`
 
-- `parseDurationMs(input): number | null` — parses duration strings like `1h30m`, `7d`, `30s` into milliseconds.
-- `formatDuration(ms): string` — formats milliseconds back into a human-readable string.
+- `parseDuration(input): number | null` — parses duration strings like `1h30m`, `7d`, `30s`, `1dec` into milliseconds. Supported units: `s`, `m`, `h`, `d`, `w`, `mo`, `y`, `dec` (decade) plus their long-form aliases (seconds, minutes, hours, days, weeks, months, years, decade/decades). Mixed units allowed: `1h30m`. **Max: 10 decades** (~316 years); returns `null` if exceeded.
+- `formatDuration(ms): string` — formats milliseconds back into a human-readable string. Includes decades as the largest unit.
 
 ### `devTimeTweak.ts` — `parseTimeExpression(token, now)`
 
@@ -1875,7 +1878,7 @@ HeavenCloud was removed — it was unreliable and the spam originated from it be
 
 | File | Shoukaku event | What it does |
 |---|---|---|
-| `nodeConnect.ts` | `ready` | Calls `reportNodeReady` + `clearNodeSilence`, logs connect/resume, triggers 24/7 boot restore |
+| `nodeConnect.ts` | `ready` | Calls `reportNodeReady` + `clearNodeSilence`, logs connect/resume, triggers 24/7 boot restore (`reconnectAllOnBoot`) **and** mid-session node-recovery restore (`reconnectAfterNodeRecover`) |
 | `nodeDestroy.ts` | `close` | Calls `reportNodeFailure` — only logs if no failover was triggered |
 | `nodeError.ts` | `error` | Calls `reportNodeFailure` — only logs if no failover was triggered and the error code is new |
 | `nodeDisconnect.ts` | `disconnect` | Calls `reportNodeGaveUp` (immediate failover) for connection-lost; logs silently for player-move |
@@ -1888,7 +1891,63 @@ HeavenCloud was removed — it was unreliable and the spam originated from it be
 
 ---
 
-## 38. Developer Notes & Conventions
+## 38. Music & 24/7 System
+
+### Overview
+
+Music is powered by **Kazagumo v3** (queue / player abstraction) over **Shoukaku v4** (Lavalink WebSocket layer). The Lavalink REST / WS backend is managed by the node manager (§37).
+
+All music commands live in `xoxo/commands/music/` with `category: 'music'`. Source search goes through `xoxo/helpers/sourceSearch.ts` (`unifiedSearch`), which tries LavaSrc Spotify → fallback YouTube search → indirect Spotify → other sources in sequence.
+
+### Player Lifecycle
+
+| Kazagumo event | Handler file | What it does |
+|---|---|---|
+| `playerStart` | `trackStart.ts` | Sends/updates the now-playing message, sets voice status |
+| `playerEnd` | `trackEnd.ts` | Starts inactivity timer (guarded — skips if 24/7 enabled) |
+| `playerEmpty` | `queueEnd.ts` | Disables NP buttons, sends queue-end notice; if 24/7 and in right channel stays connected; if 24/7 and wrong channel schedules rejoin (2 min) |
+| `playerDestroy` | `playerDisconnect.ts` | Clears player state, rejoin timer, and session state |
+| `playerResumed` | `playerMove.ts` | Logs node migration (no action needed) |
+
+### Duration Handling
+
+`KazagumoTrack.length` is set from `raw.info.length` (ms, from Lavalink) at search time. For tracks that undergo lazy resolution (e.g. Spotify passthrough → YouTube fallback), `track.length` may be updated by `track.resolve()` when playback begins — meaning the value at search time can differ slightly from the value once playing.
+
+**In `nowPlayingManager.ts`'s `buildTrackInfo`:** the authoritative length is pulled from `player.shoukaku?.track?.info?.length` (the active Lavalink track, post-resolution) and falls back to `track.length` only if Shoukaku's value is absent. This ensures the now-playing display always shows the Lavalink-confirmed duration, not the search-estimate.
+
+**In `addedToQueue` messages** (`play.ts`, `add.ts`): duration comes from `track.length` at search time (before resolution). For direct YouTube/SoundCloud tracks these match; for indirect Spotify resolves there may be a small discrepancy. This is a known limitation — editing the "added to queue" message post-resolution is not implemented.
+
+### 24/7 Mode (`$24/7`)
+
+Configuration stored per-guild in MongoDB via `client.db.get24Seven(guildId)` / `client.db.set24Seven(guildId, data)` / `client.db.getAllEnabled24Seven()`. Fields: `enabled` (boolean), `channelId` (string).
+
+Helper: `xoxo/helpers/twentyFourSeven.ts`
+
+| Export | Purpose |
+|---|---|
+| `scheduleRejoin(client, guildId, channelId, delayMs)` | Cancels any pending rejoin, then sets a new timeout calling `performRejoin` |
+| `clearRejoin(guildId)` | Cancels the pending rejoin timer for a guild |
+| `reconnectAllOnBoot(client)` | Restores all 24/7 connections on first node-ready event (once-per-process guard) |
+| `reconnectAfterNodeRecover(client)` | Restores 24/7 connections after a mid-session node failure (no once-guard; called on every node-ready) |
+
+**`performRejoin` (internal):** checks guild/channel existence and Connect+Speak permissions before calling `createPlayer`. Retries up to 3× with exponential backoff (30s → 60s → 120s) on failure.
+
+### 24/7 Reconnect Flow
+
+1. **Bot kicked from VC:** Discord fires `voiceStateUpdate` → handler destroys existing player (fires `playerDestroy` / `clearRejoin`) → handler calls `scheduleRejoin(2000)` → bot rejoins in 2 s.
+2. **`$stop` with 24/7 enabled:** stops the queue and calls `player.stop()` — does **not** destroy the player or disconnect from VC. Bot stays in the 24/7 channel idle. User must `$24/7 disable` then `$stop` to fully disconnect.
+3. **Lavalink node failure:** Shoukaku destroys all players internally; no `voiceStateUpdate` fires. When the node manager connects a new node, `nodeConnect.ts` calls `reconnectAfterNodeRecover` which recreates players for every enabled 24/7 guild. Without this, 24/7 connections are permanently lost until restart.
+4. **Bot moved to wrong channel while idle:** `voiceStateUpdate` detects the mismatch → `scheduleRejoin(3000)`.
+5. **Bot moved to wrong channel while playing:** 24/7 guard is in `queueEnd.ts` — when the queue ends and `player.voiceId !== is247.channelId`, a rejoin is scheduled (2 min delay to allow the current track to finish naturally).
+
+### `$stop` Behaviour
+
+With 24/7 enabled: clears queue + `player.stop()` → stays in VC. Info message shown explaining the mode.
+Without 24/7: `player.destroy()` → disconnects. Alias `$dc` only (the `disconnect` alias was removed to avoid collision with `vcControls/disconnect.ts`).
+
+---
+
+## 39. Developer Notes & Conventions
 
 - **Never change `displayStatus` in `botInstances.ts` unless explicitly asked to.** This value is managed by the bot owner.
 - **`Levitate-Web/` is a fully separate project.** It must never share files or imports with the bot codebase. Keep the two completely decoupled — no cross-directory imports.

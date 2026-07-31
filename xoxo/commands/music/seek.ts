@@ -50,6 +50,7 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   } catch {
     return sendError(ctxObj, 'Failed to seek. The track may not support seeking at this time.');
   }
+
   await updateNowPlayingMessage(client as any, player).catch((): null => null);
 
   const secs = Math.floor(ms / 1000);
@@ -60,7 +61,13 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
 export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
   await handle({ message, isSlash: false }, message.guild.id, args.join(' ') || null, client);
 }
+
 export async function slashExecute(interaction: any, client: LevitateClient) {
   await interaction.deferReply();
-  await handle({ interaction, isSlash: true }, interaction.guild.id, interaction.options.getString('time', true), client);
+  try {
+    await handle({ interaction, isSlash: true }, interaction.guild.id, interaction.options.getString('time', true), client);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'An unexpected error occurred.';
+    await sendError({ interaction }, msg).catch((): null => null);
+  }
 }

@@ -3,16 +3,15 @@ import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType
 
 export const data = new SlashCommandBuilder()
   .setName('avatar')
-  .setDescription("View an avatar.")
-  .addSubcommand((sub) =>
-    sub.setName('self').setDescription('View your own avatar.'),
-  )
+  .setDescription("View a user's, the bot's, or the server's avatar.")
   .addSubcommand((sub) =>
     sub
       .setName('user')
-      .setDescription("View another user's avatar.")
+      .setDescription("View your own or another user's avatar.")
       .addUserOption((o) =>
-        o.setName('user').setDescription('The user whose avatar to view.').setRequired(true),
+        o.setName('user')
+          .setDescription('The user whose avatar to view. Defaults to yourself.')
+          .setRequired(false),
       ),
   )
   .addSubcommand((sub) =>

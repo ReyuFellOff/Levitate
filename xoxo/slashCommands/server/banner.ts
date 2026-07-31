@@ -3,16 +3,15 @@ import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType
 
 export const data = new SlashCommandBuilder()
   .setName('banner')
-  .setDescription("View a banner.")
-  .addSubcommand((sub) =>
-    sub.setName('self').setDescription('View your own banner.'),
-  )
+  .setDescription("View a user's, the bot's, or the server's banner.")
   .addSubcommand((sub) =>
     sub
       .setName('user')
-      .setDescription("View another user's banner.")
+      .setDescription("View your own or another user's banner.")
       .addUserOption((o) =>
-        o.setName('user').setDescription('The user whose banner to view.').setRequired(true),
+        o.setName('user')
+          .setDescription('The user whose banner to view. Defaults to yourself.')
+          .setRequired(false),
       ),
   )
   .addSubcommand((sub) =>

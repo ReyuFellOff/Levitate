@@ -66,6 +66,10 @@ function parseDurationToSeconds(raw: string): number | null {
     m: 60, min: 60, mins: 60, minute: 60, minutes: 60,
     h: 3_600, hr: 3_600, hrs: 3_600, hour: 3_600, hours: 3_600,
     d: 86_400, day: 86_400, days: 86_400,
+    w: 604_800, week: 604_800, weeks: 604_800,
+    mo: 30 * 86_400, month: 30 * 86_400, months: 30 * 86_400,
+    y: 365 * 86_400, yr: 365 * 86_400, yrs: 365 * 86_400, year: 365 * 86_400, years: 365 * 86_400,
+    dec: 10 * 365 * 86_400, decade: 10 * 365 * 86_400, decades: 10 * 365 * 86_400,
   };
   const compact = input.replace(/\s+/g, '');
   const matches = [...compact.matchAll(/(\d+)([a-z]+)/g)];

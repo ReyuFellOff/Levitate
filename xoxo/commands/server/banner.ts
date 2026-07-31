@@ -85,12 +85,14 @@ async function sendWithChoice(
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
 
-  const sub: string = interaction.options.getSubcommand();
   const guild = interaction.guild;
   const requesterId: string = interaction.user.id;
   const channel = interaction.channel;
+  const sub: string = interaction.options.getSubcommand(true);
+
   const sendFirst = (payload: any) => interaction.editReply(payload);
 
+  // ── /banner server ──────────────────────────────────────────────────────────
   if (sub === 'server') {
     if (!guild) return sendError({ interaction }, 'Server banner is not available outside a server the bot is in.');
     const bannerUrl = guild.bannerURL({ size: 4096 });
@@ -98,6 +100,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
     return sendImagePanel({ channel, sendAsReply: sendFirst, title: "Server's Banner", imageUrl: bannerUrl, requesterId, idPrefix: 'bn' });
   }
 
+  // ── /banner bot ─────────────────────────────────────────────────────────────
   if (sub === 'bot') {
     const botUser = await client.users.fetch(client.user!.id, { force: true });
     const botMember = guild
@@ -105,6 +108,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
       : null;
     const globalBannerUrl: string | null = botUser.banner ? botUser.bannerURL({ size: 4096 }) : null;
     const serverBannerUrl: string | null = botMember?.banner ? botMember.bannerURL({ size: 4096 }) : null;
+
     if (!globalBannerUrl && !serverBannerUrl) return sendError({ interaction }, 'The bot does not have any banner.');
     if (globalBannerUrl && serverBannerUrl) {
       return sendWithChoice(channel, sendFirst, 'Bot', requesterId, (t) =>
@@ -116,8 +120,9 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
     return sendImagePanel({ channel, sendAsReply: sendFirst, title, imageUrl: url, requesterId, idPrefix: 'bn' });
   }
 
-  // sub === 'user' | 'self'
-  const rawUser = sub === 'user' ? interaction.options.getUser('user') : interaction.user;
+  // ── /banner user [user] ─────────────────────────────────────────────────────
+  const targetOption: any = interaction.options.getUser('user') ?? null;
+  const rawUser = targetOption ?? interaction.user;
   const fullUser = await client.users.fetch(rawUser.id, { force: true });
   const member = guild
     ? await guild.members.fetch({ user: fullUser.id, force: true }).catch((): null => null)

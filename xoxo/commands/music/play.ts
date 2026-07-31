@@ -98,27 +98,21 @@ async function handle(
     }
   } else {
     const track   = result.tracks[0];
-    // Snapshot duration and metadata before queue operations may mutate the track object
-    const trackDuration = track.length ? formatDuration(track.length) : 'LIVE';
-    const trackTitle    = track.title;
-    const trackAuthor   = track.author || 'Unknown';
-    const trackUri      = track.uri;
-    const thumbnail     = track.thumbnail ?? extractThumbnail(track) ?? undefined;
-
     addTracks(player, [track], user);
     player.queue.add(track);
 
-    const queuePos = player.queue.length;
+    const queuePos  = player.queue.length;
+    const thumbnail = track.thumbnail ?? extractThumbnail(track) ?? undefined;
 
     if (loadingMsg) {
       await sendTrackAddedMessage(
         isSlash ? { interaction } : { message: message!, existingMessage: loadingMsg as any },
         {
-          title:    trackTitle,
-          author:   trackAuthor,
-          duration: trackDuration,
+          title:    track.title,
+          author:   track.author || 'Unknown',
+          duration: track.length ? formatDuration(track.length) : 'LIVE',
           position: queuePos,
-          url:      trackUri,
+          url:      track.uri,
           thumbnail,
         },
       );

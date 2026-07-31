@@ -1,14 +1,14 @@
 // xoxo/commands/music/stop.ts
 import type { LevitateClient } from '../../structures/LevitateClient.js';
-import { sendError, sendSuccess } from '../../components/statusMessages.js';
+import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { clearSession } from '../../helpers/sessionQueue.js';
 import { clearPlayerState } from '../../helpers/nowPlayingManager.js';
 import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 
 export const options = {
   name: 'stop',
-  aliases: ['dc', 'disconnect'] as string[],
-  description: 'Stop playback and disconnect the bot.',
+  aliases: ['dc'] as string[],
+  description: 'Stop playback and disconnect the bot. In 24/7 mode, stops the queue and keeps the bot in the voice channel.',
   usage: 'stop',
   category: 'music',
   isDeveloper: false,
@@ -25,10 +25,31 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   const player  = (client as any).kazagumo.players.get(guildId);
   if (!player) return sendError(ctxObj, 'There is no active player in this server.');
 
+  // If 24/7 mode is enabled, stop playback but keep the bot in the voice
+  // channel. Destroying the player would cause voiceStateUpdate to fire and
+  // schedule a rejoin (correct 24/7 behaviour), but it also briefly leaves
+  // the channel which can confuse listeners and trigger edge cases. Stopping
+  // in-place is cleaner: the bot stays put, the queue is cleared, and
+  // someone can use $play to start fresh — or $24/7 disable + $stop to
+  // fully disconnect.
+  const is247 = await (client as any).db?.get24Seven?.(guildId).catch((): null => null);
+
+  if (is247?.enabled) {
+    clearPlayerState(guildId);
+    clearSession(player);
+    player.queue.clear();
+    await player.stop().catch((): null => null);
+    const prefix = (client as any).config?.prefix ?? '$';
+    return sendInfo(
+      ctxObj,
+      `Stopped playback. Bot staying in <#${is247.channelId}> (24/7 mode is active).\n-# Use \`${prefix}24/7 disable\` then \`${prefix}stop\` to fully disconnect.`,
+    );
+  }
+
+  // Normal stop — clear state and disconnect.
   clearPlayerState(guildId);
   clearSession(player);
-  // Do NOT clearRejoin here — if 24/7 is enabled, voiceStateUpdate will
-  // schedule a rejoin after the disconnect, and we must not pre-cancel it.
+  clearRejoin(guildId);
   await player.destroy();
 
   return sendSuccess(ctxObj, 'Stopped playback and disconnected.');

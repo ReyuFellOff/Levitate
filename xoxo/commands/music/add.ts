@@ -63,21 +63,14 @@ async function handle(
       );
     }
   } else {
-    const track = result.tracks[0];
-    // Snapshot metadata before queue operations may mutate the track object
-    const trackDuration = track.length ? formatDuration(track.length) : 'LIVE';
-    const trackTitle    = track.title;
-    const trackAuthor   = track.author || 'Unknown';
-    const trackUri      = track.uri;
-    const thumbnail     = track.thumbnail ?? extractThumbnail(track) ?? undefined;
-
+    const track    = result.tracks[0];
     player.queue.add(track);
     addTracks(player, [track], user);
-
+    const thumbnail = track.thumbnail ?? extractThumbnail(track) ?? undefined;
     if (loadingMsg) {
       await sendTrackAddedMessage(
         isSlash ? { interaction } : { message, existingMessage: loadingMsg as any },
-        { title: trackTitle, author: trackAuthor, duration: trackDuration, position: player.queue.length, url: trackUri, thumbnail },
+        { title: track.title, author: track.author || 'Unknown', duration: track.length ? formatDuration(track.length) : 'LIVE', position: player.queue.length, url: track.uri, thumbnail },
       );
     }
   }

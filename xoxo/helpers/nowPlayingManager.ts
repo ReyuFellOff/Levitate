@@ -57,7 +57,16 @@ function getInterpolatedPosition(player: any): number {
 
 export function buildTrackInfo(player: any, track: any): NowPlayingTrackInfo {
   const position = getInterpolatedPosition(player);
-  const length = track.length ?? 0;
+
+  // Prefer the authoritative length from the Shoukaku player's active track
+  // (set by Lavalink when playback begins) over the KazagumoTrack's cached
+  // length (set at search time). For tracks that undergo lazy resolution
+  // (e.g. Spotify → YouTube fallback), the resolved length can differ from
+  // the search-result length, so Shoukaku's value is the ground truth here.
+  const shoukakuLength: number | undefined = player.shoukaku?.track?.info?.length;
+  const length = (shoukakuLength !== undefined && shoukakuLength > 0)
+    ? shoukakuLength
+    : (track.length ?? 0);
 
   const requester = track.requester;
   const requestedBy = (requester as any)?.username ?? undefined;

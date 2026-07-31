@@ -23,8 +23,11 @@ export const options = {
 };
 
 // ── Duration parser ────────────────────────────────────────────────────────────
-// Accepts: 30m, 2h, 7d, 1mo, 1y, 30min, 2hrs, 7days, 1month, 2months, 1year
+// Accepts: 30m, 2h, 7d, 1mo, 1y, 1dec, 30min, 2hrs, 7days, 1month, 2months, 1year, 1decade
 // Returns seconds, or null on parse failure.
+// Max: 10 decades (315,360,000 seconds).
+
+const MAX_NOPREFIX_SECONDS = 10 * 10 * 365 * 24 * 60 * 60; // 10 decades
 
 export function parseDuration(raw: string): number | null {
   if (!raw) return null;
@@ -38,13 +41,14 @@ export function parseDuration(raw: string): number | null {
   if (named[s] !== undefined) return named[s];
 
   // Numeric pattern: <number><unit>
-  const match = s.match(/^(\d+(?:\.\d+)?)\s*(mo|month|months|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|y|yr|yrs|year|years)$/);
+  const match = s.match(/^(\d+(?:\.\d+)?)\s*(dec|decade|decades|mo|month|months|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|y|yr|yrs|year|years)$/);
   if (!match) return null;
 
-  const value = parseFloat(match[1]);
-  const unit  = match[2];
+  const value = parseFloat(match[1]!);
+  const unit  = match[2]!;
 
   const secondsMap: Record<string, number> = {
+    dec: 10 * 365 * 24 * 3600, decade: 10 * 365 * 24 * 3600, decades: 10 * 365 * 24 * 3600,
     mo: 60 * 60 * 24 * 30, month: 60 * 60 * 24 * 30, months: 60 * 60 * 24 * 30,
     m: 60, min: 60, mins: 60, minute: 60, minutes: 60,
     h: 3600, hr: 3600, hrs: 3600, hour: 3600, hours: 3600,
@@ -55,7 +59,10 @@ export function parseDuration(raw: string): number | null {
 
   const mult = secondsMap[unit];
   if (mult === undefined) return null;
-  return Math.round(value * mult);
+
+  const result = Math.round(value * mult);
+  if (result > MAX_NOPREFIX_SECONDS) return null;
+  return result;
 }
 
 function formatExpiry(expiresAt: Date | null | undefined): string {
