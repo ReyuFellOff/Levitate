@@ -1,12 +1,10 @@
 // xoxo/components/utility/namestyle.ts
 //
-// Full interactive name-style wizard for $namestyle.
+// Interactive name-style form for $namestyle and the Customise panel.
 //
-// Flow:
-//   Home → Font + Effect (single page, two dropdowns) → Color 1 → [Color 2 if Gradient] → Applied
-//
-// All pages are edits on a single bot message. Custom IDs are scoped to the
-// invoker's message ID so multiple concurrent sessions never collide.
+// Design: single-page form with font dropdown, effect dropdown,
+// color preset dropdowns, and a "Custom hex" button that opens a modal.
+// The form is pre-populated with any existing DB style.
 //
 // Session timeout: 5 minutes of inactivity → components disabled.
 
@@ -26,12 +24,11 @@ import {
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
 import { FONTS, EFFECTS, intToHex, hexToInt, applyNameStyle, resetNameStyle } from '../../helpers/nameStyle.js';
-import type { LevitateClient }  from '../../structures/LevitateClient.js';
-import type { NameStyleDoc }    from '../../database/database.js';
+import type { LevitateClient } from '../../structures/LevitateClient.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const HEADER = `## ${emojis.blackCross ?? '🎨'} Name Style`;
+const HEADER    = `## ${emojis.blackCross ?? '🎨'} Name Style`;
 const TIMEOUT_MS = 5 * 60_000;
 
 const FONT_DESCS: Record<number, string> = {
@@ -58,7 +55,7 @@ const EFFECT_DESCS: Record<number, string> = {
   6: 'Soft outer glow — 2nd color is accent',
 };
 
-/** 15 preset colors, 3 rows of 5 */
+/** 15 preset colors */
 const PRESET_COLORS: { label: string; hex: string }[] = [
   { label: 'White',    hex: 'FFFFFF' },
   { label: 'Black',    hex: '000000' },
@@ -86,10 +83,12 @@ export interface NsSession {
   channelId: string;
   botMsgId:  string;
   client:    LevitateClient;
-  step:      'home' | 'fonteffect' | 'color1' | 'color2';
   fontId?:   number;
   effectId?: number;
-  color1?:   number;
+  color1?:   number;  // int color value (from preset OR custom hex)
+  color2?:   number;  // int color value for gradient (from preset OR custom hex)
+  /** If set, clicking ← Back calls this instead of showing the generic cancel page. */
+  backFn?:   (interaction: any) => Promise<void>;
 }
 
 const sessions  = new Map<string, NsSession>();
@@ -111,7 +110,7 @@ function resetTimeout(scopeId: string): void {
     try {
       const ch  = await s.client.channels.fetch(s.channelId) as any;
       const msg = await ch.messages.fetch(s.botMsgId);
-      await msg.edit(buildHomePage(scopeId, null, s.guildName, true));
+      await msg.edit(buildFormPage(scopeId, s, true));
     } catch { /* message gone */ }
   }, TIMEOUT_MS));
 }
@@ -133,62 +132,70 @@ function wrap(container: ContainerBuilder): any {
   return { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
 }
 
-function header(): ContainerBuilder {
+function headerContainer(): ContainerBuilder {
   return new ContainerBuilder()
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(HEADER))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 }
 
-// ── Page builders ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-export function buildHomePage(
-  scopeId:   string,
-  style:     NameStyleDoc | null,
-  guildName: string,
-  disabled = false,
-): any {
-  const info = style
-    ? `${emojis.whiteArrow} **Font:** ${FONTS[style.font_id] ?? `ID ${style.font_id}`}\n` +
-      `${emojis.whiteArrow} **Effect:** ${EFFECTS[style.effect_id] ?? `ID ${style.effect_id}`}\n` +
-      `${emojis.whiteArrow} **Color(s):** ${style.colors.map(intToHex).join(', ')}`
-    : `${emojis.whiteArrow} No custom style set — using Discord default.`;
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(nsId(scopeId, 'customize'))
-      .setLabel('Customize')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(disabled),
-    new ButtonBuilder()
-      .setCustomId(nsId(scopeId, 'reset'))
-      .setLabel('Reset to Default')
-      .setStyle(ButtonStyle.Danger)
-      .setDisabled(disabled || !style),
-    new ButtonBuilder()
-      .setCustomId(nsId(scopeId, 'cancel'))
-      .setLabel('Cancel')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(disabled),
-  );
-
-  return wrap(
-    header()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-        `**${guildName}** — current style:\n${info}`,
-      ))
-      .addActionRowComponents(row),
-  );
+/** Check if a color integer matches one of the preset colors. */
+function matchesPreset(colorInt: number): boolean {
+  const hex = intToHex(colorInt).replace('#', '').toUpperCase();
+  return PRESET_COLORS.some(p => p.hex.toUpperCase() === hex);
 }
 
+function presetIsDefault(preset: { hex: string }, colorInt: number | undefined): boolean {
+  if (colorInt === undefined) return false;
+  return preset.hex.toUpperCase() === intToHex(colorInt).replace('#', '').toUpperCase();
+}
+
+// ── Form page ─────────────────────────────────────────────────────────────────
+
 /**
- * Combined font + effect page.
- * Shows two dropdowns (font, effect) and a Next button that is enabled only
- * when both a font and an effect have been selected.
+ * Single-page form with font/effect/color dropdowns and custom hex button.
+ * Pre-populates from session (which is seeded from the DB style if any exists).
  */
-export function buildFontEffectPage(scopeId: string, session: NsSession, disabled = false): any {
+export function buildFormPage(
+  scopeId:  string,
+  session:  NsSession,
+  disabled = false,
+): any {
+  const isGradient = session.effectId === 2;
+
+  // Status line
+  const fontName   = session.fontId   ? (FONTS[session.fontId]   ?? `ID ${session.fontId}`)   : 'Not set';
+  const effectName = session.effectId ? (EFFECTS[session.effectId] ?? `ID ${session.effectId}`) : 'Not set';
+
+  let colorText = 'Not set';
+  if (session.color1 !== undefined) {
+    colorText = `\`${intToHex(session.color1)}\``;
+    if (session.color2 !== undefined) {
+      colorText += ` → \`${intToHex(session.color2)}\``;
+    }
+  }
+
+  // Note when a color came from custom hex (not a preset)
+  const color1IsCustom = session.color1 !== undefined && !matchesPreset(session.color1);
+  const color2IsCustom = session.color2 !== undefined && !matchesPreset(session.color2);
+  const customNote =
+    (color1IsCustom || color2IsCustom)
+      ? `\n-# Custom hex color applied`
+      : '';
+
+  // Apply button enabled only when all required fields are filled
+  const color2Ready = !isGradient || session.color2 !== undefined;
+  const canApply = session.fontId !== undefined
+    && session.effectId !== undefined
+    && session.color1 !== undefined
+    && color2Ready;
+
+  // ── Dropdowns ──────────────────────────────────────────────────────────────
+
   const fontMenu = new StringSelectMenuBuilder()
     .setCustomId(nsId(scopeId, 'font'))
-    .setPlaceholder('Step 1 — Choose a font…')
+    .setPlaceholder('Font…')
     .setDisabled(disabled)
     .addOptions(
       Object.entries(FONTS).map(([id, name]) =>
@@ -202,7 +209,7 @@ export function buildFontEffectPage(scopeId: string, session: NsSession, disable
 
   const effectMenu = new StringSelectMenuBuilder()
     .setCustomId(nsId(scopeId, 'effect'))
-    .setPlaceholder('Step 2 — Choose an effect…')
+    .setPlaceholder('Effect…')
     .setDisabled(disabled)
     .addOptions(
       Object.entries(EFFECTS).map(([id, name]) =>
@@ -214,111 +221,81 @@ export function buildFontEffectPage(scopeId: string, session: NsSession, disable
       ),
     );
 
-  const bothSelected = session.fontId !== undefined && session.effectId !== undefined;
+  const color1Menu = new StringSelectMenuBuilder()
+    .setCustomId(nsId(scopeId, 'color1'))
+    .setPlaceholder('Color…')
+    .setDisabled(disabled)
+    .addOptions(
+      PRESET_COLORS.map(preset =>
+        new StringSelectMenuOptionBuilder()
+          .setValue(preset.hex)
+          .setLabel(preset.label)
+          // Pre-select only if this preset matches the current color AND it's not a custom hex override
+          .setDefault(!color1IsCustom && presetIsDefault(preset, session.color1)),
+      ),
+    );
 
-  const bottomRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  // ── Button row ─────────────────────────────────────────────────────────────
+
+  const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId(nsId(scopeId, 'back', 'home'))
-      .setLabel('← Back')
+      .setCustomId(nsId(scopeId, 'apply'))
+      .setLabel('Apply')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(disabled || !canApply),
+    new ButtonBuilder()
+      .setCustomId(nsId(scopeId, 'customhex'))
+      .setLabel('Custom Hex')
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(disabled),
     new ButtonBuilder()
-      .setCustomId(nsId(scopeId, 'nextcolor'))
-      .setLabel('Next →')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(disabled || !bothSelected),
+      .setCustomId(nsId(scopeId, 'reset'))
+      .setLabel('Reset to Default')
+      .setStyle(ButtonStyle.Danger)
+      .setDisabled(disabled),
+    new ButtonBuilder()
+      .setCustomId(nsId(scopeId, 'cancel'))
+      .setLabel('Back')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(disabled),
   );
 
-  const fontName   = session.fontId   ? (FONTS[session.fontId]   ?? `Font ${session.fontId}`)   : '—';
-  const effectName = session.effectId ? (EFFECTS[session.effectId] ?? `Effect ${session.effectId}`) : '—';
-  // Gradient (effectId 2) requires a second color — surface that info upfront
-  const gradientNote = session.effectId === 2
-    ? `\n${emojis.whiteArrow} **Gradient** selected — you will pick two colors.`
-    : '';
+  // ── Assemble container ─────────────────────────────────────────────────────
 
-  return wrap(
-    header()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-        `### Step 1 of 2 — Font & Effect\n` +
-        `Choose the font and color effect for **${session.guildName}**.\n\n` +
-        `${emojis.whiteArrow} **Font:** ${fontName}\n` +
-        `${emojis.whiteArrow} **Effect:** ${effectName}${gradientNote}`,
-      ))
-      .addActionRowComponents(new ActionRowBuilder<any>().addComponents(fontMenu))
-      .addActionRowComponents(new ActionRowBuilder<any>().addComponents(effectMenu))
-      .addActionRowComponents(bottomRow),
-  );
-}
+  const c = headerContainer()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `**${session.guildName}**\n` +
+      `${emojis.whiteArrow} **Font:** ${fontName}\n` +
+      `${emojis.whiteArrow} **Effect:** ${effectName}\n` +
+      `${emojis.whiteArrow} **Color:** ${colorText}${customNote}`,
+    ))
+    .addActionRowComponents(new ActionRowBuilder<any>().addComponents(fontMenu))
+    .addActionRowComponents(new ActionRowBuilder<any>().addComponents(effectMenu))
+    .addActionRowComponents(new ActionRowBuilder<any>().addComponents(color1Menu));
 
-function buildColorRows(
-  scopeId:   string,
-  slot:      'color1' | 'color2',
-  disabled = false,
-): ActionRowBuilder<ButtonBuilder>[] {
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-
-  // 3 rows of 5 preset colors
-  for (let r = 0; r < 3; r++) {
-    const row = new ActionRowBuilder<ButtonBuilder>();
-    for (let c = 0; c < 5; c++) {
-      const preset = PRESET_COLORS[r * 5 + c];
-      row.addComponents(
-        new ButtonBuilder()
-          .setCustomId(nsId(scopeId, slot, preset.hex))
-          .setLabel(preset.label)
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(disabled),
+  // Color 2 row — only shown when gradient is selected (stays within 5-row limit)
+  if (isGradient) {
+    const color2Menu = new StringSelectMenuBuilder()
+      .setCustomId(nsId(scopeId, 'color2'))
+      .setPlaceholder('Second color (gradient)…')
+      .setDisabled(disabled)
+      .addOptions(
+        PRESET_COLORS.map(preset =>
+          new StringSelectMenuOptionBuilder()
+            .setValue(preset.hex)
+            .setLabel(preset.label)
+            .setDefault(!color2IsCustom && presetIsDefault(preset, session.color2)),
+        ),
       );
-    }
-    rows.push(row);
+    c.addActionRowComponents(new ActionRowBuilder<any>().addComponents(color2Menu));
   }
 
-  // 4th row: Custom hex + Back
-  const backTarget = slot === 'color2' ? 'color1' : 'fonteffect';
-  rows.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(nsId(scopeId, slot, 'custom'))
-        .setLabel('✏️  Custom hex')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(disabled),
-      new ButtonBuilder()
-        .setCustomId(nsId(scopeId, 'back', backTarget))
-        .setLabel('← Back')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(disabled),
-    ),
-  );
+  c.addActionRowComponents(buttonRow);
 
-  return rows;
-}
-
-export function buildColor1Page(scopeId: string, session: NsSession, disabled = false): any {
-  const fontName   = FONTS[session.fontId!]    ?? `Font ${session.fontId}`;
-  const effectName = EFFECTS[session.effectId!] ?? `Effect ${session.effectId}`;
-
-  const c = header().addTextDisplayComponents(new TextDisplayBuilder().setContent(
-    `### Step 2 of 2 — Color\n` +
-    `${emojis.whiteArrow} **Font:** ${fontName} · **Effect:** ${effectName}\n\n` +
-    `Pick a preset or enter your own hex code.`,
-  ));
-  for (const row of buildColorRows(scopeId, 'color1', disabled)) c.addActionRowComponents(row);
   return wrap(c);
 }
 
-export function buildColor2Page(scopeId: string, session: NsSession, disabled = false): any {
-  const fontName   = FONTS[session.fontId!]    ?? `Font ${session.fontId}`;
-  const effectName = EFFECTS[session.effectId!] ?? `Effect ${session.effectId}`;
-  const c1Hex      = session.color1 !== undefined ? intToHex(session.color1) : '—';
-
-  const c = header().addTextDisplayComponents(new TextDisplayBuilder().setContent(
-    `### Gradient — Second Color\n` +
-    `${emojis.whiteArrow} **Font:** ${fontName} · **Effect:** ${effectName} · **Color 1:** ${c1Hex}\n\n` +
-    `Pick the second gradient color.`,
-  ));
-  for (const row of buildColorRows(scopeId, 'color2', disabled)) c.addActionRowComponents(row);
-  return wrap(c);
-}
+// ── Final-state pages ─────────────────────────────────────────────────────────
 
 export function buildAppliedPage(
   fontId:    number,
@@ -331,7 +308,7 @@ export function buildAppliedPage(
   const warning   = saved ? '' : '\n\nStyle applied but **not saved** — it will not survive a restart.';
 
   return wrap(
-    header().addTextDisplayComponents(new TextDisplayBuilder().setContent(
+    headerContainer().addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${emojis.blacktick ?? ''} Name style applied in **${guildName}**.\n\n` +
       `${emojis.whiteArrow} **Font:** ${FONTS[fontId] ?? `ID ${fontId}`}\n` +
       `${emojis.whiteArrow} **Effect:** ${EFFECTS[effectId] ?? `ID ${effectId}`}\n` +
@@ -342,7 +319,7 @@ export function buildAppliedPage(
 
 export function buildResetPage(guildName: string): any {
   return wrap(
-    header().addTextDisplayComponents(new TextDisplayBuilder().setContent(
+    headerContainer().addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${emojis.blacktick ?? ''} Name style cleared in **${guildName}** — reverted to Discord default.`,
     )),
   );
@@ -350,30 +327,62 @@ export function buildResetPage(guildName: string): any {
 
 export function buildCancelPage(): any {
   return wrap(
-    header().addTextDisplayComponents(new TextDisplayBuilder().setContent('Cancelled.')),
+    headerContainer().addTextDisplayComponents(new TextDisplayBuilder().setContent('Cancelled.')),
   );
 }
 
-// ── Modal helper ──────────────────────────────────────────────────────────────
+// ── Custom hex modal ──────────────────────────────────────────────────────────
 
-function makeColorModal(scopeId: string, slot: 'color1' | 'color2'): ModalBuilder {
-  const label = slot === 'color2' ? 'Second color (hex)' : 'Color (hex)';
-  return new ModalBuilder()
-    .setCustomId(`ns:modal:${slot}:${scopeId}`)
-    .setTitle('Enter a hex color')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('ns:input:color')
-          .setLabel(label)
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('#RRGGBB or RRGGBB')
-          .setMinLength(6)
-          .setMaxLength(7)
-          .setRequired(true),
-      ),
-    );
+function makeCustomHexModal(
+  scopeId: string,
+  session: NsSession,
+): ModalBuilder {
+  const isGradient = session.effectId === 2;
+
+  const col1Input = new TextInputBuilder()
+    .setCustomId('ns:input:hex1')
+    .setLabel('Color 1 (hex)')
+    .setStyle(TextInputStyle.Short)
+    .setPlaceholder('#RRGGBB or RRGGBB')
+    .setMinLength(6)
+    .setMaxLength(7)
+    .setRequired(!isGradient);  // required unless gradient (where col2 alone could be entered)
+
+  // Pre-fill with current color if set
+  if (session.color1 !== undefined) {
+    col1Input.setValue(intToHex(session.color1));
+  }
+
+  const components: ActionRowBuilder<TextInputBuilder>[] = [
+    new ActionRowBuilder<TextInputBuilder>().addComponents(col1Input),
+  ];
+
+  if (isGradient) {
+    const col2Input = new TextInputBuilder()
+      .setCustomId('ns:input:hex2')
+      .setLabel('Color 2 (hex) — gradient only')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('#RRGGBB or RRGGBB')
+      .setMinLength(6)
+      .setMaxLength(7)
+      .setRequired(false);
+
+    if (session.color2 !== undefined) {
+      col2Input.setValue(intToHex(session.color2));
+    }
+
+    components.push(new ActionRowBuilder<TextInputBuilder>().addComponents(col2Input));
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`ns:modal:customhex:${scopeId}`)
+    .setTitle('Enter hex color(s)');
+
+  for (const row of components) modal.addComponents(row);
+  return modal;
 }
+
+// ── Modal awaiter ─────────────────────────────────────────────────────────────
 
 function awaitModal(
   client:    LevitateClient,
@@ -404,30 +413,36 @@ export async function handleNsInteraction(interaction: any, client: LevitateClie
   // customId shapes:
   //   ns:<scopeId>:<action>
   //   ns:<scopeId>:<action>:<param>
-  //   ns:<scopeId>:back:<target>
-  //   ns:<scopeId>:color1:<hex|custom>
-  //   ns:<scopeId>:color2:<hex|custom>
-  const parts    = (interaction.customId as string).split(':');
-  const scopeId  = parts[1];
-  const action   = parts[2];
-  const param    = parts[3]; // may be undefined
+  const parts   = (interaction.customId as string).split(':');
+  const scopeId = parts[1];
+  const action  = parts[2];
+  const param   = parts[3]; // may be undefined
 
   const session = sessions.get(scopeId);
   if (!session) {
-    return interaction.reply({ content: 'This session has expired. Run the command again.', flags: MessageFlags.Ephemeral }).catch((): null => null);
+    return interaction.reply({
+      content: 'This session has expired. Run the command again.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
   }
 
-  // Only the original invoker can interact
   if (interaction.user?.id !== session.authorId) {
-    return interaction.reply({ content: "This isn't your panel.", flags: MessageFlags.Ephemeral }).catch((): null => null);
+    return interaction.reply({
+      content: "This isn't your panel.",
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
   }
 
   resetTimeout(scopeId);
 
-  // ── Cancel ────────────────────────────────────────────────────────────────
+  // ── Cancel / Back ─────────────────────────────────────────────────────────
   if (action === 'cancel') {
     clearSession(scopeId);
-    await interaction.update(buildCancelPage()).catch((): null => null);
+    if (session.backFn) {
+      await session.backFn(interaction);
+    } else {
+      await interaction.update(buildCancelPage()).catch((): null => null);
+    }
     return;
   }
 
@@ -436,7 +451,10 @@ export async function handleNsInteraction(interaction: any, client: LevitateClie
     await interaction.deferUpdate().catch((): null => null);
     const ok = await resetNameStyle(client, session.guildId);
     if (!ok) {
-      await interaction.followUp({ content: 'Failed to reset the style. Make sure I have **Change Nickname** permission.', flags: MessageFlags.Ephemeral }).catch((): null => null);
+      await interaction.followUp({
+        content: 'Failed to reset the style. Make sure I have **Change Nickname** permission.',
+        flags: MessageFlags.Ephemeral,
+      }).catch((): null => null);
       return;
     }
     await client.db?.removeNameStyle(session.guildId).catch((): null => null);
@@ -445,131 +463,113 @@ export async function handleNsInteraction(interaction: any, client: LevitateClie
     return;
   }
 
-  // ── Customize → go to font+effect step ───────────────────────────────────
-  if (action === 'customize') {
-    session.step = 'fonteffect';
-    await interaction.update(buildFontEffectPage(scopeId, session)).catch((): null => null);
-    return;
-  }
-
-  // ── Back navigation ───────────────────────────────────────────────────────
-  if (action === 'back') {
-    if (param === 'home') {
-      session.step = 'home';
-      const style = await client.db?.getNameStyle(session.guildId).catch((): null => null) ?? null;
-      await interaction.update(buildHomePage(scopeId, style, session.guildName)).catch((): null => null);
-    } else if (param === 'fonteffect') {
-      session.step = 'fonteffect';
-      await interaction.update(buildFontEffectPage(scopeId, session)).catch((): null => null);
-    } else if (param === 'color1') {
-      session.step = 'color1';
-      await interaction.update(buildColor1Page(scopeId, session)).catch((): null => null);
-    }
-    return;
-  }
-
   // ── Font selected (dropdown) ──────────────────────────────────────────────
   if (action === 'font' && interaction.isStringSelectMenu?.()) {
     session.fontId = parseInt(interaction.values[0], 10);
-    // Stay on the same page — update to reflect selection and possibly enable Next
-    await interaction.update(buildFontEffectPage(scopeId, session)).catch((): null => null);
+    await interaction.update(buildFormPage(scopeId, session)).catch((): null => null);
     return;
   }
 
   // ── Effect selected (dropdown) ────────────────────────────────────────────
   if (action === 'effect' && interaction.isStringSelectMenu?.()) {
-    session.effectId = parseInt(interaction.values[0], 10);
-    // Stay on the same page — update to reflect selection and possibly enable Next
-    await interaction.update(buildFontEffectPage(scopeId, session)).catch((): null => null);
+    const newEffect = parseInt(interaction.values[0], 10);
+    // Clear color2 when switching away from gradient
+    if (newEffect !== 2) session.color2 = undefined;
+    session.effectId = newEffect;
+    await interaction.update(buildFormPage(scopeId, session)).catch((): null => null);
     return;
   }
 
-  // ── Next button → advance to color 1 ─────────────────────────────────────
-  if (action === 'nextcolor') {
-    if (session.fontId === undefined || session.effectId === undefined) {
-      // Shouldn't happen (button is disabled), but guard anyway
-      await interaction.reply({ content: 'Please select both a font and an effect first.', flags: MessageFlags.Ephemeral }).catch((): null => null);
-      return;
-    }
-    session.step = 'color1';
-    await interaction.update(buildColor1Page(scopeId, session)).catch((): null => null);
-    return;
-  }
-
-  // ── Color 1 — preset ─────────────────────────────────────────────────────
-  if (action === 'color1' && param && param !== 'custom') {
-    const val = hexToInt(param);
-    if (val === null) return;
-    session.color1 = val;
-    if (session.effectId === 2) {
-      // Gradient needs a second color
-      session.step = 'color2';
-      await interaction.update(buildColor2Page(scopeId, session)).catch((): null => null);
-    } else {
-      await applyAndFinish(interaction, scopeId, session, [val]);
+  // ── Color 1 selected (dropdown) ───────────────────────────────────────────
+  if (action === 'color1' && interaction.isStringSelectMenu?.()) {
+    const val = hexToInt(interaction.values[0]);
+    if (val !== null) {
+      session.color1 = val;
+      await interaction.update(buildFormPage(scopeId, session)).catch((): null => null);
     }
     return;
   }
 
-  // ── Color 1 — custom hex via modal ────────────────────────────────────────
-  if (action === 'color1' && param === 'custom') {
-    const modalId = `ns:modal:color1:${scopeId}`;
-    await interaction.showModal(makeColorModal(scopeId, 'color1')).catch((): null => null);
+  // ── Color 2 selected (dropdown) ───────────────────────────────────────────
+  if (action === 'color2' && interaction.isStringSelectMenu?.()) {
+    const val = hexToInt(interaction.values[0]);
+    if (val !== null) {
+      session.color2 = val;
+      await interaction.update(buildFormPage(scopeId, session)).catch((): null => null);
+    }
+    return;
+  }
+
+  // ── Custom hex button → open modal ───────────────────────────────────────
+  if (action === 'customhex') {
+    const modalId = `ns:modal:customhex:${scopeId}`;
+    await interaction.showModal(makeCustomHexModal(scopeId, session)).catch((): null => null);
 
     const submit = await awaitModal(client, modalId, session.authorId, 60_000);
     if (!submit) return;
 
-    const raw = submit.fields.getTextInputValue('ns:input:color') as string;
-    const val = hexToInt(raw);
-    if (val === null) {
-      await submit.reply({ content: `\`${raw}\` is not a valid hex color.`, flags: MessageFlags.Ephemeral }).catch((): null => null);
-      return;
+    const raw1 = submit.fields.getTextInputValue?.('ns:input:hex1')?.trim() || '';
+    const raw2 = submit.fields.getTextInputValue?.('ns:input:hex2')?.trim() || '';
+
+    const errors: string[] = [];
+
+    if (raw1) {
+      const val = hexToInt(raw1);
+      if (val === null) {
+        errors.push(`\`${raw1}\` is not a valid hex color.`);
+      } else {
+        session.color1 = val;
+      }
     }
 
-    session.color1 = val;
-    await submit.deferUpdate().catch((): null => null);
-
-    if (session.effectId === 2) {
-      session.step = 'color2';
-      await submit.message.edit(buildColor2Page(scopeId, session)).catch((): null => null);
-    } else {
-      await finishApply(submit.message, scopeId, session, [val]);
-    }
-    return;
-  }
-
-  // ── Color 2 — preset ─────────────────────────────────────────────────────
-  if (action === 'color2' && param && param !== 'custom') {
-    const val = hexToInt(param);
-    if (val === null) return;
-    await applyAndFinish(interaction, scopeId, session, [session.color1!, val]);
-    return;
-  }
-
-  // ── Color 2 — custom hex via modal ────────────────────────────────────────
-  if (action === 'color2' && param === 'custom') {
-    const modalId = `ns:modal:color2:${scopeId}`;
-    await interaction.showModal(makeColorModal(scopeId, 'color2')).catch((): null => null);
-
-    const submit = await awaitModal(client, modalId, session.authorId, 60_000);
-    if (!submit) return;
-
-    const raw = submit.fields.getTextInputValue('ns:input:color') as string;
-    const val = hexToInt(raw);
-    if (val === null) {
-      await submit.reply({ content: `\`${raw}\` is not a valid hex color.`, flags: MessageFlags.Ephemeral }).catch((): null => null);
-      return;
+    if (raw2) {
+      const val = hexToInt(raw2);
+      if (val === null) {
+        errors.push(`\`${raw2}\` is not a valid hex color.`);
+      } else {
+        session.color2 = val;
+      }
     }
 
     await submit.deferUpdate().catch((): null => null);
-    await finishApply(submit.message, scopeId, session, [session.color1!, val]);
+
+    if (errors.length) {
+      await submit.followUp({
+        content: errors.join('\n'),
+        flags: MessageFlags.Ephemeral,
+      }).catch((): null => null);
+    }
+
+    await submit.message?.edit(buildFormPage(scopeId, session)).catch((): null => null);
+    return;
+  }
+
+  // ── Apply ─────────────────────────────────────────────────────────────────
+  if (action === 'apply') {
+    const { fontId, effectId, color1 } = session;
+    if (fontId === undefined || effectId === undefined || color1 === undefined) {
+      await interaction.reply({
+        content: 'Please select a font, effect, and color before applying.',
+        flags: MessageFlags.Ephemeral,
+      }).catch((): null => null);
+      return;
+    }
+    if (effectId === 2 && session.color2 === undefined) {
+      await interaction.reply({
+        content: 'Gradient effect requires a second color. Select it from the dropdown or use Custom Hex.',
+        flags: MessageFlags.Ephemeral,
+      }).catch((): null => null);
+      return;
+    }
+
+    const colors = effectId === 2 ? [color1, session.color2!] : [color1];
+    await applyAndFinish(interaction, scopeId, session, colors);
     return;
   }
 }
 
 // ── Apply helpers ─────────────────────────────────────────────────────────────
 
-/** Used when a button interaction is still open (can call .update()). */
 async function applyAndFinish(
   interaction: any,
   scopeId:     string,
@@ -590,7 +590,10 @@ async function finishApply(
 
   const ok = await applyNameStyle(session.client, guildId, fontId!, effectId!, colors);
   if (!ok) {
-    await message.channel?.send({ content: 'Failed to apply the style. Make sure I have **Change Nickname** permission.', flags: MessageFlags.Ephemeral }).catch((): null => null);
+    await message.channel?.send({
+      content: 'Failed to apply the style. Make sure I have **Change Nickname** permission.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
     return;
   }
 

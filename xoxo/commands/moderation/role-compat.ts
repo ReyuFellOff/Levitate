@@ -42,7 +42,9 @@ function validateRoleForSlash(guild: any, role: any, invokerMember?: any): strin
   const botMember = guild.members.me;
   if (botMember && role.position >= botMember.roles.highest.position)
     return "I can't manage a role that is at or above my highest role.";
-  if (invokerMember && role.position >= invokerMember.roles.highest.position)
+  // Server owners implicitly outrank every role — skip the hierarchy check for them.
+  const invokerIsOwner = invokerMember && invokerMember.id === guild.ownerId;
+  if (!invokerIsOwner && invokerMember && role.position >= invokerMember.roles.highest.position)
     return "You can't manage a role that is at or above your own highest role.";
   return null;
 }

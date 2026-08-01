@@ -1,6 +1,7 @@
 // xoxo/helpers/nowPlayingManager.ts
 import { sendNowPlaying, buildNowPlayingPayload, type NowPlayingTrackInfo } from '../components/music/nowPlaying.js';
 import { extractThumbnail, formatDuration } from '../utils/formatting.js';
+import { generateNowPlayingCanvas } from '../structures/NowPlayingCanvas.js';
 
 interface PositionSnapshot {
   position: number;
@@ -20,9 +21,40 @@ interface PlayerState {
 
 const playerStates = new Map<string, PlayerState>();
 
+/** Auto-update interval IDs — one per active player (keyed by guildId). */
+const updateIntervals = new Map<string, ReturnType<typeof setInterval>>();
+
+const NP_UPDATE_INTERVAL_MS = 10_000; // 10 seconds
+
 function getState(guildId: string): PlayerState {
   if (!playerStates.has(guildId)) playerStates.set(guildId, {});
   return playerStates.get(guildId)!;
+}
+
+function stopUpdateInterval(guildId: string): void {
+  const existing = updateIntervals.get(guildId);
+  if (existing) {
+    clearInterval(existing);
+    updateIntervals.delete(guildId);
+  }
+}
+
+function startUpdateInterval(client: any, player: any): void {
+  const guildId = player.guildId;
+  stopUpdateInterval(guildId); // clear any previous interval first
+
+  const id = setInterval(async () => {
+    const state = playerStates.get(guildId);
+    // Stop if no active now-playing message
+    if (!state?.nowPlayingMessage) { stopUpdateInterval(guildId); return; }
+
+    const currentPlayer = client.kazagumo?.players?.get(guildId);
+    if (!currentPlayer?.queue?.current) { stopUpdateInterval(guildId); return; }
+
+    await updateNowPlayingMessage(client, currentPlayer);
+  }, NP_UPDATE_INTERVAL_MS);
+
+  updateIntervals.set(guildId, id);
 }
 
 export function setPositionSnapshot(guildId: string, position: number): void {
@@ -30,6 +62,7 @@ export function setPositionSnapshot(guildId: string, position: number): void {
 }
 
 export function clearPlayerState(guildId: string): void {
+  stopUpdateInterval(guildId);
   playerStates.delete(guildId);
 }
 
@@ -53,6 +86,25 @@ function getInterpolatedPosition(player: any): number {
   const length = player.queue?.current?.length ?? 0;
   const interpolated = snapshot.position + elapsed;
   return length > 0 ? Math.min(interpolated, length) : interpolated;
+}
+
+/** Silently generate the canvas image for a track; returns null on failure. */
+async function buildCanvasBuffer(trackInfo: NowPlayingTrackInfo, player: any): Promise<Buffer | null> {
+  try {
+    return await generateNowPlayingCanvas({
+      title:             trackInfo.title,
+      artist:            trackInfo.artist,
+      currentFormatted:  trackInfo.currentFormatted,
+      durationFormatted: trackInfo.durationFormatted,
+      progress:          trackInfo.progress,
+      volume:            trackInfo.volume ?? player.volume ?? 100,
+      requestedBy:       trackInfo.requestedBy,
+      thumbnailUrl:      trackInfo.thumbnailUrl,
+      isLive:            trackInfo.durationFormatted === 'LIVE',
+    });
+  } catch {
+    return null;
+  }
 }
 
 export function buildTrackInfo(player: any, track: any): NowPlayingTrackInfo {
@@ -110,6 +162,7 @@ export async function deleteOldNowPlayingMessage(client: any, guildId: string): 
 }
 
 export async function disableNowPlayingButtons(client: any, player: any): Promise<void> {
+  stopUpdateInterval(player.guildId);
   const guildId = player.guildId;
   const state = getState(guildId);
   const stored = state.nowPlayingMessage;
@@ -120,7 +173,8 @@ export async function disableNowPlayingButtons(client: any, player: any): Promis
 
   const prefix = client.config?.prefix;
   const trackInfo = buildTrackInfo(player, track);
-  const payload = buildNowPlayingPayload(player, trackInfo, { allDisabled: true, prefix }) as any;
+  const canvasBuffer = await buildCanvasBuffer(trackInfo, player);
+  const payload = buildNowPlayingPayload(player, trackInfo, { allDisabled: true, prefix, canvasBuffer: canvasBuffer ?? undefined }) as any;
 
   const msg = await fetchStoredMessage(client, stored);
   if (msg) await msg.edit(payload).catch(() => {});
@@ -136,7 +190,8 @@ export async function sendNowPlayingMessage(
 
   const prefix = client.config?.prefix;
   const trackInfo = buildTrackInfo(player, track);
-  const msg = await sendNowPlaying({ channel }, player, trackInfo, { prefix }).catch((): null => null);
+  const canvasBuffer = await buildCanvasBuffer(trackInfo, player);
+  const msg = await sendNowPlaying({ channel }, player, trackInfo, { prefix, canvasBuffer: canvasBuffer ?? undefined }).catch((): null => null);
 
   if (msg) {
     getState(player.guildId).nowPlayingMessage = {
@@ -144,6 +199,8 @@ export async function sendNowPlayingMessage(
       messageId: msg.id,
       isQueueEnd: false,
     };
+    // Start the 10-second auto-update interval for this player.
+    startUpdateInterval(client, player);
   }
 
   return msg;
@@ -159,7 +216,8 @@ export async function updateNowPlayingMessage(client: any, player: any): Promise
 
   const prefix = client.config?.prefix;
   const trackInfo = buildTrackInfo(player, track);
-  const payload = buildNowPlayingPayload(player, trackInfo, { prefix }) as any;
+  const canvasBuffer = await buildCanvasBuffer(trackInfo, player);
+  const payload = buildNowPlayingPayload(player, trackInfo, { prefix, canvasBuffer: canvasBuffer ?? undefined }) as any;
 
   const msg = await fetchStoredMessage(client, stored);
   if (msg) {
@@ -171,8 +229,7 @@ export async function updateNowPlayingMessage(client: any, player: any): Promise
   const channel = client.channels.cache.get(player.textId);
   if (!channel) return;
 
-  const trackInfo2 = buildTrackInfo(player, track);
-  const newMsg = await sendNowPlaying({ channel }, player, trackInfo2, { prefix }).catch((): null => null);
+  const newMsg = await sendNowPlaying({ channel }, player, trackInfo, { prefix, canvasBuffer: canvasBuffer ?? undefined }).catch((): null => null);
   if (newMsg) {
     state.nowPlayingMessage = {
       channelId: (channel as any).id,

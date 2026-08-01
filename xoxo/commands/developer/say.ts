@@ -1,6 +1,7 @@
 // xoxo/commands/developer/say.ts
 //
-// Make the bot say something. Reserved for bot developers only.
+// Make the bot say something.
+// Available to anyone with Manage Messages or Administrator permission.
 //
 // Supports:
 //   • \n → real newline
@@ -10,7 +11,7 @@
 //   • File/image attachments
 //   • If used as a reply, the bot also replies to that message
 
-import { AttachmentBuilder } from 'discord.js';
+import { AttachmentBuilder, PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
@@ -19,19 +20,30 @@ import { parseSayText } from '../../helpers/emojiParser.js';
 export const options = {
   name: 'say',
   aliases: ['echo'] as string[],
-  description: 'Make the bot say something. (Developer only)',
+  description: 'Make the bot say something. Requires Manage Messages or Administrator.',
   usage: `say <text>
   say Hello\\nworld
   say $emoji<name_or_id>
   say $emojyname1|$|$emojyname2`,
-  category: 'developer',
-  owner: true,
+  category: 'utility',
+  owner: false,
   cooldown: 0,
 };
 
 // ─── Prefix execute ──────────────────────────────────────────────────────────
 
 export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+  // Permission check: Manage Messages or Administrator
+  const invokerPerms = message.channel.permissionsFor?.(message.member);
+  const hasManageMessages = invokerPerms?.has?.(PermissionFlagsBits.ManageMessages);
+  const hasAdmin           = invokerPerms?.has?.(PermissionFlagsBits.Administrator);
+  if (!hasManageMessages && !hasAdmin) {
+    return sendError(
+      { message },
+      'You need **Manage Messages** or **Administrator** permission to use this command.',
+    );
+  }
+
   const rawText: string =
     typeof message.commandRawArgs === 'string' ? message.commandRawArgs : args.join(' ');
   if (!rawText && !message.attachments.size) {
@@ -90,6 +102,17 @@ export async function prefixExecute(message: any, args: string[], client: Levita
 // ─── Slash execute ───────────────────────────────────────────────────────────
 
 export async function slashExecute(interaction: any, client: LevitateClient) {
+  // Permission check: Manage Messages or Administrator
+  const memberPerms = interaction.member?.permissions;
+  const hasManageMessages = memberPerms?.has?.(PermissionFlagsBits.ManageMessages);
+  const hasAdmin           = memberPerms?.has?.(PermissionFlagsBits.Administrator);
+  if (!hasManageMessages && !hasAdmin) {
+    return sendError(
+      { interaction },
+      'You need **Manage Messages** or **Administrator** permission to use this command.',
+    );
+  }
+
   await interaction.deferReply();
 
   const rawText: string = interaction.options.getString('text') ?? '';

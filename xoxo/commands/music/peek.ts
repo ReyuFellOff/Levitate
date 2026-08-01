@@ -1,15 +1,17 @@
 // xoxo/commands/music/peek.ts
-// Show a minimal view of the currently playing track without the controls.
+// Preview any queued track by position number without affecting playback.
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
+import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
-import { buildTrackInfo } from '../../helpers/nowPlayingManager.js';
+import { extractThumbnail, formatDuration } from '../../utils/formatting.js';
+import { generateNowPlayingCanvas } from '../../structures/NowPlayingCanvas.js';
 
 export const options = {
   name: 'peek',
   aliases: [] as string[],
-  description: 'Peek at the currently playing track (minimal view).',
-  usage: 'peek',
+  description: 'Preview a queued track by its position number.',
+  usage: 'peek <position>',
   category: 'music',
   isDeveloper: false,
   userPerms: [] as string[],
@@ -20,21 +22,72 @@ export const options = {
   cooldown: 3,
 };
 
-async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean }, guildId: string, client: LevitateClient) {
+async function handle(
+  ctx: { message?: any; interaction?: any; isSlash: boolean },
+  guildId: string,
+  position: number,
+  client: LevitateClient,
+) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
-  const player  = (client as any).kazagumo.players.get(guildId);
+  const player  = (client as any).kazagumo.players.get(guildId) as any;
+
   if (!player?.queue?.current) return sendError(ctxObj, 'There is nothing currently playing.');
 
-  const track     = player.queue.current;
-  const prefix    = (client as any).config?.prefix;
-  const trackInfo = buildTrackInfo(player, track);
+  if (!player.queue.length) return sendError(ctxObj, 'The queue is empty — there are no upcoming tracks to peek at.');
 
-  await sendNowPlaying(ctxObj as any, player, trackInfo, { isPeek: true, prefix });
+  if (position < 1 || position > player.queue.length) {
+    return sendError(ctxObj, `Position must be between **1** and **${player.queue.length}**.`);
+  }
+
+  const track = player.queue[position - 1];
+  if (!track) return sendError(ctxObj, 'Could not find that track in the queue.');
+
+  const prefix = (client as any).config?.prefix;
+
+  const trackInfo = {
+    title:             track.title,
+    artist:            track.author || 'Unknown',
+    url:               track.uri,
+    sourceName:        track.sourceName || 'Unknown',
+    durationFormatted: track.length ? formatDuration(track.length) : 'LIVE',
+    currentFormatted:  '00:00',
+    progress:          0,
+    thumbnailUrl:      (track.thumbnail ?? extractThumbnail(track) ?? undefined) as string | undefined,
+    volume:            player.volume ?? 100,
+    isServerVolume:    false,
+    requestedBy:       (track.requester as any)?.username as string | undefined,
+  };
+
+  const canvasBuffer = await generateNowPlayingCanvas({
+    title:             trackInfo.title,
+    artist:            trackInfo.artist,
+    currentFormatted:  trackInfo.currentFormatted,
+    durationFormatted: trackInfo.durationFormatted,
+    progress:          0,
+    volume:            trackInfo.volume,
+    requestedBy:       trackInfo.requestedBy,
+    thumbnailUrl:      trackInfo.thumbnailUrl,
+    isLive:            trackInfo.durationFormatted === 'LIVE',
+  }).catch((): null => null);
+
+  await sendNowPlaying(ctxObj as any, player, trackInfo, {
+    isPeek:       true,
+    prefix,
+    canvasBuffer: canvasBuffer ?? undefined,
+  });
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
-  await handle({ message, isSlash: false }, message.guild.id, client);
+export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+  if (!args.length) return sendWrongUsage({ message, client }, options.name, options.usage);
+  const position = parseInt(args[0]!, 10);
+  if (isNaN(position) || position < 1) {
+    return sendError({ message }, 'Please provide a valid position number (e.g. `peek 2`).');
+  }
+  await handle({ message, isSlash: false }, message.guild.id, position, client);
 }
+
 export async function slashExecute(interaction: any, client: LevitateClient) {
-  await handle({ interaction, isSlash: true }, interaction.guild.id, client);
+  await interaction.deferReply();
+  const position = interaction.options.getInteger('position', true);
+  await handle({ interaction, isSlash: true }, interaction.guild.id, position, client);
 }

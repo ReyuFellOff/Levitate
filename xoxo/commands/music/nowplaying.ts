@@ -3,6 +3,7 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
 import { buildTrackInfo } from '../../helpers/nowPlayingManager.js';
+import { generateNowPlayingCanvas } from '../../structures/NowPlayingCanvas.js';
 
 export const options = {
   name: 'nowplaying',
@@ -28,7 +29,19 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   const prefix    = (client as any).config?.prefix;
   const trackInfo = buildTrackInfo(player, track);
 
-  await sendNowPlaying(ctxObj as any, player, trackInfo, { prefix });
+  const canvasBuffer = await generateNowPlayingCanvas({
+    title:             trackInfo.title,
+    artist:            trackInfo.artist,
+    currentFormatted:  trackInfo.currentFormatted,
+    durationFormatted: trackInfo.durationFormatted,
+    progress:          trackInfo.progress,
+    volume:            trackInfo.volume ?? player.volume ?? 100,
+    requestedBy:       trackInfo.requestedBy,
+    thumbnailUrl:      trackInfo.thumbnailUrl,
+    isLive:            trackInfo.durationFormatted === 'LIVE',
+  }).catch((): null => null);
+
+  await sendNowPlaying(ctxObj as any, player, trackInfo, { prefix, canvasBuffer: canvasBuffer ?? undefined });
 }
 
 export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {

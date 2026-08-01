@@ -38,7 +38,10 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
     clearPlayerState(guildId);
     clearSession(player);
     player.queue.clear();
-    await player.stop().catch((): null => null);
+    // Kazagumo has no stop() — clear the queue then skip so the current
+    // track ends immediately. With an empty queue the player idles in place,
+    // keeping the bot in the voice channel as 24/7 requires.
+    player.skip();
     const prefix = (client as any).config?.prefix ?? '$';
     return sendInfo(
       ctxObj,

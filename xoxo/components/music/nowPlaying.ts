@@ -39,6 +39,8 @@ export interface NowPlayingOptions {
   allDisabled?: boolean;
   isPeek?: boolean;
   prefix?: string;
+  /** Pre-generated canvas image buffer — shown instead of the raw thumbnailUrl. */
+  canvasBuffer?: Buffer;
 }
 
 function getSourceEmoji(sourceName?: string): string {
@@ -92,11 +94,20 @@ export function buildNowPlayingPayload(
     ? `${emojis.musicHeartNote} Peeking...`
     : `${sourceEmoji} Now playing`;
 
+  const canvasBuffer = options?.canvasBuffer;
+
   const mainContainer = new ContainerBuilder()
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerText))
     .addSeparatorComponents(new SeparatorBuilder());
 
-  if (track.thumbnailUrl) {
+  // Canvas image takes priority over the raw thumbnail URL (including peek mode).
+  if (canvasBuffer) {
+    mainContainer.addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL('attachment://nowplaying.png'),
+      ),
+    );
+  } else if (track.thumbnailUrl) {
     mainContainer.addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
         new MediaGalleryItemBuilder().setURL(track.thumbnailUrl),
@@ -161,7 +172,11 @@ export function buildNowPlayingPayload(
     )
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(footerText));
 
-  return { components: [mainContainer], flags: MessageFlags.IsComponentsV2 };
+  const payload: any = { components: [mainContainer], flags: MessageFlags.IsComponentsV2 };
+  if (canvasBuffer) {
+    payload.files = [{ attachment: canvasBuffer, name: 'nowplaying.png' }];
+  }
+  return payload;
 }
 
 /** CV2 payload shown in place of the now-playing panel once `player:stop` is pressed. */

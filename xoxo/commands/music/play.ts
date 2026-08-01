@@ -121,10 +121,9 @@ async function handle(
 
   if (!player.playing && !player.paused) {
     await player.play().catch((): null => null);
-  } else if (player.paused) {
-    player.pause(false);
-    await updateNowPlayingMessage(client as any, player).catch((): null => null);
   } else {
+    // Player is already playing or paused — just refresh the now-playing panel
+    // to show the updated queue without touching playback state.
     await updateNowPlayingMessage(client as any, player).catch((): null => null);
   }
 }

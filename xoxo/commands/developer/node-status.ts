@@ -1,6 +1,7 @@
 // xoxo/commands/developer/node-status.ts
-// Developer-only: shows which Lavalink node is currently active and lists all
-// configured nodes in priority order (best → fallback).
+// Show which Lavalink node is currently active and list all configured nodes
+// in priority order (best → fallback).
+// Available to everyone — no owner restriction.
 
 import { sendError, sendInfo } from '../../components/statusMessages.js';
 import { getActiveNodeName, getPriorityOrder } from '../../helpers/nodeManager.js';
@@ -10,8 +11,8 @@ export const options = {
   aliases: ['nodestatus', 'ns'] as string[],
   description: 'Show which Lavalink node is connected and list all configured nodes in priority order.',
   usage: 'node-status',
-  category: 'developer',
-  owner: true,
+  category: 'info',
+  owner: false,
   cooldown: 0,
 };
 
@@ -40,8 +41,6 @@ export async function prefixExecute(message: any, _args: string[], client: any) 
 
   if (connectedNode) {
     const others = priorityOrder.filter(n => n !== connectedNode.name);
-    // If the manager is targeting a different node than the one that's live,
-    // note it (e.g. manager just queued up a failover).
     const managerNote =
       activeManagerName && activeManagerName !== connectedNode.name
         ? ` *(manager targeting: **${activeManagerName}**)*`

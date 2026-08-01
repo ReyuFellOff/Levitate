@@ -1,6 +1,6 @@
 # Levitate — Project Bible (`grace.md`)
 
-> **Last updated:** 2026-07-26 (server-owner role hierarchy bypass, help prefix label, bot-tag user resolution)  
+> **Last updated:** 2026-08-01 (invite: brownishSparkles header, visible divider separators, whiteArrow emoji on invite link; nick: guild-owner check added — returns specific error instead of misleading "higher role" message; customise: Profile button now opens a single unified "Edit Profile" modal with Name + Bio text inputs + Avatar + Banner file upload components (LabelBuilder + FileUploadBuilder) — no sub-panel step; submit or dismiss returns to home page; Reset confirm "Cancel" renamed "← Back"; namestyle: replaced multi-step wizard with single-page form — font/effect/color preset dropdowns + custom-hex modal, pre-populated from DB; $namestyle command opens form directly)  
 > This document is the exhaustive reference for the Levitate Discord bot codebase. It covers every layer: architecture, startup, structures, loaders, events, commands, components, helpers, utilities, configuration, and database. Read it before touching anything. Keep it updated whenever you make a non-trivial change.
 
 ---
@@ -91,6 +91,8 @@ xoxo/
   structures/
     LevitateClient.ts       ← Extended discord.js Client
     StatusManager.ts        ← Presence/status rotator
+    RatingCanvas.ts         ← Canvas image generator for rating commands ($howcute, $gay, etc.)
+    NowPlayingCanvas.ts     ← Canvas image generator for the music now-playing card
   database/
     database.ts             ← MongoDB interface (Database class + initDatabase)
   handlers/
@@ -515,6 +517,7 @@ Routes all incoming interactions to the correct handler.
 | `viewdata:prev\|next` | View-data pagination |
 | `deldata:prev\|next\|confirm\|cancel` | Delete-data pagination + confirm/cancel |
 | `senddata:prev\|next` | Send-data pagination |
+| `customise:*` | Customise panel (profile/namestyle/reset/cancel/done) — `handleCustomiseInteraction` in `xoxo/components/customisation/customise.ts` |
 
 **String select menus** — routed by `customId`:
 
@@ -611,6 +614,8 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$help` | — | Interactive CV2 help menu with category navigation |
 | `$ping` | — | API latency, WS ping, DB ping |
 | `$debug` | — | Detailed stats with interactive category navigation |
+| `$invite` | `addbot`, `botinvite`, `inv` | Bot invite link — CV2 panel: `## <brownishSparkles> Add {botName}`, visible divider separators, `<whiteArrow>` emoji before invite hyperlink + support-server link |
+| `$node-status` | `nodestatus`, `ns` | Show the active Lavalink node and the full configured priority list. Available to **everyone** (`owner: false`). |
 
 #### Moderation
 | Command | Aliases | Description |
@@ -628,8 +633,8 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$lock` | — | Lock a channel (remove SendMessages from @everyone) |
 | `$unlock` | — | Unlock a channel |
 | `$lockdown` | — | Lock every text channel in the server (with confirmation); `lockdown unlock` reverses; slash also has `/lockdown-lift` |
-| `$nick` | — | Change a member's nickname |
-| `$massnick` | — | Change all members' nicknames with confirm prompt |
+| `$nick` | `nickname`, `setnick`, `setnickname` | Change a member's nickname. When targeting the bot itself, bypasses the `manageable` check and uses the REST `@me` endpoint so the bot can always change its own nickname. Guild owner is explicitly rejected with a dedicated error ("I can't change the server owner's nickname") instead of the misleading "higher or equal role" message. |
+| `$massnick` | `massnickname`, `mn` | Change all members' nicknames — prepend, append, remove, or reset. Interactive All/Humans/Bots target-type panel (like `$roleall`). `remove <word>` strips the word from each member's effective displayed name (server nickname if set, otherwise globalName/username). |
 | `$masskick` | — | Kick all members matching criteria with confirm prompt |
  | `$role` | — | `$role add <user> [role]` adds a role, `$role remove <user> [role]` removes one, and `$role <user>` opens the combined add/remove role picker |
 | `$roleall` | `allrole`, `giveall` | Give a role to all/humans/bots — button panel chooses target group; rate-limit-safe batching (10/sec) |
@@ -675,6 +680,7 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$whoping` | `$wp`, `$whoponged` | Show the last 10 messages that directly pinged a user in this channel (direct `<@id>` and reply-pings only — no role mentions). Optional arg: `@user` or user ID to check someone else. Component file: `xoxo/components/utility/whoping.ts`. |
 | `$ghostping` | `$gp`, `$ghostpng` | Ghost-ping up to 10 users — sends a message that pings them then immediately deletes it. Administrator permission required. Role mentions rejected. Slash builder in `xoxo/slashCommands/utility/ghostping.ts` exposes `user` (required) + `user2`–`user10` (optional). Cooldown 10s. |
 | `$host-image` | `hostimage`, `imgbb`, `upload-image` | Upload an image (attachment or URL) and get back hosted links |
+| `$say` | `echo` | Make the bot say something. Requires **Manage Messages** or **Administrator**. Supports `\n`, custom emoji `$emoji<id>` syntax, file attachments, and reply-passthrough. |
 | `$placeholder-help` | `$ph`, `$phhelp` | Paginated placeholder token reference |
 
 #### Server
@@ -733,12 +739,13 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 #### Customisation
 | Command | Aliases | Description |
 |---|---|---|
-| `$namestyle` | `ns` | Interactively set the bot's display name style for this server |
-| `$setavatar` | `setav`, `setpfp` | Change the bot's avatar (developer: operates on bot user) |
-| `$setbanner` | `setbn`, `setcover` | Change the bot's banner |
+| `$customise` | `customize` | Interactive CV2 profile panel — two visible divider separators (one after title, one before buttons). Buttons: **Profile** (directly opens a single "Edit Profile" modal: Display Name, Bio, Avatar URL, Banner URL text inputs + Avatar file upload, Banner file upload via `LabelBuilder`+`FileUploadBuilder`; file upload takes priority over URL for same field; submit or dismiss returns to home page), **Namestyle** (opens namestyle form inline, pre-populated from DB; **← Back** button returns to customise home page by re-registering the customise session and rebuilding the home page via `backFn` on the NS session), **Reset Profile** (confirm step, danger red; **← Back** returns to home), **Done**. Description text has no leading dashes. Accent color `#F39399`. Bot's server avatar shown as thumbnail. Session active 10 minutes. Requires Administrator. |
+| `$namestyle` | `ns` | Opens a single-page name-style form directly — font dropdown (12 options), effect dropdown (6 options), color preset dropdown (15 presets), gradient-only second-color dropdown, **Custom Hex** button (modal with color1+color2 hex fields, pre-filled from session). All dropdowns pre-populated from the guild's saved style. Apply button enabled when all required fields are filled. Requires Manage Server. |
+| `$setavatar` | `setav`, `setpfp` | Change the bot's server avatar — attachment or image URL, or `reset` |
+| `$setbanner` | `setbn`, `setcover` | Change the bot's server banner — attachment or image URL, or `reset` |
 | `$setbio` | — | Change the bot's about-me bio |
 | `$setname` | — | Change the bot's username |
-| `$resetprofile` | — | Reset bot profile to defaults |
+| `$resetprofile` | — | Reset bot server profile (nick/avatar/banner/bio) to global defaults |
 
 #### Fun
 | Command | Aliases | Description |
@@ -763,7 +770,7 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$blacklist` | — | Add/remove/list blacklisted users |
 | `$blacklist-server` | — | Add/remove/list blacklisted servers |
 | `$noprefix` | — | Add/remove/list noprefix users; toggle global/guild state |
-| `$say` | — | Say text as the bot; supports `\n` and custom emoji via `{:emojiId:}` syntax |
+| `$say` | `echo` | *(category: `utility`, `owner: false`)* Say text as the bot. Requires **Manage Messages** or **Administrator**. Supports `\n`, custom emoji via `{:emojiId:}` syntax, and file attachments. |
 | `$say-embed` | — | Send an embed JSON as the bot |
 | `$say-cv2` | — | Send a CV2 JSON payload as the bot |
 | `$note` | — | Post a styled note to the notes channel |
@@ -1887,7 +1894,7 @@ HeavenCloud was removed — it was unreliable and the spam originated from it be
 
 ### Developer command
 
-`$node-status` (`nodestatus`, `ns`) — developer-only. Shows which node is currently connected in Shoukaku's pool and which node the manager is targeting, plus the full configured priority list.
+`$node-status` (`nodestatus`, `ns`) — developer-only (`owner: true`), category `info`. Shows which node is currently connected in Shoukaku's pool and which node the manager is targeting, plus the full configured priority list.
 
 ---
 
@@ -1914,6 +1921,8 @@ All music commands live in `xoxo/commands/music/` with `category: 'music'`. Sour
 `KazagumoTrack.length` is set from `raw.info.length` (ms, from Lavalink) at search time. For tracks that undergo lazy resolution (e.g. Spotify passthrough → YouTube fallback), `track.length` may be updated by `track.resolve()` when playback begins — meaning the value at search time can differ slightly from the value once playing.
 
 **In `nowPlayingManager.ts`'s `buildTrackInfo`:** the authoritative length is pulled from `player.shoukaku?.track?.info?.length` (the active Lavalink track, post-resolution) and falls back to `track.length` only if Shoukaku's value is absent. This ensures the now-playing display always shows the Lavalink-confirmed duration, not the search-estimate.
+
+**Auto-update interval:** `sendNowPlayingMessage` starts a `setInterval` (10 s, stored in the module-level `updateIntervals` map keyed by guildId) that calls `updateNowPlayingMessage` on each tick. The interval is stopped by `clearPlayerState` (track end / player destroy) and `disableNowPlayingButtons` (queue end / stop). Only one interval runs per guild at a time — starting a new one always cancels the previous via `stopUpdateInterval`.
 
 **In `addedToQueue` messages** (`play.ts`, `add.ts`): duration comes from `track.length` at search time (before resolution). For direct YouTube/SoundCloud tracks these match; for indirect Spotify resolves there may be a small discrepancy. This is a known limitation — editing the "added to queue" message post-resolution is not implemented.
 

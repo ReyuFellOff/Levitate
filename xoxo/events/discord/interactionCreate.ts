@@ -63,8 +63,9 @@ import {
   handleServerListBack,
   handleServerListPage,
 } from '../../components/serverlist.js';
-import { handleLogConfigInteraction }  from '../../components/logging/logMenu.js';
-import { handleNsInteraction }         from '../../components/utility/namestyle.js';
+import { handleLogConfigInteraction }    from '../../components/logging/logMenu.js';
+import { handleNsInteraction }           from '../../components/utility/namestyle.js';
+import { handleCustomiseInteraction }    from '../../components/customisation/customise.js';
 import { handleVanityRoleInteraction } from '../../components/utility/vanityrole.js';
 import { handleAutoroleInteraction }   from '../../components/utility/autorole.js';
 import { handleRpsInteraction }       from '../../components/fun/rpsHandler.js';
@@ -95,6 +96,7 @@ const REGISTERED_CUSTOM_ID_PREFIXES = [
   'logcfg', 'rps', 'image', 'ns', 'vr', 'vr-modal', 'ar',
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
   'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue', 'player',
+  'customise',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -124,6 +126,12 @@ export async function execute(interaction: any, client: LevitateClient): Promise
   // ── Image search navigation (buttons only) ────────────────────────────────
   if (typeof interaction.customId === 'string' && interaction.customId.startsWith('image:')) {
     await handleImageInteraction(interaction, client);
+    return;
+  }
+
+  // ── Customise panel (buttons; profile modal awaited inline) ─────────────────
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('customise:') && !interaction.isModalSubmit?.()) {
+    await handleCustomiseInteraction(interaction, client);
     return;
   }
 
