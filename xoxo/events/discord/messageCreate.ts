@@ -190,7 +190,7 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
         );
 
         try {
-          await message.channel.sendTyping().catch((): null => null);
+          if (!mentionCmd.options?.noTyping) await message.channel.sendTyping().catch((): null => null);
           await mentionCmd.prefixExecute(message, mentionArgs, client);
           client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
         } catch (err: unknown) {
@@ -279,7 +279,7 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
   }, message.url, message.channelId);
 
   try {
-    await message.channel.sendTyping().catch((): null => null);
+    if (!command.options?.noTyping) await message.channel.sendTyping().catch((): null => null);
     await command.prefixExecute(message, args, client);
     client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
   } catch (err: unknown) {

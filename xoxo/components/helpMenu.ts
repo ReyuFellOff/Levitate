@@ -98,8 +98,14 @@ function getCategoryMap(client: LevitateClient): Map<string, string[]> {
   return map;
 }
 
-function buildHeaderSection(client: LevitateClient, compact = false): SectionBuilder {
-  const avatarUrl = client.user?.displayAvatarURL({ forceStatic: false }) ?? '';
+function buildHeaderSection(client: LevitateClient, compact = false, guildId?: string | null): SectionBuilder {
+  // Prefer the bot's server-specific avatar when inside a guild
+  const guild      = guildId ? client.guilds.cache.get(guildId) : null;
+  const botMember  = guild?.members?.me;
+  const avatarUrl  =
+    botMember?.displayAvatarURL({ forceStatic: false }) ??
+    client.user?.displayAvatarURL({ forceStatic: false }) ??
+    '';
   const descContent = compact
     ? `**Built for your server.**`
     : `Ascend above the noise. A quiet vanguard of precision and grace—shaping an effortless, elevated sanctuary for your community.`;
@@ -207,7 +213,7 @@ export async function buildHelpMenuPayload(
   const linksText = buildFooterLinks(client);
 
   const container = new ContainerBuilder()
-    .addSectionComponents(buildHeaderSection(client))
+    .addSectionComponents(buildHeaderSection(client, false, guildId))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -255,7 +261,7 @@ export async function buildAllCommandsPayload(
   });
 
   const container = new ContainerBuilder()
-    .addSectionComponents(buildHeaderSection(client))
+    .addSectionComponents(buildHeaderSection(client, false, _guildId))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
   let first = true;
@@ -304,7 +310,7 @@ export async function buildCategoryPayload(
   const linksText = buildFooterLinks(client);
 
   const container = new ContainerBuilder()
-    .addSectionComponents(buildHeaderSection(client, true))
+    .addSectionComponents(buildHeaderSection(client, true, _guildId))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
