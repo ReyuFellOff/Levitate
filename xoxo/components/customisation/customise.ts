@@ -229,10 +229,59 @@ function buildResetConfirmPage(
   return wrap(container);
 }
 
+// ── Success page ──────────────────────────────────────────────────────────────
+
+function buildSuccessPage(
+  scopeId:        string,
+  botDisplayName: string,
+  avatarUrl:      string | null,
+): any {
+  const container = new ContainerBuilder().setAccentColor(ACCENT_COLOR);
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      `## ${emojis.whiteButterflies} Customise **${botDisplayName}**`,
+    ),
+  );
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }),
+  );
+
+  const successText = `${emojis.blacktick} Profile updated successfully.`;
+
+  if (avatarUrl) {
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(successText))
+        .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl)),
+    );
+  } else {
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(successText),
+    );
+  }
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }),
+  );
+
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(customiseId(scopeId, 'success-home'))
+        .setLabel('Customise')
+        .setStyle(ButtonStyle.Secondary),
+    ),
+  );
+
+  return wrap(container);
+}
+
 // ── Profile modal (Name + Bio + Avatar + Banner) ──────────────────────────────
 // File upload takes priority over URL if both are provided for the same field.
 
-function makeProfileModal(scopeId: string): ModalBuilder {
+function makeProfileModal(scopeId: string, currentNick?: string | null): ModalBuilder {
   const modal = new ModalBuilder()
     .setCustomId(`customise:modal:profile:${scopeId}`)
     .setTitle('Edit Profile')
@@ -242,7 +291,7 @@ function makeProfileModal(scopeId: string): ModalBuilder {
           .setCustomId('cp:name')
           .setLabel('Display Name')
           .setStyle(TextInputStyle.Short)
-          .setPlaceholder('Leave blank to keep current')
+          .setPlaceholder(currentNick ? currentNick : 'Leave blank to keep current')
           .setMaxLength(32)
           .setRequired(false),
       ),
@@ -406,12 +455,31 @@ export async function handleCustomiseInteraction(
     return;
   }
 
+  // ── Success → Customise button returns to home ────────────────────────────
+  if (action === 'success-home') {
+    const botDisplayName = await resolveBotDisplayName(client, session.guildId);
+    const avatarUrl      = await resolveBotAvatarUrl(client, session.guildId);
+    await interaction.update(
+      buildHomePage(scopeId, session.guildName, botDisplayName, avatarUrl),
+    ).catch((): null => null);
+    return;
+  }
+
   // ── Profile → open unified Edit Profile modal ─────────────────────────────
   if (action === 'profile') {
     const modalId = `customise:modal:profile:${scopeId}`;
 
+    // Fetch current server nickname to use as placeholder in the modal
+    let currentNick: string | null = null;
     try {
-      await interaction.showModal(makeProfileModal(scopeId));
+      const guild     = client.guilds.cache.get(session.guildId) ?? await client.guilds.fetch(session.guildId);
+      const botMember = guild.members.cache.get(client.user!.id)
+        ?? await guild.members.fetch(client.user!.id).catch((): null => null);
+      currentNick = botMember?.nickname ?? null;
+    } catch { /* best-effort */ }
+
+    try {
+      await interaction.showModal(makeProfileModal(scopeId, currentNick));
     } catch (err: any) {
       console.error('[CUSTOMISE] showModal failed:', err?.message ?? String(err));
       await interaction.reply({
@@ -494,7 +562,7 @@ export async function handleCustomiseInteraction(
     const botDisplayName  = await resolveBotDisplayName(client, session.guildId);
     const freshAvatarUrl  = await resolveBotAvatarUrl(client, session.guildId);
     await submit.message?.edit(
-      buildHomePage(scopeId, session.guildName, botDisplayName, freshAvatarUrl),
+      buildSuccessPage(scopeId, botDisplayName, freshAvatarUrl),
     ).catch((): null => null);
     return;
   }
