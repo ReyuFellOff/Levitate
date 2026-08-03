@@ -2,8 +2,8 @@
 //
 // Change or reset a member's server nickname.
 //
-// Prefix:  $nick <@user|ID|username> <new nickname>
-//          $nick <@user|ID|username> reset
+// Prefix:  $nick <@user|ID|username> <new nickname>       — both required
+//          $nick reset <user1> [user2] ... [user10]       — reset up to 10 at once
 // Slash:   /nick set user:[user] nickname:[text]
 //          /nick reset user:[user]
 //
@@ -20,10 +20,10 @@ import { resolveUser } from '../../helpers/userResolver.js';
 
 export const options = {
   name:        'nick',
-  aliases:     ['nickname', 'setnick', 'setnickname'] as string[],
+  aliases:     ['nickname'] as string[],
   description: "Change or reset a member's server nickname.",
   usage: `nick <@user|ID|username> <new nickname>
-nick <@user|ID|username> reset`,
+nick reset <user1> [user2] ... [user10]`,
   category: 'moderation',
   owner:    false,
   cooldown: 3,
@@ -55,8 +55,80 @@ export async function prefixExecute(
     return sendError(ctx, 'You need the **Manage Nicknames** permission to change nicknames.');
   }
 
-  if (args.length < 2) {
+  if (!args.length) {
     return sendError(ctx, `Usage:\n\`\`\`\n${options.usage}\n\`\`\``);
+  }
+
+  // ── Reset mode: nick reset <user1> [user2] ... [user10] ─────────────────
+  if (args[0]?.toLowerCase() === 'reset') {
+    const rawTargets = args.slice(1, 11); // cap at 10
+    if (!rawTargets.length) {
+      return sendError(ctx, `Provide at least one user to reset.\nUsage: \`nick reset <user1> [user2] ... [user10]\``);
+    }
+
+    const botMember = guild.members.me;
+    if (botMember && !botMember.permissions.has(PermissionFlagsBits.ManageNicknames)) {
+      return sendError(ctx, 'I need the **Manage Nicknames** permission to change nicknames.');
+    }
+
+    const succeeded: string[] = [];
+    const failed:    string[] = [];
+
+    for (const raw of rawTargets) {
+      const targetUser = await resolveUser(client, guild, raw);
+      if (!targetUser) { failed.push(`\`${raw}\` (not found)`); continue; }
+
+      const member = await guild.members.fetch(targetUser.id).catch((): null => null);
+      if (!member) { failed.push(`**${targetUser.username}** (not in server)`); continue; }
+
+      if (member.id === guild.ownerId) {
+        failed.push(`**${targetUser.username}** (server owner)`);
+        continue;
+      }
+
+      // Special case: bot itself
+      if (member.id === client.user?.id) {
+        const token = client.config.botToken;
+        if (!token) { failed.push(`**${targetUser.username}** (no token)`); continue; }
+        const oldNick = member.nickname as string | null;
+        const ok = await setBotSelfNick(guild.id, null, token).then(() => true).catch(() => false);
+        if (ok) {
+          succeeded.push(`**${targetUser.username}**`);
+          sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, null, message.author.username));
+        } else {
+          failed.push(`**${targetUser.username}**`);
+        }
+        continue;
+      }
+
+      if (!member.manageable) {
+        failed.push(`**${targetUser.username}** (role too high)`);
+        continue;
+      }
+
+      const oldNick = member.nickname as string | null;
+      const ok = await member
+        .setNickname(null, `Nickname reset by ${message.author.username}`)
+        .then(() => true)
+        .catch(() => false);
+
+      if (ok) {
+        succeeded.push(`**${targetUser.username}**`);
+        sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, null, message.author.username));
+      } else {
+        failed.push(`**${targetUser.username}**`);
+      }
+    }
+
+    const lines: string[] = [];
+    if (succeeded.length) lines.push(`Reset: ${succeeded.join(', ')}`);
+    if (failed.length)    lines.push(`Failed: ${failed.join(', ')}`);
+    return sendSuccess(ctx, lines.join('\n') || 'Nothing to do.');
+  }
+
+  // ── Set mode: nick <user> <new nickname> ────────────────────────────────
+  if (args.length < 2) {
+    return sendError(ctx, `Both user and nickname are required.\nUsage: \`nick <@user|ID|username> <new nickname>\``);
   }
 
   const targetUser = await resolveUser(client, guild, args[0]);
@@ -65,10 +137,9 @@ export async function prefixExecute(
   const member = await guild.members.fetch(targetUser.id).catch((): null => null);
   if (!member) return sendError(ctx, 'That user is not a member of this server.');
 
-  const isReset = args[1]?.toLowerCase() === 'reset';
-  const newNick = isReset ? null : args.slice(1).join(' ').trim();
-
-  if (!isReset && newNick && newNick.length > MAX_NICK) {
+  const newNick = args.slice(1).join(' ').trim();
+  if (!newNick) return sendError(ctx, 'Nickname cannot be empty.');
+  if (newNick.length > MAX_NICK) {
     return sendError(ctx, `Nickname is too long (**${newNick.length}** chars). Maximum is **${MAX_NICK}** characters.`);
   }
 
@@ -83,7 +154,6 @@ export async function prefixExecute(
       return sendError(ctx, `Failed to change my nickname: ${err.message}`);
     }
     sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, newNick, message.author.username));
-    if (isReset) return sendSuccess(ctx, 'Reset my server nickname.');
     return sendSuccess(ctx, `Changed my server nickname to **${newNick}**.`);
   }
 
@@ -102,10 +172,6 @@ export async function prefixExecute(
   const oldNick = member.nickname as string | null;
   await member.setNickname(newNick, `Nickname change requested by ${message.author.username}`);
   sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, newNick, message.author.username));
-
-  if (isReset) {
-    return sendSuccess(ctx, `Reset **${targetUser.username}**'s nickname.`);
-  }
   return sendSuccess(ctx, `Set **${targetUser.username}**'s nickname to **${newNick}**.`);
 }
 

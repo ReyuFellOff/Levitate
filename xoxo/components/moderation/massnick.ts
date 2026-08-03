@@ -8,12 +8,13 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
+  RoleSelectMenuBuilder,
   SeparatorBuilder,
   TextDisplayBuilder,
   MessageFlags,
 } from 'discord.js';
 
-export type MassNickTargetType = 'all' | 'humans' | 'bots';
+export type MassNickTargetType = 'all' | 'humans' | 'bots' | 'role' | 'members';
 export type MassNickMode = 'prepend' | 'prefix' | 'append' | 'suffix' | 'reset' | 'remove';
 
 function wrap(container: ContainerBuilder): any {
@@ -36,14 +37,33 @@ function modeLabel(mode: MassNickMode, word: string | null): string {
 }
 
 /**
- * Panel asking the user who to apply the mass-nick to.
- * Buttons use `massnick:<type>:<token>` so the per-message collector can filter.
+ * Resolve a human-readable label for the target type, including role/member display info.
+ */
+export function targetDisplayLabel(targetType: string): string {
+  if (targetType === 'all')     return 'all members';
+  if (targetType === 'humans')  return 'humans only';
+  if (targetType === 'bots')    return 'bots only';
+  if (targetType === 'members') return 'specific members';
+  if (targetType.startsWith('role:')) return `role members`;
+  return targetType;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Target selection panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Initial panel: 6 buttons across 2 action rows.
+ * Row 1 — All Members | Humans Only | Bots Only
+ * Row 2 — Specific Role | Members | Cancel
+ * Pass `disabled: true` to render all buttons greyed-out (e.g. on timeout).
  */
 export function buildMassNickTargetPanel(
   mode: MassNickMode,
   word: string | null,
   memberCount: number,
   token: string,
+  disabled = false,
 ): any {
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
@@ -63,28 +83,113 @@ export function buildMassNickTargetPanel(
         new ButtonBuilder()
           .setCustomId(`massnick:all:${token}`)
           .setLabel('All Members')
-          .setStyle(ButtonStyle.Secondary),
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled),
         new ButtonBuilder()
           .setCustomId(`massnick:humans:${token}`)
           .setLabel('Humans Only')
-          .setStyle(ButtonStyle.Secondary),
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled),
         new ButtonBuilder()
           .setCustomId(`massnick:bots:${token}`)
           .setLabel('Bots Only')
-          .setStyle(ButtonStyle.Secondary),
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(disabled),
+      ),
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`massnick:role:${token}`)
+          .setLabel('Specific Role')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(disabled),
+        new ButtonBuilder()
+          .setCustomId(`massnick:members:${token}`)
+          .setLabel('Members')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(disabled),
         new ButtonBuilder()
           .setCustomId(`massnick:cancel:${token}`)
           .setLabel('Cancel')
-          .setStyle(ButtonStyle.Danger),
+          .setStyle(ButtonStyle.Danger)
+          .setDisabled(disabled),
       ),
     );
 
   return wrap(container);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Specific Role — role select dropdown page
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Second page shown when the user clicks "Specific Role".
+ * Contains a RoleSelectMenu so Discord renders a role picker inline.
+ * Pass `disabled: true` to grey-out the menu (e.g. on timeout).
+ */
+export function buildMassNickRoleSelectPage(
+  mode: MassNickMode,
+  word: string | null,
+  token: string,
+  disabled = false,
+): any {
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## Mass Nickname — ${modeLabel(mode, word)}\n` +
+        `-# Select the role whose members should be affected.`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(
+      new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
+        new RoleSelectMenuBuilder()
+          .setCustomId(`massnick:role_select:${token}`)
+          .setPlaceholder('Choose a role…')
+          .setMinValues(1)
+          .setMaxValues(1)
+          .setDisabled(disabled),
+      ),
+    );
+
+  return wrap(container);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Members — message prompt page
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Shown when the user clicks "Members". Asks them to type member
+ * mentions / IDs / usernames in the next message.
+ */
+export function buildMassNickMembersPromptPage(
+  mode: MassNickMode,
+  word: string | null,
+): any {
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## Mass Nickname — ${modeLabel(mode, word)}\n` +
+        `Type the members you want to apply this to in your next message, separated by spaces.\n` +
+        `-# You can use mentions (\`@user\`), user IDs, or usernames. Up to 10 members. You have 60 seconds.`,
+      ),
+    );
+  return wrap(container);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Progress, result, timeout, cancelled
+// ─────────────────────────────────────────────────────────────────────────────
+
 /** Shown while members are being processed. */
-export function buildMassNickProgressPayload(mode: MassNickMode, word: string | null, targetType: MassNickTargetType): any {
-  const targetLabel = targetType === 'all' ? 'all members' : targetType === 'humans' ? 'humans' : 'bots';
+export function buildMassNickProgressPayload(
+  mode: MassNickMode,
+  word: string | null,
+  targetLabel: string,
+): any {
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -99,14 +204,11 @@ export function buildMassNickProgressPayload(mode: MassNickMode, word: string | 
 export function buildMassNickResultPayload(
   mode: MassNickMode,
   word: string | null,
-  targetType: MassNickTargetType,
+  targetLabel: string,
   changed: number,
   skipped: number,
   failed: number,
-  usingCache: boolean,
 ): any {
-  const targetLabel = targetType === 'all' ? 'all members' : targetType === 'humans' ? 'humans only' : 'bots only';
-
   const lines: string[] = [
     `**${changed}** nickname${changed !== 1 ? 's' : ''} updated.`,
   ];
@@ -123,16 +225,6 @@ export function buildMassNickResultPayload(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(lines.join('\n')),
     );
-
-  if (usingCache) {
-    container
-      .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `-# Member list may be incomplete — the Server Members privileged intent is not active in the Discord Developer Portal. Enable it for full coverage.`,
-        ),
-      );
-  }
 
   return wrap(container);
 }

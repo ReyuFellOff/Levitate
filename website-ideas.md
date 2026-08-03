@@ -16,7 +16,7 @@ Check off items as they are implemented.
 - [ ] Gradient borders that animate on hover
 - [ ] SVG noise texture overlay for depth
 - [ ] Rotating hero artwork or bot avatar frames
-- [ ] Parallax depth for stickers and hero artwork
+- [x] Parallax depth for stickers and hero artwork
 - [ ] Seasonal visual themes
 
 ---
@@ -27,7 +27,7 @@ Check off items as they are implemented.
 - [ ] "Back to top" floating button
 - [ ] Responsive mobile bottom navigation
 - [ ] Keyboard shortcut overlay
-- [ ] Animated page transitions
+- [x] Animated page transitions
 
 ---
 

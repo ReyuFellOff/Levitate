@@ -1,6 +1,6 @@
 // xoxo/commands/moderation/massnick.ts
 //
-// Change the server nickname of every member at once.
+// Change the server nickname of every member (or a targeted subset) at once.
 //
 // Modes:
 //   massnick prepend <word>   — "word CurrentNick"
@@ -10,41 +10,38 @@
 //   massnick remove  <word>   — remove all occurrences of <word> from each nick
 //   massnick reset            — remove all server nicknames
 //
-// After providing the mode and word, an interactive panel with four buttons
-// lets the invoker choose who is affected:
-//   • All Members — every member regardless of type
-//   • Humans Only — excludes bots
-//   • Bots Only   — only bot accounts
-//   • Cancel
+// After providing the mode and word, an interactive panel lets the invoker
+// choose who is affected:
+//   Row 1 — All Members | Humans Only | Bots Only
+//   Row 2 — Specific Role (role dropdown) | Members (type them) | Cancel
 //
 // prepend/append/remove work on the member's effective displayed name:
-//   — their server nickname if one is set
-//   — otherwise their globalName / username
+//   — their server nickname if one is set, otherwise globalName / username.
 // Nicknames are capped at 32 characters (Discord limit).
 //
-// Requires ManageNicknames (+ ManageGuild recommended so regular mods can't abuse it).
+// Requires ManageNicknames (+ ManageGuild recommended).
 
 import { PermissionFlagsBits, MessageFlags } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendLoading, sendSuccess } from '../../components/statusMessages.js';
+import { resolveUser } from '../../helpers/userResolver.js';
 import {
   buildMassNickTargetPanel,
+  buildMassNickRoleSelectPage,
+  buildMassNickMembersPromptPage,
   buildMassNickProgressPayload,
   buildMassNickResultPayload,
-  buildMassNickTimedOutPayload,
   buildMassNickCancelledPayload,
-  type MassNickTargetType,
+  targetDisplayLabel,
   type MassNickMode,
 } from '../../components/moderation/massnick.js';
 
 export const options = {
   name:        'massnick',
-  aliases:     ['massnickname', 'mn'] as string[],
+  aliases:     ['massnickname'] as string[],
   description: 'Change the nickname of every member at once (prepend, append, remove, or reset).',
   usage: `massnick prepend <word>
-massnick prefix  <word>
 massnick append  <word>
-massnick suffix  <word>
 massnick remove  <word>
 massnick reset`,
   category: 'moderation',
@@ -64,43 +61,87 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Get the effective base name for a member — server nickname if set,
- * otherwise globalName/username. This is what prepend/append/remove operate on.
- */
+/** Get the effective base name — server nickname, globalName, or username. */
 function effectiveName(member: any): string {
   return member.nickname ?? member.user.globalName ?? member.user.username;
+}
+
+/**
+ * Parse a space-separated member list from a raw string.
+ * Accepts: @mentions, raw user IDs, usernames.
+ * Returns deduplicated array of user IDs (up to 10).
+ */
+async function parseMembers(
+  input:  string,
+  guild:  any,
+  client: LevitateClient,
+): Promise<string[]> {
+  const tokens = input.trim().split(/\s+/).slice(0, 10);
+  const ids    = new Set<string>();
+
+  for (const token of tokens) {
+    // Mention: <@123> or <@!123>
+    const mentionMatch = token.match(/^<@!?(\d{17,20})>$/);
+    if (mentionMatch) { ids.add(mentionMatch[1]); continue; }
+
+    // Raw numeric ID
+    if (/^\d{17,20}$/.test(token)) { ids.add(token); continue; }
+
+    // Username / display name — try to resolve from guild cache
+    const resolved = await resolveUser(client, guild, token).catch((): null => null);
+    if (resolved) ids.add(resolved.id);
+  }
+
+  return [...ids];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Core mass-nickname logic
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Apply the mass-nick operation to the guild.
+ *
+ * targetType  — 'all' | 'humans' | 'bots' | `role:<roleId>` | 'members'
+ * specificIds — required when targetType === 'members'
+ */
 async function runMassNick(
-  panel:      any,
-  guild:      any,
-  mode:       MassNickMode,
-  word:       string | null,
-  targetType: MassNickTargetType,
-  invoker:    string,
-  client:     LevitateClient,
+  panel:       any,
+  guild:       any,
+  mode:        MassNickMode,
+  word:        string | null,
+  targetType:  string,
+  displayLabel: string,
+  invoker:     string,
+  client:      LevitateClient,
+  specificIds: string[] = [],
 ): Promise<void> {
-  await panel.edit(buildMassNickProgressPayload(mode, word, targetType)).catch((): null => null);
+  await panel.edit(buildMassNickProgressPayload(mode, word, displayLabel)).catch((): null => null);
 
   let members: Map<string, any>;
-  let usingCache = false;
   try {
     members = await guild.members.fetch();
   } catch {
     members = guild.members.cache;
-    usingCache = true;
+  }
+
+  // If targeting specific members, only fetch/use those
+  if (targetType === 'members' && specificIds.length > 0) {
+    const subset = new Map<string, any>();
+    for (const id of specificIds) {
+      const m =
+        members.get(id) ??
+        (await guild.members.fetch(id).catch((): null => null));
+      if (m) subset.set(id, m);
+    }
+    members = subset;
   }
 
   let changed = 0;
   let failed  = 0;
   let skipped = 0;
 
-  const auditReason = `massnick ${mode}${word ? ` "${word}"` : ''} (${targetType}) by ${invoker}`;
+  const auditReason = `massnick ${mode}${word ? ` "${word}"` : ''} (${displayLabel}) by ${invoker}`;
   const selfId      = client.user?.id;
 
   // Build remove regex once (case-insensitive)
@@ -108,12 +149,14 @@ async function runMassNick(
     ? new RegExp(escapeRegex(word), 'gi')
     : null;
 
+  // Role-based target: extract role ID
+  const roleId = targetType.startsWith('role:') ? targetType.slice(5) : null;
+
   for (const [, member] of members) {
-    // ── Target type filter — silently ignore members outside the target group.
-    // Do NOT count them as skipped; skipped is reserved for members in the
-    // target group that already had the correct nickname.
-    if (targetType === 'humans' && member.user.bot) continue;
+    // ── Target type filter ──────────────────────────────────────────────────
+    if (targetType === 'humans' && member.user.bot)  continue;
     if (targetType === 'bots'   && !member.user.bot) continue;
+    if (roleId && !member.roles.cache.has(roleId))   continue;
 
     // ── Manageability check ─────────────────────────────────────────────────
     const isSelf = selfId && member.user.id === selfId;
@@ -126,10 +169,9 @@ async function runMassNick(
       if (member.nickname === null) { skipped++; continue; }
       newNick = null;
     } else if (mode === 'remove') {
-      const base = effectiveName(member);
+      const base     = effectiveName(member);
       const stripped = base.replace(removeRegex!, '').replace(/\s+/g, ' ').trim();
-      if (stripped === base) { skipped++; continue; } // word not present
-      // If stripping the word restores the original username/globalName, clear the nick instead
+      if (stripped === base) { skipped++; continue; }
       const globalBase = member.user.globalName ?? member.user.username;
       newNick = stripped === globalBase ? null : stripped.slice(0, MAX_NICK) || null;
     } else if (mode === 'prepend' || mode === 'prefix') {
@@ -141,7 +183,6 @@ async function runMassNick(
       newNick = `${base} ${word}`.slice(0, MAX_NICK);
     }
 
-    // Skip if already at the target nick
     if (newNick !== null && newNick === member.nickname) { skipped++; continue; }
 
     const ok = await member
@@ -154,8 +195,121 @@ async function runMassNick(
   }
 
   await panel
-    .edit(buildMassNickResultPayload(mode, word, targetType, changed, skipped, failed, usingCache))
+    .edit(buildMassNickResultPayload(mode, word, displayLabel, changed, skipped, failed))
     .catch((): null => null);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared collector logic (used by both prefix and slash flows)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function attachCollector(
+  panel:      any,
+  channel:    any,
+  authorId:   string,
+  guild:      any,
+  mode:       MassNickMode,
+  word:       string | null,
+  token:      string,
+  invoker:    string,
+  client:     LevitateClient,
+): void {
+  // Track which page is currently rendered so we know what to disable on timeout.
+  let currentPage: 'buttons' | 'role_select' = 'buttons';
+
+  // No max — we stop manually so role/members multi-step works.
+  // 5-minute timeout: on expiry, disable the active page's controls instead
+  // of replacing the panel with a plain-text "timed out" message.
+  const collector = panel.createMessageComponentCollector({
+    filter: (i: any) => {
+      if (!i.customId.startsWith('massnick:') || !i.customId.endsWith(`:${token}`)) return false;
+      if (i.user.id !== authorId) {
+        i.reply({ content: 'Only the person who ran this command can use this.', flags: MessageFlags.Ephemeral })
+          .catch((): null => null);
+        return false;
+      }
+      return true;
+    },
+    time: 300_000, // 5 minutes
+  });
+
+  collector.on('collect', async (i: any) => {
+    await i.deferUpdate().catch((): null => null);
+    const parts  = i.customId.split(':');
+    const action = parts[1] as string;
+
+    // ── Simple targets: run immediately ──────────────────────────────────
+    if (action === 'all' || action === 'humans' || action === 'bots') {
+      const label = targetDisplayLabel(action);
+      await runMassNick(panel, guild, mode, word, action, label, invoker, client);
+      collector.stop('done');
+      return;
+    }
+
+    if (action === 'cancel') {
+      await panel.edit(buildMassNickCancelledPayload()).catch((): null => null);
+      collector.stop('done');
+      return;
+    }
+
+    // ── Specific Role: switch to role dropdown page ───────────────────────
+    if (action === 'role') {
+      currentPage = 'role_select';
+      await panel.edit(buildMassNickRoleSelectPage(mode, word, token)).catch((): null => null);
+      // Collector continues — next interaction will be role_select
+      return;
+    }
+
+    // ── Role select menu interaction ──────────────────────────────────────
+    if (action === 'role_select') {
+      const roleId     = i.values[0] as string;
+      const roleName   = guild.roles.cache.get(roleId)?.name ?? roleId;
+      const targetType = `role:${roleId}`;
+      const label      = `members with role **${roleName}**`;
+      await runMassNick(panel, guild, mode, word, targetType, label, invoker, client);
+      collector.stop('done');
+      return;
+    }
+
+    // ── Members: prompt for a message, then collect it ────────────────────
+    if (action === 'members') {
+      await panel.edit(buildMassNickMembersPromptPage(mode, word)).catch((): null => null);
+      collector.stop('members'); // stop button collector; take over with a message collector
+
+      const msgCollector = channel.createMessageCollector({
+        filter: (m: any) => m.author.id === authorId,
+        max:    1,
+        time:   60_000,
+      });
+
+      msgCollector.on('collect', async (msg: any) => {
+        await msg.delete().catch((): null => null);
+        const ids = await parseMembers(msg.content, guild, client);
+
+        if (!ids.length) {
+          await panel.edit(buildMassNickCancelledPayload()).catch((): null => null);
+          return;
+        }
+
+        const label = `**${ids.length}** specific member${ids.length !== 1 ? 's' : ''}`;
+        await runMassNick(panel, guild, mode, word, 'members', label, invoker, client, ids);
+      });
+
+      // Members prompt has no buttons — nothing to disable on timeout; just leave it.
+      msgCollector.on('end', (_collected: any, _reason: string) => { /* no-op */ });
+    }
+  });
+
+  collector.on('end', async (_: any, reason: string) => {
+    if (reason !== 'time') return; // 'done' / 'members' handled inline
+
+    // Disable whichever page is currently visible
+    if (currentPage === 'role_select') {
+      await panel.edit(buildMassNickRoleSelectPage(mode, word, token, true)).catch((): null => null);
+    } else {
+      await panel.edit(buildMassNickTargetPanel(mode, word, guild.memberCount, token, true)).catch((): null => null);
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,7 +343,7 @@ export async function prefixExecute(
   if (!isReset) {
     word = args[1] ?? null;
     if (!word) {
-      const verb = mode === 'remove' ? 'remove' : mode === 'prepend' || mode === 'prefix' ? 'prepend' : 'append';
+      const verb = mode === 'remove' ? 'remove' : (mode === 'prepend' || mode === 'prefix') ? 'prepend' : 'append';
       return sendError(ctx, `Provide a single word to ${verb}. Example: \`massnick ${mode} HLW\``);
     }
     if (/\s/.test(word)) {
@@ -197,44 +351,23 @@ export async function prefixExecute(
     }
   }
 
-  // Generate the token here so the panel and the collector share the same one.
   const token = `${message.id}-${Date.now()}`;
   const panel = await message.channel
     .send(buildMassNickTargetPanel(mode, word, guild.memberCount, token))
     .catch((): null => null);
   if (!panel) return;
 
-  const collector = panel.createMessageComponentCollector({
-    filter: (i: any) => {
-      if (!i.customId.startsWith('massnick:') || !i.customId.endsWith(`:${token}`)) return false;
-      if (i.user.id !== message.author.id) {
-        i.reply({ content: 'Only the person who ran this command can use this.', flags: MessageFlags.Ephemeral })
-          .catch((): null => null);
-        return false;
-      }
-      return true;
-    },
-    max:  1,
-    time: 30_000,
-  });
-
-  collector.on('collect', async (i: any) => {
-    await i.deferUpdate().catch((): null => null);
-    const action = i.customId.split(':')[1] as string;
-
-    if (action === 'cancel') {
-      await panel.edit(buildMassNickCancelledPayload()).catch((): null => null);
-      return;
-    }
-
-    await runMassNick(panel, guild, mode, word, action as MassNickTargetType, message.author.username, client);
-  });
-
-  collector.on('end', async (_: any, reason: string) => {
-    if (reason === 'time') {
-      await panel.edit(buildMassNickTimedOutPayload()).catch((): null => null);
-    }
-  });
+  attachCollector(
+    panel,
+    message.channel,
+    message.author.id,
+    guild,
+    mode,
+    word,
+    token,
+    message.author.username,
+    client,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -276,37 +409,15 @@ export async function slashExecute(
   const panel = await interaction.fetchReply().catch((): null => null);
   if (!panel) return;
 
-  const collector = panel.createMessageComponentCollector({
-    filter: (i: any) => {
-      if (!i.customId.startsWith('massnick:') || !i.customId.endsWith(`:${token}`)) return false;
-      if (i.user.id !== interaction.user.id) {
-        i.reply({ content: 'Only the person who ran this command can use this.', flags: MessageFlags.Ephemeral })
-          .catch((): null => null);
-        return false;
-      }
-      return true;
-    },
-    max:  1,
-    time: 30_000,
-  });
-
-  collector.on('collect', async (i: any) => {
-    await i.deferUpdate().catch((): null => null);
-    const parts  = i.customId.split(':');
-    const action = parts[1] as string;
-
-    if (action === 'cancel') {
-      await panel.edit(buildMassNickCancelledPayload()).catch((): null => null);
-      return;
-    }
-
-    const targetType = action as MassNickTargetType;
-    await runMassNick(panel, guild, mode, word, targetType, interaction.user.username, client);
-  });
-
-  collector.on('end', async (_: any, reason: string) => {
-    if (reason === 'time') {
-      await panel.edit(buildMassNickTimedOutPayload()).catch((): null => null);
-    }
-  });
+  attachCollector(
+    panel,
+    interaction.channel,
+    interaction.user.id,
+    guild,
+    mode,
+    word,
+    token,
+    interaction.user.username,
+    client,
+  );
 }
