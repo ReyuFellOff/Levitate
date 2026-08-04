@@ -3,31 +3,35 @@
 // Ghost-ping one or more users — sends a message that pings them, then
 // immediately deletes it so the notification appears but the message is gone.
 //
-// Prefix:  $ghostping <@user1> [@user2] … (up to 10 users)
-// Slash:   /ghostping user1:<user> [user2-user10]
+// Prefix:  $ghostping <@user1> [@user2] … or a role
+// Slash:   /ghostping user1:<user> [user2-user10] or role:<role>
 //
 // Checks:
 //   • Invoker has Administrator
 //   • Bot has ManageMessages (needed to delete the ghost ping)
-//   • At least 1 user, at most 10 users
-//   • No role mentions — user IDs only
-//   • Cooldown: 10 seconds
+//   • At least 1 user or a role
+//   • Roles may only be targeted by the server owner
+//   • Cooldown: 30 seconds
 
 import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
+import { resolveRole } from '../../helpers/roleResolver.js';
 
 export const options = {
   name:        'ghostping',
   aliases:     ['gp', 'ghostpng'] as string[],
-  description: 'Ghost-ping up to 10 users (pings and immediately deletes the message).',
-  usage:       'ghostping <@user1> [@user2] … (max 10)',
+  description: 'Ghost-ping users or a role (pings and immediately deletes the message).',
+  usage:       'ghostping <@user1> [@user2] … | <role>',
   category:    'utility',
   owner:       false,
-  cooldown:    10,
+  cooldown:    30,
 };
 
 const MAX_USERS = 10;
+type GhostPingTarget =
+  | { kind: 'users'; ids: string[] }
+  | { kind: 'role'; id: string; mention: string };
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -51,16 +55,24 @@ function extractUserIds(args: string[]): string[] {
   return ids;
 }
 
-function buildContent(userIds: string[]): string {
-  return userIds.map((id) => `<@${id}>`).join(' ');
+function buildContent(target: GhostPingTarget): string {
+  if (target.kind === 'role') {
+    return target.mention;
+  }
+  return target.ids.map((id) => `<@${id}>`).join(' ');
 }
 
-async function sendGhostPing(channel: any, userIds: string[]): Promise<void> {
-  const content = buildContent(userIds);
+async function sendGhostPing(channel: any, target: GhostPingTarget): Promise<void> {
+  const content = buildContent(target);
+  const allowedMentions = target.kind === 'role'
+    ? target.mention === '@everyone'
+      ? { parse: ['everyone'] as const }
+      : { roles: [target.id] }
+    : { users: target.ids };
   try {
     const msg = await channel.send({
       content,
-      allowedMentions: { users: userIds },
+      allowedMentions,
     });
     await msg.delete().catch((): null => null);
   } catch {
@@ -92,13 +104,22 @@ export async function prefixExecute(
   }
 
   if (!args.length) {
-    return sendError(ctx, 'Please mention at least one user to ghost-ping.');
+    return sendError(ctx, 'Please mention at least one user or provide a role to ghost-ping.');
   }
 
-  // Reject any role mentions explicitly
-  const hasRoleMention = args.some((a) => /^<@&\d{17,20}>$/.test(a));
-  if (hasRoleMention) {
-    return sendError(ctx, 'Roles cannot be ghost-pinged. Only users are allowed.');
+  const role = resolveRole(message.guild, args.join(' '));
+  if (role) {
+    if (message.guild.ownerId !== message.author.id) {
+      return sendError(ctx, 'Only the server owner can ghost-ping a role.');
+    }
+
+    await message.delete().catch((): null => null);
+    await sendGhostPing(message.channel, {
+      kind: 'role',
+      id: role.id,
+      mention: role.id === message.guild.id ? '@everyone' : `<@&${role.id}>`,
+    });
+    return;
   }
 
   const userIds = extractUserIds(args);
@@ -113,7 +134,7 @@ export async function prefixExecute(
   // Delete the command message first (best-effort) so the source is hidden
   await message.delete().catch((): null => null);
 
-  await sendGhostPing(message.channel, userIds);
+  await sendGhostPing(message.channel, { kind: 'users', ids: userIds });
 }
 
 // ─── Slash execute ────────────────────────────────────────────────────────────
@@ -140,7 +161,26 @@ export async function slashExecute(
     return sendError(ctx, 'I need **Manage Messages** permission to delete the ghost ping.');
   }
 
-  // Collect up to 10 user options
+  const roleInput = interaction.options.getString('role', false)?.trim();
+  if (roleInput) {
+    if (interaction.guild.ownerId !== interaction.user.id) {
+      return sendError(ctx, 'Only the server owner can ghost-ping a role.');
+    }
+
+    const role = resolveRole(interaction.guild, roleInput);
+    if (!role) {
+      return sendError(ctx, 'Role not found. Use a role mention, role ID, or role name.');
+    }
+
+    await sendGhostPing(interaction.channel, {
+      kind: 'role',
+      id: role.id,
+      mention: role.id === interaction.guild.id ? '@everyone' : `<@&${role.id}>`,
+    });
+    return sendSuccess(ctx, 'Ghost-pinged role.');
+  }
+
+  // Collect user options
   const userIds: string[] = [];
   const seen = new Set<string>();
 
@@ -158,7 +198,7 @@ export async function slashExecute(
     return sendError(ctx, 'No valid users provided.');
   }
 
-  await sendGhostPing(interaction.channel, userIds);
+  await sendGhostPing(interaction.channel, { kind: 'users', ids: userIds });
 
   const label = userIds.length === 1 ? '1 user' : `${userIds.length} users`;
   return sendSuccess(ctx, `Ghost-pinged ${label}.`);

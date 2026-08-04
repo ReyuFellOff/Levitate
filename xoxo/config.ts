@@ -115,7 +115,14 @@ export interface Config {
     auth: string;
     secure: boolean;
   }>;
-
+  /** Song metadata and display volume used by `nowplaying sample` / `test`. */
+  sampleNowPlaying: {
+    title: string;
+    artist: string;
+    volume: number;
+  };
+  /** Image shown on the `filter help` / `filter available` guide. */
+  filterHelpImageUrl: string;
   // 9. Default presence
   /**
    * Fallback presence — applied only when no entry in
@@ -218,6 +225,15 @@ export const config: Config = {
       secure: false,
     },
   ],
+  // ── 8c. Now-playing sample ─────────────────────────────────────────────────
+  // Set only the song identity and preview volume here. Duration, artwork,
+  // URL, and other track data are fetched from the music search result.
+  sampleNowPlaying: {
+    title: 'Call Out My Name',
+    artist: 'The Weeknd',
+    volume: 67,
+  },
+  filterHelpImageUrl: 'https://i.ibb.co/gLryQTK4/Vinyl-aesthetic-music-1.jpg',
 
   // ── 8. Default presence ────────────────────────────────────────────────────
   // Fallback only — used when no botInstances.ts entry matches the running

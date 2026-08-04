@@ -38,6 +38,8 @@ export interface NowPlayingTrackInfo {
 export interface NowPlayingOptions {
   allDisabled?: boolean;
   isPeek?: boolean;
+  /** Use the explicit sample-preview heading instead of the live heading. */
+  isSample?: boolean;
   prefix?: string;
   /** Pre-generated canvas image buffer — shown instead of the raw thumbnailUrl. */
   canvasBuffer?: Buffer;
@@ -92,7 +94,7 @@ export function buildNowPlayingPayload(
 
   const headerText = isPeek
     ? `${emojis.musicHeartNote} Peeking...`
-    : `${sourceEmoji} Now playing`;
+    : `### ${sourceEmoji} ${options?.isSample ? 'Now playing sample' : 'Now Playing'}`;
 
   const canvasBuffer = options?.canvasBuffer;
 

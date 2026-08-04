@@ -3,10 +3,10 @@ import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('ghostping')
-  .setDescription('Ghost-ping up to 10 users — pings them and immediately deletes the message.')
+  .setDescription('Ghost-ping users or a role — pings them and immediately deletes the message.')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .addUserOption((o) =>
-    o.setName('user').setDescription('User to ghost-ping.').setRequired(true),
+    o.setName('user').setDescription('User to ghost-ping.').setRequired(false),
   )
   .addUserOption((o) =>
     o.setName('user2').setDescription('Second user to ghost-ping.').setRequired(false),
@@ -34,4 +34,7 @@ export const data = new SlashCommandBuilder()
   )
   .addUserOption((o) =>
     o.setName('user10').setDescription('Tenth user to ghost-ping.').setRequired(false),
+  )
+  .addStringOption((o) =>
+    o.setName('role').setDescription('Role mention, ID, or name to ghost-ping.').setRequired(false),
   );

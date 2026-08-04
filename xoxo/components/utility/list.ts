@@ -433,6 +433,87 @@ function permList(perms: string[]): string {
   return chunks.join('\n');
 }
 
+export function buildRoleInfoPayload(
+  item: any,
+  includeNavigation = false,
+  disabled = false,
+): any {
+  const perms = item.permissions?.toArray?.() ?? [];
+  const iconUrl: string | null = item.iconURL?.() ?? null;
+  const managedLine = item.managed ? '**Managed:** Yes (Integration/Bot role)' : null;
+
+  const tags: string[] = [];
+  if (item.tags?.premiumSubscriberRole) tags.push('Boost Subscriber Role');
+  if (item.tags?.botId)                tags.push(`Bot Role (\`${item.tags.botId}\`)`);
+  if (item.tags?.integrationId)        tags.push(`Integration (\`${item.tags.integrationId}\`)`);
+  if (item.tags?.guildConnections)     tags.push('Linked Role');
+  if (item.tags?.availableForPurchase) tags.push('Available for Purchase');
+  const tagsLine = tags.length ? `**Tags:** ${tags.join(' · ')}` : null;
+  const unicodeEmoji = item.unicodeEmoji ? `**Emoji:** ${item.unicodeEmoji}` : null;
+  const memberSize = item.members?.size ?? 0;
+
+  const lines = [
+    `${emojis.whiteArrow} **__Role Info__**`,
+    `**Name:** ${item.name}`,
+    `**Mention:** <@&${item.id}>`,
+    `**ID:** \`${item.id}\``,
+    `**Color:** ${item.hexColor !== '#000000' ? item.hexColor : 'Default (no color)'}`,
+    `**Position:** ${item.position} / ${(item.guild?.roles?.cache?.size ?? 1) - 1}`,
+    `**Members with Role:** ${memberSize.toLocaleString()}`,
+    `**Hoisted:** ${item.hoist ? 'Yes' : 'No'}`,
+    `**Mentionable:** ${item.mentionable ? 'Yes' : 'No'}`,
+    managedLine,
+    tagsLine,
+    unicodeEmoji,
+    `**Created:** ${ts(item.createdTimestamp)}`,
+  ].filter(Boolean).join('\n');
+
+  const permText = perms.length
+    ? `**Permissions (${perms.length}):**\n${permList(perms)}`
+    : '**Permissions:** None';
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${TYPE_EMOJI.roles} ${TYPE_LABEL.roles} — Details`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  if (iconUrl) {
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines))
+        .setThumbnailAccessory(new ThumbnailBuilder().setURL(iconUrl)),
+    );
+  } else {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(lines));
+  }
+
+  container
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(permText));
+
+  if (includeNavigation) {
+    container
+      .addActionRowComponents(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId('list:back')
+            .setLabel('Back to List')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(disabled),
+        ),
+      );
+  }
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] },
+  };
+}
+
 function channelTypeFull(type: number): string {
   const m: Record<number, string> = {
     0: 'Text Channel', 2: 'Voice Channel', 5: 'Announcement Channel',
@@ -449,6 +530,8 @@ function channelTypeFull(type: number): string {
 function buildDetailPayload(session: ListSession, item: any, disabled = false): any {
   const { listType } = session;
 
+  if (listType === 'roles') return buildRoleInfoPayload(item, true, disabled);
+
   const backBtn = new ButtonBuilder()
     .setCustomId('list:back')
     .setLabel('← Back to List')
@@ -464,69 +547,6 @@ function buildDetailPayload(session: ListSession, item: any, disabled = false): 
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
   switch (listType) {
-
-    // ── Role ──────────────────────────────────────────────────────────────────
-    case 'roles': {
-      const perms = item.permissions?.toArray?.() ?? [];
-
-      // Role icon (if set)
-      const iconUrl: string | null = item.iconURL?.() ?? null;
-
-      // Managed/integration info
-      const managedLine = item.managed ? '**Managed:** Yes (Integration/Bot role)' : null;
-
-      // Tags (premium subscriber, bot, linked role)
-      const tags: string[] = [];
-      if (item.tags?.premiumSubscriberRole) tags.push('Boost Subscriber Role');
-      if (item.tags?.botId)                tags.push(`Bot Role (\`${item.tags.botId}\`)`);
-      if (item.tags?.integrationId)        tags.push(`Integration (\`${item.tags.integrationId}\`)`);
-      if (item.tags?.guildConnections)     tags.push('Linked Role');
-      if (item.tags?.availableForPurchase) tags.push('Available for Purchase');
-      const tagsLine = tags.length ? `**Tags:** ${tags.join(' · ')}` : null;
-
-      // Unicode emoji on the role (separate from iconURL)
-      const unicodeEmoji = item.unicodeEmoji ? `**Emoji:** ${item.unicodeEmoji}` : null;
-
-      const memberSize = item.members?.size ?? 0;
-
-      const lines = [
-        `${emojis.whiteArrow} **__Role Info__**`,
-        `**Name:** ${item.name}`,
-        `**Mention:** <@&${item.id}>`,
-        `**ID:** \`${item.id}\``,
-        `**Color:** ${item.hexColor !== '#000000' ? item.hexColor : 'Default (no color)'}`,
-        `**Position:** ${item.position} / ${(item.guild?.roles?.cache?.size ?? 1) - 1}`,
-        `**Members with Role:** ${memberSize.toLocaleString()}`,
-        `**Hoisted:** ${item.hoist ? 'Yes — shown separately in member list' : 'No'}`,
-        `**Mentionable:** ${item.mentionable ? 'Yes' : 'No'}`,
-        managedLine,
-        tagsLine,
-        unicodeEmoji,
-        `**Created:** ${ts(item.createdTimestamp)}`,
-      ].filter(Boolean).join('\n');
-
-      const permText = perms.length
-        ? `**Permissions (${perms.length}):**\n${permList(perms)}`
-        : '**Permissions:** None';
-
-      if (iconUrl) {
-        // Section with thumbnail
-        container
-          .addSectionComponents(
-            new SectionBuilder()
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines))
-              .setThumbnailAccessory(new ThumbnailBuilder().setURL(iconUrl)),
-          )
-          .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(permText));
-      } else {
-        container
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines))
-          .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(permText));
-      }
-      break;
-    }
 
     // ── Member ────────────────────────────────────────────────────────────────
     case 'members': {

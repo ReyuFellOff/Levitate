@@ -155,10 +155,14 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
         let mentionCmd =
           client.commands.get(mentionCmdName) ??
           client.commands.get(client.aliases.get(mentionCmdName) ?? '');
+        let mentionUserAlias = false;
 
         if (!mentionCmd) {
           const userAliased = client.userAliases.get(message.author.id)?.get(mentionCmdName);
-          if (userAliased) mentionCmd = client.commands.get(userAliased);
+          if (userAliased) {
+            mentionCmd = client.commands.get(userAliased);
+            mentionUserAlias = !!mentionCmd;
+          }
         }
 
         if (!mentionCmd) {
@@ -176,6 +180,7 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
           await reservedForDeveloper({ message }).catch((): null => null);
           return;
         }
+        if (mentionUserAlias && !(await enforceUserAliasPermissions(message, mentionCmd))) return;
 
         message.commandRawArgs = rest.slice(mentionCmdName.length).trimStart();
 
@@ -239,12 +244,16 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
   let command =
     client.commands.get(commandName) ??
     client.commands.get(client.aliases.get(commandName) ?? '');
+  let userAlias = false;
 
   if (!command) {
     // Per-user alias — private to the author, checked only after global
     // commands/aliases have failed to resolve (global names always win).
     const userAliased = client.userAliases.get(message.author.id)?.get(commandName);
-    if (userAliased) command = client.commands.get(userAliased);
+    if (userAliased) {
+      command = client.commands.get(userAliased);
+      userAlias = !!command;
+    }
   }
 
   if (!command) {
@@ -265,6 +274,7 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     await reservedForDeveloper({ message }).catch((): null => null);
     return;
   }
+  if (userAlias && !(await enforceUserAliasPermissions(message, command))) return;
 
   // ── Attach raw args to message for commands that need real newlines ────────
   // Strips the prefix + commandName token, preserving actual whitespace/newlines.
@@ -286,6 +296,33 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[messageCreate] Error in "${commandName}": ${msg}`);
   }
+}
+
+/**
+ * Personal aliases may target any loaded command, but they must not grant
+ * access to a command the invoker could not use directly. The target command
+ * still owns its own detailed checks; this gate enforces its declared
+ * userPerms metadata for alias invocations.
+ */
+async function enforceUserAliasPermissions(message: any, command: any): Promise<boolean> {
+  const required: string[] = Array.isArray(command?.options?.userPerms)
+    ? command.options.userPerms
+    : [];
+  if (!required.length) return true;
+
+  const missing = required.filter((permission) =>
+    !message.member?.permissions?.has?.(permission),
+  );
+  if (!missing.length) return true;
+
+  const readable = missing.map((permission) =>
+    permission.replace(/([a-z])([A-Z])/g, '$1 $2'),
+  ).join(', ');
+  await sendError(
+    { message },
+    `You need **${readable}** permission to use this command.`,
+  ).catch((): null => null);
+  return false;
 }
 
 // ── No-prefix access resolver ──────────────────────────────────────────────

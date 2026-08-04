@@ -1,6 +1,6 @@
 # Levitate — Project Bible (`grace.md`)
 
-> **Last updated:** 2026-08-03 (website About connect panel: Discord identity and Add friend CTA are now separate, preventing the action from crowding the profile row; URL synchronized with `xoxo/config/developerPanel.ts`; website developer avatar decoration: static `developerConfig.avatar` takes priority over the Discord API avatar; decoration multiplier is tunable in `Levitate-Web/src/pages/About.tsx`; removed the separate avatar ring so the decoration hugs the avatar directly; invite: brownishSparkles header, visible divider separators, whiteArrow emoji on invite link; nick: guild-owner check added — returns specific error instead of misleading "higher role" message; customise: Profile button now opens a single unified "Edit Profile" modal with Name + Bio text inputs + Avatar + Banner file upload components (LabelBuilder + FileUploadBuilder) — no sub-panel step; Display Name placeholder shows current server nickname if one is set; successful apply now shows a success page (accent color, blacktick message, bot avatar thumbnail) with a grey "Customise" button that returns to the customise home page; submit with nothing provided still returns directly to home; Reset confirm "Cancel" renamed "← Back"; namestyle: replaced multi-step wizard with single-page form — font/effect/color preset dropdowns + custom-hex modal, pre-populated from DB; $namestyle command opens form directly)
+> **Last updated:** 2026-08-04 (website command catalog synchronized with the latest bot build: `$filter` and `$roleinfo` added; website footer now shows an IST last-updated timestamp and the timestamp must be changed with every website source/content change; bot docs refreshed for the music filter command, role information command, shared role resolver, and current command/helper inventory; `list roles` role details now show plain hoist status and a buttonless footer-free standalone role card)
 > This document is the exhaustive reference for the Levitate Discord bot codebase. It covers every layer: architecture, startup, structures, loaders, events, commands, components, helpers, utilities, configuration, and database. Read it before touching anything. Keep it updated whenever you make a non-trivial change.
 
 ---
@@ -46,7 +46,7 @@
 
 ## 1. Project Overview
 
-**Levitate** (internally code-named "Nomadic") is a TypeScript Discord bot focused on **moderation, anti-nuke, and utility**. There is no music functionality. Every user-visible response uses Discord's **Components V2** format (`MessageFlags.IsComponentsV2`), never classic embeds for bot-generated UI.
+**Levitate** (internally code-named "Nomadic") is a TypeScript Discord bot focused on **moderation, anti-nuke, music, and utility**. Every user-visible response uses Discord's **Components V2** format (`MessageFlags.IsComponentsV2`), never classic embeds for bot-generated UI.
 
 The bot is designed to run multiple named instances (Main, TheSecond, TheThird, BETA) from the same codebase, each with its own client ID, status/presence configuration, and display style. The running instance is identified at boot via the `DISCORD_CLIENT_ID` environment variable.
 
@@ -173,6 +173,7 @@ xoxo/
     parseDuration.ts        ← formatDuration, parseDurationMs
     devTimeTweak.ts         ← parseTimeExpression (for special-afk time arg)
     userResolver.ts         ← Resolve user IDs/mentions
+    roleResolver.ts         ← Resolve role mentions, IDs, and name text (highest matching role wins)
     purgeHelper.ts          ← Bulk-delete logic for purge commands
   utils/
     webhookLogger.ts        ← Singleton queued webhook log sender
@@ -608,6 +609,8 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 
 ### Full command list
 
+The current build loads **146 prefix command modules** and **102 slash runtime commands**. The public prefix surface contains **129 unique command names**; the website catalog documents **130 public command entries** because it also includes the slash-only `$lockdown-lift` entry. Website command totals are derived from the catalog and deduplicated by base command name.
+
 #### Info
 | Command | Aliases | Description |
 |---|---|---|
@@ -667,12 +670,13 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$sticky` | — | Manage sticky messages (set, enable, disable, view) |
 | `$autorole` | `ar`, `autoroles` | Configure roles automatically given to new members and bots when they join |
 | `$vanityrole` | `vr`, `vanityroles` | Auto-assign roles based on a status/bio keyword or the server tag |
-| `$alias` | — | Create a personal, private nickname for any command you can use |
+| `$alias` | — | Manage private personal command aliases: `$alias create <name> <command name>`, `$alias delete <name>`, or `$alias` / `$alias list` to view them. Any loaded command may be targeted; aliases are limited to 15 per user and 14 characters each, and target command permissions are checked when used. |
 | `$firstmessage` | `firstmsg` | Get details about the first message ever sent in this channel |
 | `$host` | `hosting`, `hoster` | Shows where the bot is hosted and some technical details |
 | `$react` | — | Add a reaction to a message |
 | `$archive` | — | Save recent channel messages (default 100, max 500) to a `.txt` file and DM it to the invoker |
 | `$list` | `$ls` | Paginated list of roles, members, bots, emojis, stickers, channels, or bans. Rich detail panel per item with full entity info (roles: perms + icon + tags; members: roles + key perms + timestamps; bots: username/ID/nickname/timestamps/roles/integration role/key perms + avatar thumbnail; channels: topic + slowmode + category; emojis/stickers: image gallery + metadata; bans: avatar + reason). |
+| `$roleinfo` | `ri` | Show detailed information about one role using a mention, role ID, or case-insensitive text contained in its name. When multiple roles match text, the highest role in the hierarchy wins. No interactive controls. |
 | `$container` | `$cb`, `$containerbuilder`, `$build` | Interactive CV2 message builder. Block types: Text, Spacer (line/gap, no modal — select-menu configured), Info Card (text+picture), Photo Grid, Quick Links (`Label \| url` format). Controls: Edit / Remove / Duplicate / Color / Move / Send / Save as Data / Clear All. Post Here or pick a channel. **Save as Data** (Administrator-only) prompts for a name via modal, checks for conflicts via `savedDataNameExists`, uploads the container JSON to `config.savedDataChannelId`, posts `config.dataDivider`, and writes a `type: 'cv2'` record via `createSavedData` — reusable later with `$send-data`/`$view-data`. Session expires after 10 min. Component file exports `startBuilderSession` + `builderSessions`. |
 | `$embed` | — | Interactive **classic-embed** builder (one of the few places classic embeds are intentionally used, alongside a live control panel). Sections: Basic Info (title/description/color/url), Author, Footer, Images, Fields (up to 25), and **Buttons** (up to 5 Link-style buttons — label + URL + optional emoji, added/edited/removed via a select-menu list identical in shape to the Fields flow). The button row renders live under the embed preview and is included when sending (Post Here / channel select) and when using **Save as Data** — the saved JSON is `{ embeds: [...], components: [...] }` rather than a bare embed object, so `$send-data`/`$view-data` reconstruct the Link buttons alongside the embed. Component file: `xoxo/components/utility/embed.ts`, entry point `startEmbedBuilderSession`. |
 | `$webhook` | `$webhooks`, `$wh` | Interactive webhook manager (Manage Webhooks required, both user and bot). Home panel lists every webhook the bot can see in the server (`guild.fetchWebhooks()`) via a select menu, plus **Create Webhook** (channel select → modal for name + optional avatar URL). Selecting a webhook opens a manage panel: **Send Message** (content + optional per-message username/avatar override), **Rename**, **Change Avatar**, **Move Channel**, **Delete** (confirm step), **Back**. Avatar URLs are passed straight to discord.js, which fetches and resolves them server-side. Component file: `xoxo/components/utility/webhook.ts`, entry point `startWebhookSession`. |
@@ -680,10 +684,35 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 | `$enlarge` | `jumbo`, `big` | Show a custom emoji as a full-size image (CV2 MediaGallery). Accepts emoji markdown (`<:name:id>` / `<a:name:id>`), a raw numeric ID, `:name:`, or a bare name. Resolves from the guild cache first, then the full client cache. CDN URL: `https://cdn.discordapp.com/emojis/<id>.<png\|gif>?size=4096`. Component: `xoxo/components/utility/enlarge.ts`. Cooldown: 3 s. |
 | `$impersonate` | `mimic` | Send a message as another server member via a temporary webhook (uses their server nickname and server avatar). Requires **Manage Messages** or **Administrator**. Bot needs **Manage Webhooks** in the channel. Webhook is deleted immediately after sending. Command message is deleted on success. Cooldown: 6 s. Category: `features` (file lives in `xoxo/commands/features/`). `noTyping: true` prevents a visible typing indicator with no follow-up bot message. |
 | `$whoping` | `$wp`, `$whoponged` | Show the last 10 messages that directly pinged a user in this channel (direct `<@id>` and reply-pings only — no role mentions). Optional arg: `@user` or user ID to check someone else. Component file: `xoxo/components/utility/whoping.ts`. |
-| `$ghostping` | `$gp`, `$ghostpng` | Ghost-ping up to 10 users — sends a message that pings them then immediately deletes it. Administrator permission required. Role mentions rejected. Slash builder in `xoxo/slashCommands/utility/ghostping.ts` exposes `user` (required) + `user2`–`user10` (optional). Cooldown 10s. |
+| `$ghostping` | `$gp`, `$ghostpng` | Ghost-ping users, or a role when invoked by the server owner — sends a message that pings the target then immediately deletes it. `@everyone` is supported. Administrator permission required. Prefix accepts user mentions/IDs or a role resolved through `roleResolver`; slash exposes optional user slots plus a role text option. Cooldown 30s. |
 | `$host-image` | `hostimage`, `imgbb`, `upload-image` | Upload an image (attachment or URL) and get back hosted links |
 | `$say` | `echo` | Make the bot say something. Requires **Manage Messages** or **Administrator**. Supports `\n`, custom emoji `$emoji<id>` syntax, file attachments, and reply-passthrough. |
 | `$placeholder-help` | `$ph`, `$phhelp` | Paginated placeholder token reference |
+
+#### Music
+| Command | Aliases | Description |
+|---|---|---|
+| `$24/7` | `247`, `twentyfourseven`, `stay` | Enable, disable, or view persistent voice-channel mode. |
+| `$play` | `p` | Search for and play a track or playlist, or add it to the queue. |
+| `$add` | — | Search for and add a track or playlist without starting playback. |
+| `$queue` | `q`, `list` | Show the current, completed, and upcoming queue pages. |
+| `$nowplaying` | `np`, `song`, `current` | Show the active track and playback controls. |
+| `$peek` | — | Show a minimal view of the currently playing track. |
+| `$pause` | — | Pause the current track. |
+| `$resume` | `unpause`, `res` | Resume a paused track. |
+| `$stop` | `dc` | Stop playback; with 24/7 enabled, clear the queue while staying connected. |
+| `$skip` | `s`, `next` | Skip the current track. |
+| `$skipto` | `st`, `jumpto`, `jt` | Skip to a queue position. |
+| `$remove` | `rm` | Remove a queued track by position. |
+| `$clear` | `cl`, `clearqueue` | Clear all upcoming tracks. |
+| `$shuffle` | `sh` | Shuffle upcoming tracks. |
+| `$move` | `mv` | Move a queued track from one position to another. |
+| `$loop` | `repeat`, `l` | Set or toggle track/queue loop mode. |
+| `$volume` | `vol`, `v` | Set or view playback volume. |
+| `$servervolume` | `svol`, `sv` | Set or view persistent server playback volume. |
+| `$seek` | — | Seek within the current track using a duration expression. |
+| `$grab` | `save` | DM the current track details to the invoker. |
+| `$filter` | `filters` | Apply, remove, reset, or inspect multiple simultaneous audio filters. `$filter help` opens the detailed filter guide; `$filter available` lists supported filters. |
 
 #### Server
 | Command | Aliases | Description |
@@ -879,6 +908,8 @@ Interactive menus (help, debug, view-data, delete-data, send-data, placeholder-h
 
 Located in `xoxo/helpers/`. Loaded by `helperLoader` into `client.helpers.*`.
 
+The current top-level helper inventory contains **31 TypeScript files**: `antinukeEngine.ts`, `autoresponderDispatch.ts`, `autoresponderMatcher.ts`, `birthdayScheduler.ts`, `customRoleDispatch.ts`, `debugStats.ts`, `devTimeTweak.ts`, `emojiParser.ts`, `emojiResolver.ts`, `getHostingServiceIP.ts`, `imagePanel.ts`, `inviteCache.ts`, `logDispatcher.ts`, `nameStyle.ts`, `nodeManager.ts`, `nowPlayingManager.ts`, `panelGuard.ts`, `parseBirthdayDate.ts`, `parseDuration.ts`, `placeholders.ts`, `playerRetry.ts`, `purgeHelper.ts`, `ratingBias.ts`, `roleResolver.ts`, `sessionQueue.ts`, `sourceSearch.ts`, `spotifyClient.ts`, `statsServer.ts`, `stickyHelper.ts`, `twentyFourSeven.ts`, and `userResolver.ts`.
+
 ### `debugStats.ts`
 
 - `gatherDebugStats(client, apiMs): Promise<DebugStats>` — collects all debug info: guild/user/channel counts (aggregated across clusters via `broadcastEval`), RAM/CPU/event loop, cluster/shard info, latencies, architecture, and counters.
@@ -930,6 +961,10 @@ Resolves user mentions/IDs/usernames to a discord.js User or GuildMember object.
 2. Snowflake ID (17–20 digits)
 3. `Username#discriminator` tag — covers bot tags like `BotName#0000`; searches guild members first, then the client user cache
 4. Plain username or display name (guild member search)
+
+### `roleResolver.ts` — `resolveRole(guild, input)`
+
+Resolves a role from a mention, a numeric role ID, or case-insensitive text contained in the role name. Text matching is substring-based; when multiple roles match, the role with the highest hierarchy position wins. This resolver is shared by `$roleinfo` and role-selection flows so role lookup behavior stays consistent.
 
 ### `purgeHelper.ts`
 
