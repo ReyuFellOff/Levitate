@@ -28,7 +28,7 @@ export const options = {
   aliases:     ['rs', 'rsnipe'] as string[],
   description: 'Show the last removed reaction in a channel.',
   usage:       'reactionsnipe [#channel]',
-  category:    'purge',
+  category:    'utility',
   owner:       false,
   cooldown:    3,
 };

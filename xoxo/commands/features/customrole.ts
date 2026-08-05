@@ -2,12 +2,14 @@
 //
 // $customrole — server-specific role-assignment shortcuts.
 //
-// Moderators with Manage Roles link one keyword to up to 5 roles. Afterwards
-// anyone with Manage Roles can type `<prefix><keyword> @user1 @user2 …` and
-// the bot instantly gives those roles to the mentioned members (up to 10).
+// Administrators link one keyword to up to 5 roles. A single guild-wide access
+// role, configured with `customrole access <role>`, controls who can use every
+// keyword. Members with that role can type `<prefix><keyword> @user1 @user2 …`
+// and the bot instantly gives those roles to the mentioned members (up to 10).
 //
 // Subcommands:
-//   create <keyword> <@role(s)>       — register a new keyword (max 15 per guild)
+//   create <keyword> <@role(s)>       — register a keyword (max 15 per guild)
+//   access <@role>                    — set the access role for all keywords
 //   delete <keyword>                  — remove a keyword
 //   list                              — show all keywords in this server
 //   info   <keyword>                  — show which roles are linked
@@ -20,13 +22,15 @@ import type { LevitateClient }           from '../../structures/LevitateClient.j
 import { PermissionFlagsBits }           from 'discord.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { Database }                      from '../../database/database.js';
+import { resolveRole }                   from '../../helpers/roleResolver.js';
 
 export const options = {
   name:        'customrole',
   aliases:     ['cr', 'crole'] as string[],
-  description: 'Create server-specific role-assignment shortcuts. Link a keyword to up to 5 roles, then use that keyword as a command to assign them.',
+  description: 'Create server-specific role-assignment shortcuts. Link keywords to up to 5 roles and set one server-wide access role for all custom roles.',
   usage:       [
     'customrole create <keyword> <@role> [@role2 …]',
+    'customrole access <@role>',
     'customrole delete <keyword>',
     'customrole list',
     'customrole info <keyword>',
@@ -45,16 +49,17 @@ const KEYWORD_RE      = /^[a-z0-9_-]+$/; // lowercase, digits, hyphen, underscor
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Parse role IDs from the message's role mentions + any raw 17-20 digit IDs in args. */
+/** Parse role IDs from role mentions + any raw 17-20 digit IDs in args. */
 function parseRoleIds(message: any, args: string[]): string[] {
-  const ids: string[] = [...message.mentions.roles.values()].map((r: any) => r.id);
+  const ids: string[] = [];
   const seen = new Set(ids);
   const rawId = /^\d{17,20}$/;
   for (const arg of args) {
     const stripped = arg.replace(/^<@&/, '').replace(/>$/, '');
-    if (rawId.test(stripped) && !seen.has(stripped)) {
-      ids.push(stripped);
-      seen.add(stripped);
+    const role = message.guild.roles.cache.get(stripped);
+    if ((rawId.test(stripped) || /^<@&\d{17,20}>$/.test(arg)) && role && !seen.has(role.id)) {
+      ids.push(role.id);
+      seen.add(role.id);
     }
   }
   return ids;
@@ -75,13 +80,19 @@ function resolveValidRoles(guild: any, roleIds: string[]): { valid: any[]; inval
   return { valid, invalid };
 }
 
-/** Permission guard — both invoker and bot must have Manage Roles. */
-async function requireManageRoles(message: any): Promise<boolean> {
+/** Management is restricted to server owners and members with Administrator. */
+async function requireAdministrator(message: any): Promise<boolean> {
   const invoker = message.member;
-  if (!invoker?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
-    await sendError({ message }, 'You need the **Manage Roles** permission to manage custom roles.');
+  const isOwner = message.guild?.ownerId === message.author?.id;
+  if (!isOwner && !invoker?.permissions?.has?.(PermissionFlagsBits.Administrator)) {
+    await sendError({ message }, 'You need the **Administrator** permission to manage custom roles.');
     return false;
   }
+  return true;
+}
+
+/** The bot still needs Manage Roles to create or change member roles. */
+async function requireBotManageRoles(message: any): Promise<boolean> {
   const bot = message.guild.members.me;
   if (!bot?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
     await sendError({ message }, 'I need the **Manage Roles** permission to use this feature.');
@@ -92,12 +103,39 @@ async function requireManageRoles(message: any): Promise<boolean> {
 
 // ── Subcommand handlers ──────────────────────────────────────────────────────
 
+async function handleAccess(
+  message: any,
+  args:    string[],
+  client:  LevitateClient,
+): Promise<void> {
+  if (!await requireAdministrator(message)) return;
+
+  const input = args.join(' ').trim();
+  if (!input) {
+    await sendError({ message }, 'Provide the server-wide access role. Usage: `customrole access <@role>`');
+    return;
+  }
+
+  const accessRole = resolveRole(message.guild, input);
+  if (!accessRole || accessRole.id === message.guild.id || accessRole.managed) {
+    await sendError({ message }, 'The access role must be a valid, non-managed server role (not @everyone).');
+    return;
+  }
+
+  await client.db!.setCustomRoleAccessRole(message.guild.id, accessRole.id);
+  await sendSuccess(
+    { message },
+    `Set <@&${accessRole.id}> as the access role for **all** custom roles in this server.`,
+  );
+}
+
 async function handleCreate(
   message: any,
   args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
-  if (!await requireManageRoles(message)) return;
+  if (!await requireAdministrator(message)) return;
+  if (!await requireBotManageRoles(message)) return;
 
   const keyword = args[0]?.toLowerCase();
   if (!keyword) {
@@ -139,7 +177,10 @@ async function handleCreate(
     capped.map((r: any) => r.id),
     message.author.id,
   );
-  const usageNote = `-# Usage: \`<prefix>${keyword} @user1 @user2 …\` or \`<prefix>${keyword} remove @user1 @user2 …\` — requires Manage Roles. Doesn't work with noprefix.`;
+  const accessRoleId = await client.db!.getCustomRoleAccessRoleId(message.guild.id);
+  const usageNote = accessRoleId
+    ? `-# Usage: \`<prefix>${keyword} @user1 @user2 …\` or \`<prefix>${keyword} remove @user1 @user2 …\` — requires <@&${accessRoleId}>. Doesn't work with noprefix.`
+    : '-# Set the server-wide access role with `customrole access <@role>` before using this keyword. Doesn\'t work with noprefix.';
 
   if (result === 'exists') {
     await sendError({ message }, `A custom role keyword \`${keyword}\` already exists. Use \`customrole add ${keyword}\` to link more roles.`);
@@ -168,7 +209,8 @@ async function handleDelete(
   args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
-  if (!await requireManageRoles(message)) return;
+   if (!await requireAdministrator(message)) return;
+   if (!await requireBotManageRoles(message)) return;
 
   const keyword = args[0]?.toLowerCase();
   if (!keyword) {
@@ -188,12 +230,15 @@ async function handleList(
   message: any,
   client:  LevitateClient,
 ): Promise<void> {
+  if (!await requireAdministrator(message)) return;
   const docs = await client.db!.getCustomRoles(message.guild.id);
   if (docs.length === 0) {
-    await sendInfo({ message }, 'No custom role keywords set up yet. Use `customrole create <keyword> <@role(s)>` to create one.');
+        await sendInfo({ message }, 'No custom role keywords set up yet. Use `customrole create <keyword> <@role(s)>` to create one.');
     return;
   }
 
+  const accessRoleId = await client.db!.getCustomRoleAccessRoleId(message.guild.id);
+  const accessRole = accessRoleId ? message.guild.roles.cache.get(accessRoleId) : null;
   const lines: string[] = docs.map((doc, i) => {
     const roleList = doc.role_ids
       .map((id: string) => {
@@ -206,7 +251,7 @@ async function handleList(
 
   await sendInfo(
     { message },
-    `**Custom Roles** (${docs.length}/${Database.CUSTOM_ROLE_MAX_PER_GUILD})\n${lines.join('\n')}`,
+    `**Custom Roles** (${docs.length}/${Database.CUSTOM_ROLE_MAX_PER_GUILD})\nAccess role for all: ${accessRole ? `<@&${accessRole.id}>` : 'not configured'}\n${lines.join('\n')}`,
   );
 }
 
@@ -215,6 +260,7 @@ async function handleInfo(
   args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
+  if (!await requireAdministrator(message)) return;
   const keyword = args[0]?.toLowerCase();
   if (!keyword) {
     await sendError({ message }, 'Provide a keyword. Usage: `customrole info <keyword>`');
@@ -235,6 +281,9 @@ async function handleInfo(
   const creator = await message.guild.members.fetch(doc.created_by).catch((): null => null);
   const createdBy = creator ? `<@${doc.created_by}>` : `\`${doc.created_by}\``;
   const createdAt = `<t:${Math.floor(new Date(doc.created_at).getTime() / 1000)}:R>`;
+  const accessRoleId = await client.db!.getCustomRoleAccessRoleId(message.guild.id);
+  const accessRole = accessRoleId ? message.guild.roles.cache.get(accessRoleId) : null;
+  const access = accessRole ? `<@&${accessRole.id}> (\`${accessRole.name}\`)` : 'not configured';
 
   await sendInfo(
     { message },
@@ -242,8 +291,9 @@ async function handleInfo(
       `**Custom Role — \`${doc.keyword}\`**`,
       `Roles linked: **${doc.role_ids.length}**/${Database.CUSTOM_ROLE_MAX_ROLES}`,
       roleLines.join('\n'),
+      `Server-wide access role: ${access}`,
       `Created by ${createdBy} ${createdAt}`,
-      `-# Usage: \`<prefix>${doc.keyword} @user1 @user2 …\` or \`<prefix>${doc.keyword} remove @user1 @user2 …\` (requires Manage Roles, max 10 users)`,
+      `-# Usage: \`<prefix>${doc.keyword} @user1 @user2 …\` or \`<prefix>${doc.keyword} remove @user1 @user2 …\` (requires the server-wide access role, max 10 users)`,
     ].join('\n'),
   );
 }
@@ -253,7 +303,8 @@ async function handleAdd(
   args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
-  if (!await requireManageRoles(message)) return;
+  if (!await requireAdministrator(message)) return;
+  if (!await requireBotManageRoles(message)) return;
 
   const keyword = args[0]?.toLowerCase();
   if (!keyword) {
@@ -317,7 +368,8 @@ async function handleRemove(
   args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
-  if (!await requireManageRoles(message)) return;
+  if (!await requireAdministrator(message)) return;
+  if (!await requireBotManageRoles(message)) return;
 
   const keyword = args[0]?.toLowerCase();
   if (!keyword) {
@@ -375,10 +427,13 @@ export async function prefixExecute(
     return;
   }
 
+  if (!await requireAdministrator(message)) return;
+
   const sub = args[0]?.toLowerCase();
 
   switch (sub) {
     case 'create': return handleCreate(message, args.slice(1), client);
+    case 'access': return handleAccess(message, args.slice(1), client);
     case 'delete': return handleDelete(message, args.slice(1), client);
     case 'list':   return handleList(message, client);
     case 'info':   return handleInfo(message, args.slice(1), client);
@@ -391,14 +446,15 @@ export async function prefixExecute(
         [
           '**Custom Roles — Subcommands**',
           '`customrole create <keyword> <@role(s)>` — link a keyword to up to 5 roles',
+          '`customrole access <@role>` — set the access role for all custom roles in this server',
           '`customrole delete <keyword>` — remove a keyword',
-          '`customrole list` — show all keywords',
-          '`customrole info <keyword>` — show linked roles',
+          '`customrole list` — show all keywords and the server-wide access role',
+          '`customrole info <keyword>` — show linked roles and the server-wide access role',
           '`customrole add <keyword> <@role(s)>` — add more roles to an existing keyword',
           '`customrole remove <keyword> <@role(s)>` — unlink specific roles',
           '`customrole <keyword> @user1 @user2 …` — assign linked roles to mentioned users',
           '`customrole <keyword> remove @user1 @user2 …` — remove linked roles from mentioned users',
-          `-# Requires **Manage Roles** to create and use keywords.`,
+          `-# Requires **Administrator** to manage keywords and set access. Keyword use requires the server-wide access role; the server owner always has access.`,
         ].join('\n'),
       );
   }

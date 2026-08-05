@@ -121,7 +121,9 @@ xoxo/
     data/                   ← create-data, view-data, delete-data, send-data
     info/                   ← ping, debug, help
     moderation/             ← ban, kick, timeout, untimeout, unban, hackban, warn, warnings, clearwarnings, strip, lock, unlock, lockdown, lockdown-lift, …
-    utility/                ← avatar, banner, sticky, purge, archive, setprefix, container, …
+    utility/                ← avatar, banner, purge, archive, container, misc utilities, …
+    purge/                  ← purge, purge-till, snipe, reactionsnipe (all shown under Utility)
+    server/                 ← server info, prefixes, avatar/banner commands (category varies by command)
     vcControls/             ← join, leave, rejoin, mute, unmute, deafen, undeafen, disconnect, shift
     welcomer/               ← greet, greet-channel, greet-message, greet-test, …
     customisation/          ← setavatar, setbanner, setbio, setname, resetprofile
@@ -592,20 +594,19 @@ For developer-only commands, `owner: true` gates execution in both `messageCreat
 |---|---|---|
 | Info | `info/` | Yes |
 | Moderation | `moderation/` | Yes |
-| Antinuke | `antinuke/` | Yes |
-| Purge | `purge/` | Yes |
-| Utility | `utility/` | Yes |
-| Server | `server/` | Yes |
+| Security | `security/` | Yes |
+| Utility | `utility/`, `purge/`, `server/` | Yes |
+| Settings | `server/`, `utility/` | Yes |
+| Miscellaneous | `utility/` | Yes |
 | VC Controls | `vcControls/` | Yes |
-| Welcomer | `welcomer/` | Yes (birthday merged in) |
-| Logging | `logging/` | Yes |
-| Autoresponder | `autoresponder/` | Yes |
+| Music | `music/` | Yes |
+| Features | `features/`, `utility/` | Yes |
 | Data | `data/` | Yes |
 | Customisation | `customisation/` | Yes |
 | Fun | `fun/` | Yes |
 | Developer | `developer/` | **No** (excluded from help) |
 
-**Removed categories:** `birthday/` merged into `welcomer/`. Every category must contain ≥2 commands; single-command categories are not permitted.
+**Removed categories:** `purge/`, `server/`, `welcomer/`, `logging/`, and `autoresponder/` are source folders, not help categories. Their commands use the category field shown above. Every help category must contain ≥2 commands; single-command categories are not permitted.
 
 ### Full command list
 
@@ -655,39 +656,56 @@ The current build loads **146 prefix command modules** and **102 slash runtime c
 |---|---|---|
 | `$antinuke` | `$an`, `$antinukesetup` | Full antinuke control panel — prefix-only, requires Administrator. Subcommands: `status`, `help`, `enable`, `disable`, `config`, `modules`, `module <name> enable\|disable\|punishment <type>\|threshold <count>\|info`, `profiles`, `profile <name>` (lockdown\|strict\|balanced\|lenient), `whitelist list\|add <user\|role>\|remove <user\|role>`, `logs <#channel>\|disable`, `quarantine-role <@role>`, `reset` |
 
-#### Purge
+#### Utility
 | Command | Aliases | Description |
 |---|---|---|
 | `$purge` | `$clear` | Bulk-delete messages; subcommands include `all`, `amount`, `bot`, `humans`, `user`, `text`, `images`, `files`, `links`, `link`, `between`, `embeds`, `reactions` |
 | `$purge-till` | `purgetill`, `pt` | Delete messages up to a specific message ID |
 | `$snipe` | `s` | Show the last deleted message in a channel |
 | `$reactionsnipe` | `rs`, `rsnipe` | Show the last removed reaction in a channel |
-
-#### Utility
-| Command | Aliases | Description |
-|---|---|---|
-| `$afk` | — | Set AFK status (server or global); auto-removed on next message |
-| `$sticky` | — | Manage sticky messages (set, enable, disable, view) |
 | `$autorole` | `ar`, `autoroles` | Configure roles automatically given to new members and bots when they join |
 | `$vanityrole` | `vr`, `vanityroles` | Auto-assign roles based on a status/bio keyword or the server tag |
-| `$alias` | — | Manage private personal command aliases: `$alias create <name> <command name>`, `$alias delete <name>`, or `$alias` / `$alias list` to view them. Any loaded command may be targeted; aliases are limited to 15 per user and 14 characters each, and target command permissions are checked when used. |
-| `$firstmessage` | `firstmsg` | Get details about the first message ever sent in this channel |
 | `$host` | `hosting`, `hoster` | Shows where the bot is hosted and some technical details |
 | `$react` | — | Add a reaction to a message |
-| `$archive` | — | Save recent channel messages (default 100, max 500) to a `.txt` file and DM it to the invoker |
 | `$list` | `$ls` | Paginated list of roles, members, bots, emojis, stickers, channels, or bans. Rich detail panel per item with full entity info (roles: perms + icon + tags; members: roles + key perms + timestamps; bots: username/ID/nickname/timestamps/roles/integration role/key perms + avatar thumbnail; channels: topic + slowmode + category; emojis/stickers: image gallery + metadata; bans: avatar + reason). |
 | `$roleinfo` | `ri` | Show detailed information about one role using a mention, role ID, or case-insensitive text contained in its name. When multiple roles match text, the highest role in the hierarchy wins. No interactive controls. |
 | `$container` | `$cb`, `$containerbuilder`, `$build` | Interactive CV2 message builder. Block types: Text, Spacer (line/gap, no modal — select-menu configured), Info Card (text+picture), Photo Grid, Quick Links (`Label \| url` format). Controls: Edit / Remove / Duplicate / Color / Move / Send / Save as Data / Clear All. Post Here or pick a channel. **Save as Data** (Administrator-only) prompts for a name via modal, checks for conflicts via `savedDataNameExists`, uploads the container JSON to `config.savedDataChannelId`, posts `config.dataDivider`, and writes a `type: 'cv2'` record via `createSavedData` — reusable later with `$send-data`/`$view-data`. Session expires after 10 min. Component file exports `startBuilderSession` + `builderSessions`. |
 | `$embed` | — | Interactive **classic-embed** builder (one of the few places classic embeds are intentionally used, alongside a live control panel). Sections: Basic Info (title/description/color/url), Author, Footer, Images, Fields (up to 25), and **Buttons** (up to 5 Link-style buttons — label + URL + optional emoji, added/edited/removed via a select-menu list identical in shape to the Fields flow). The button row renders live under the embed preview and is included when sending (Post Here / channel select) and when using **Save as Data** — the saved JSON is `{ embeds: [...], components: [...] }` rather than a bare embed object, so `$send-data`/`$view-data` reconstruct the Link buttons alongside the embed. Component file: `xoxo/components/utility/embed.ts`, entry point `startEmbedBuilderSession`. |
 | `$webhook` | `$webhooks`, `$wh` | Interactive webhook manager (Manage Webhooks required, both user and bot). Home panel lists every webhook the bot can see in the server (`guild.fetchWebhooks()`) via a select menu, plus **Create Webhook** (channel select → modal for name + optional avatar URL). Selecting a webhook opens a manage panel: **Send Message** (content + optional per-message username/avatar override), **Rename**, **Change Avatar**, **Move Channel**, **Delete** (confirm step), **Back**. Avatar URLs are passed straight to discord.js, which fetches and resolves them server-side. Component file: `xoxo/components/utility/webhook.ts`, entry point `startWebhookSession`. |
-| `$vanity` | — | Look up a Discord vanity URL — shows server name/ID/members/online + invite link if taken, or marks it available if free |
-| `$enlarge` | `jumbo`, `big` | Show a custom emoji as a full-size image (CV2 MediaGallery). Accepts emoji markdown (`<:name:id>` / `<a:name:id>`), a raw numeric ID, `:name:`, or a bare name. Resolves from the guild cache first, then the full client cache. CDN URL: `https://cdn.discordapp.com/emojis/<id>.<png\|gif>?size=4096`. Component: `xoxo/components/utility/enlarge.ts`. Cooldown: 3 s. |
+| `$vanity` | — | With no argument, show this server's vanity URL (if any). With a code or link, show server name/ID/members/online + invite link if taken, or mark it available if free |
+| `$serverinfo` | `$si`, `$guildinfo`, `$guild` | 5-tab CV2 panel: Overview (including server vanity when configured), Members, Channels, Security, and Assets |
+| `$membercount` | `$mc`, `memcount` | Show the server's total, human, and bot member counts |
+| `$userinfo` | `$ui`, `$whois` | 4-tab CV2 panel: About, Roles, Permissions, and Assets |
+| `$avatar` | `$av`, `$pfp` | Show a user's avatar; prompts server versus global when they differ |
+| `$banner` | `$bn` | Show a user's banner; prompts server versus global when they differ |
 | `$impersonate` | `mimic` | Send a message as another server member via a temporary webhook (uses their server nickname and server avatar). Requires **Manage Messages** or **Administrator**. Bot needs **Manage Webhooks** in the channel. Webhook is deleted immediately after sending. Command message is deleted on success. Cooldown: 6 s. Category: `features` (file lives in `xoxo/commands/features/`). `noTyping: true` prevents a visible typing indicator with no follow-up bot message. |
-| `$whoping` | `$wp`, `$whoponged` | Show the last 10 messages that directly pinged a user in this channel (direct `<@id>` and reply-pings only — no role mentions). Optional arg: `@user` or user ID to check someone else. Component file: `xoxo/components/utility/whoping.ts`. |
-| `$ghostping` | `$gp`, `$ghostpng` | Ghost-ping users, or a role when invoked by the server owner — sends a message that pings the target then immediately deletes it. `@everyone` is supported. Administrator permission required. Prefix accepts user mentions/IDs or a role resolved through `roleResolver`; slash exposes optional user slots plus a role text option. Cooldown 30s. |
 | `$host-image` | `hostimage`, `imgbb`, `upload-image` | Upload an image (attachment or URL) and get back hosted links |
 | `$say` | `echo` | Make the bot say something. Requires **Manage Messages** or **Administrator**. Supports `\n`, custom emoji `$emoji<id>` syntax, file attachments, and reply-passthrough. |
 | `$placeholder-help` | `$ph`, `$phhelp` | Paginated placeholder token reference |
+
+#### Settings
+| Command | Aliases | Description |
+|---|---|---|
+| `$setprefix` | `prefix`, `changeprefix` | Set a custom prefix for this guild |
+| `$resetprefix` | — | Reset the guild prefix to the default |
+| `$selfprefix` | `$sp`, `$myprefix` | Set, view, or remove a personal prefix |
+| `$mynop` | `mynoprefix` | Toggle your own noprefix access on or off |
+
+#### Miscellaneous
+| Command | Aliases | Description |
+|---|---|---|
+| `$archive` | — | Save recent channel messages to a `.txt` file and DM it to the invoker |
+| `$enlarge` | `jumbo`, `big` | Show a custom emoji as a full-size image |
+| `$firstmessage` | `firstmsg` | Get details about the first message ever sent in this channel |
+| `$ghostping` | `$gp`, `$ghostpng` | Ghost-ping users or a role, then immediately delete the message |
+| `$whoping` | `$wp`, `$whoponged` | Show the last 10 messages that directly pinged a user in this channel |
+
+#### Features
+| Command | Aliases | Description |
+|---|---|---|
+| `$afk` | — | Set AFK status (server or global); auto-removed on next message |
+| `$sticky` | — | Manage sticky messages (set, enable, disable, view) |
+| `$alias` | — | Manage private personal command aliases |
 
 #### Music
 | Command | Aliases | Description |
@@ -714,18 +732,6 @@ The current build loads **146 prefix command modules** and **102 slash runtime c
 | `$grab` | `save` | DM the current track details to the invoker. |
 | `$filter` | `filters` | Apply, remove, reset, or inspect multiple simultaneous audio filters. `$filter help` opens the detailed filter guide; `$filter available` lists supported filters. |
 
-#### Server
-| Command | Aliases | Description |
-|---|---|---|
-| `$serverinfo` | `$si`, `$guildinfo`, `$guild` | 5-tab CV2 panel: Overview (name/ID/owner/features), Members (counts/boosts/channels), Channels (type breakdown/expressions), Security (verification/roles), Assets (icon/banner/splash/discovery) — buttons active 3 min. |
-| `$membercount` | `$mc`, `memcount` | Shows the server's total, human, and bot member counts |
-| `$userinfo` | `$ui`, `$whois` | 4-tab CV2 panel: About, Roles, Permissions, Assets (buttons active 3 min) |
-| `$avatar` | `$av`, `$pfp` | Show a user's avatar; prompts server vs global if different |
-| `$banner` | `$bn` | Show a user's banner; prompts server vs global if different |
-| `$setprefix` | `prefix`, `changeprefix` | Set a custom prefix for this guild (ManageGuild) |
-| `$resetprefix` | — | Reset guild prefix to default |
-| `$selfprefix` | `$sp`, `$myprefix` | Set/view/remove a personal prefix — works globally for that user, alongside the server prefix. No special permissions required. |
-
 #### VC Controls
 | Command | Aliases | Description |
 |---|---|---|
@@ -739,7 +745,7 @@ The current build loads **146 prefix command modules** and **102 slash runtime c
 | `$disconnect` | `$dsc`, `$devoice` | Disconnect a member from VC |
 | `$shift` | — | Move a member to a different VC |
 
-#### Welcomer
+#### Features — Welcomer & Birthday
 | Command | Aliases | Description |
 |---|---|---|
 | `$greet` | `welcomer`, `welcome` | Show current greet configuration |
@@ -749,12 +755,32 @@ The current build loads **146 prefix command modules** and **102 slash runtime c
 | `$greet-bots` | `gbots` | Toggle whether bots trigger the greet |
 | `$birthday` | `bday`, `bd` | Show birthday settings for this server + your own birthday. Subcommands: `set <date>` (multiple date formats — `15/04`, `15-04-2000`, `April 15`, `2000-04-15`), `unset`, `list` (upcoming birthdays of members in this server), `channel set <#channel>\|remove` (ManageGuild), `message set <text> [data: <name>]\|remove` (ManageGuild). A birthday is global to a user (one date shared across every server); the announcement channel/message are per-server. See §32 for full details. |
 
-#### Autoresponder
+#### Features — Starboard
+| Command | Aliases | Description |
+|---|---|---|
+| `$starboard` | `stars` | Configure the destination, threshold, emoji, accent color, ignored channels or roles, manual sync, enable state, and CV2 status panel. All non-bot stars count, including the message author's star. Starboard posts update live with reactions and include a Jump to Message link. Usage is multiline in help. |
+| `$starboard sync [<#channel>]` | `stars` | Recheck the last 100 messages in a channel so existing reactions can be processed after Starboard setup. |
+| `$starboard top` | `stars` | Show the historical starboard leaderboard. |
+| `$randomstar` | `randomstars`, `randomstarboard` | Show a random historical starboard post. Media previews are shown only when the configured destination channel is NSFW. |
+
+#### Features — Autoresponder
 | Command | Aliases | Description |
 |---|---|---|
 | `$autoresponder` | `ares`, `autoresponders` | Create, edit, and manage auto-reply triggers. Interactive paged home panel — see §35 for full details. |
 
-#### Logging
+#### Features — Custom Roles
+| Command | Aliases | Description |
+|---|---|---|
+| `$customrole create` | `cr`, `crole` | **Administrator/owner only.** Create a keyword with up to 5 linked roles. All keywords use the server-wide access role configured with `$customrole access`. |
+| `$customrole access` | `cr`, `crole` | **Administrator/owner only.** Set the one access role required to use every custom-role keyword: `$customrole access <@role>`. |
+| `$customrole delete` | `cr`, `crole` | **Administrator/owner only.** Delete a custom-role keyword. |
+| `$customrole list` | `cr`, `crole` | **Administrator/owner only.** List configured keywords and the single server-wide access role. |
+| `$customrole info` | `cr`, `crole` | **Administrator/owner only.** Show linked roles, the server-wide access role, creator, and usage for one keyword. |
+| `$customrole add` | `cr`, `crole` | **Administrator/owner only.** Add linked roles to an existing keyword (maximum 5). |
+| `$customrole remove` | `cr`, `crole` | **Administrator/owner only.** Remove linked roles; removing the last one deletes the keyword. |
+| `$customrole <keyword>` | — | Assign or remove the keyword's linked roles from up to 10 mentioned members. Requires the server-wide access role or server ownership; users without permissions are denied before the access-role check. |
+
+#### Features — Logging
 | Command | Aliases | Description |
 |---|---|---|
 | `$log` | `logs`, `logging` | Open the interactive logging config panel, or inline: `$log <category> <#channel\|enable\|disable>`. Categories: `channel`, `member`, `message`, `modlog`, `role`, `vc`, `server` |
@@ -1997,5 +2023,5 @@ Without 24/7: `player.destroy()` → disconnects. Alias `$dc` only (the `disconn
 
 - **Never change `displayStatus` in `botInstances.ts` unless explicitly asked to.** This value is managed by the bot owner.
 - **`Levitate-Web/` is a fully separate project.** It must never share files or imports with the bot codebase. Keep the two completely decoupled — no cross-directory imports. Its website themes are defined in `Levitate-Web/src/config/themes.ts`; decorative artwork and sticker effects must consume theme CSS variables rather than hard-coded palette values, and Discord marks must remain visible on light themes.
-- **Every command category must contain ≥2 commands.** Single-command categories are not permitted. The `autoresponder/` category currently contains one entry and should grow as needed.
+- **Every help category must contain ≥2 commands.** Single-command help categories are not permitted. Source folders such as `autoresponder/` do not define help categories; the command `options.category` field does.
 - **CV2 builders belong in `xoxo/components/`, not in command files.** See §14 for the full rule. Exception: pure `ButtonStyle.Link` rows (no customId, no interaction handler) may remain inline in the command file since they carry no interaction state.

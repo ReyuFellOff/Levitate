@@ -23,7 +23,7 @@ export const options = {
   aliases:     ['sp', 'myprefix'] as string[],
   description: 'Set a personal command prefix that works for you across all servers.',
   usage:       'selfprefix [prefix | reset]',
-  category:    'utility',
+  category:    'settings',
   owner:       false,
   cooldown:    3,
 };

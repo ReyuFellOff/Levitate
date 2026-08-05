@@ -7,12 +7,16 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildMessageDeletePayload } from '../../components/logging/logMessages.js';
 import { pushSnipe } from '../../components/moderation/snipeStore.js';
+import { handleStarboardSourceDelete } from '../../helpers/starboard.js';
 
 export const name = 'messageDelete';
 export const once = false;
 
 export async function execute(message: any, client: LevitateClient): Promise<void> {
   if (!message.guild) return;
+  handleStarboardSourceDelete(message, client).catch((error: unknown) => {
+    console.error(`[starboard] Failed to remove deleted source: ${error instanceof Error ? error.message : String(error)}`);
+  });
   if (message.author?.bot) return;
 
   const channelId = message.channelId ?? message.channel?.id;

@@ -23,7 +23,7 @@ export const options = {
   aliases:     ['gp', 'ghostpng'] as string[],
   description: 'Ghost-ping users or a role (pings and immediately deletes the message).',
   usage:       'ghostping <@user1> [@user2] … | <role>',
-  category:    'utility',
+  category:    'miscellaneous',
   owner:       false,
   cooldown:    30,
 };

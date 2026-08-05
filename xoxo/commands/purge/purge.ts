@@ -41,7 +41,7 @@ purge files [amount]
 purge links [amount]
 purge text <"term1"> ["term2"] ...
 purge link <message-link>`,
-  category: 'purge',
+  category: 'utility',
   owner: false,
   cooldown: 5,
 };

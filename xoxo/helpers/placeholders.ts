@@ -42,9 +42,9 @@
 //   Time
 //   ─────────────────────────────────────────────────────
 //   ${timestamp}           → Unix timestamp (seconds)
-//   ${date}                → YYYY-MM-DD (UTC)
-//   ${time}                → HH:MM:SS (UTC)
-//   ${datetime}            → YYYY-MM-DD HH:MM:SS (UTC)
+//   ${date}                → YYYY-MM-DD
+//   ${time}                → HH:MM
+//   ${datetime}            → YYYY-MM-DD HH:MM
 //   ${discord_ts}          → Discord <t:unix:F> long date+time
 //   ${discord_ts_relative} → Discord <t:unix:R> relative time
 //
@@ -174,7 +174,11 @@ function buildMap(ctx: PlaceholderContext): Record<string, string> {
   // ── Time ──────────────────────────────────────────────────────────────────
   const isoFull  = now.toISOString();
   const datePart = isoFull.slice(0, 10);
-  const timePart = isoFull.slice(11, 19);
+  const timePart = now.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 
   // ── Bot ───────────────────────────────────────────────────────────────────
   const botUser    = client?.user;
@@ -290,9 +294,9 @@ export function getPlaceholderList(): string {
     '',
     '**Time**',
     '`${timestamp}` — Unix timestamp (seconds)',
-    '`${date}` — YYYY-MM-DD (UTC)',
-    '`${time}` — HH:MM:SS (UTC)',
-    '`${datetime}` — YYYY-MM-DD HH:MM:SS (UTC)',
+    '`${date}` — YYYY-MM-DD',
+    '`${time}` — HH:MM',
+    '`${datetime}` — YYYY-MM-DD HH:MM',
     '`${discord_ts}` — Discord long date+time stamp',
     '`${discord_ts_relative}` — Discord relative time stamp',
     '',

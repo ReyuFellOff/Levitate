@@ -5,9 +5,10 @@ import type { LevitateClient } from '../structures/LevitateClient.js';
  * Resolve a Discord emoji by name or ID.
  *
  * Resolution order:
- * 1. Full custom-emoji markdown  <a?:name:id>  → resolve by extracted ID
- * 2. Pure numeric string          → resolve by ID
- * 3. Name string                  → current guild → client cache → fetch every guild
+ * 1. Unicode emoji sequence       → return unchanged for message reactions
+ * 2. Full custom-emoji markdown   <a?:name:id>  → resolve by extracted ID
+ * 3. Pure numeric string          → resolve by ID
+ * 4. Name string                  → current guild → client cache → fetch every guild
  */
 export async function resolveEmoji(
   client: LevitateClient,
@@ -17,12 +18,29 @@ export async function resolveEmoji(
   const trimmed = identifier.trim();
   if (!trimmed) return null;
 
+  if (isUnicodeEmoji(trimmed)) return trimmed;
+
   const markdownMatch = trimmed.match(/^<a?:[\w]+:(\d+)>$/);
   if (markdownMatch) return resolveById(client, markdownMatch[1]);
 
   if (/^\d+$/.test(trimmed)) return resolveById(client, trimmed);
 
   return resolveByName(client, trimmed.toLowerCase(), guild);
+}
+
+/**
+ * Discord accepts Unicode emoji as the raw reaction string. Keep this
+ * deliberately strict so ordinary text such as "hello⭐" does not bypass
+ * custom emoji resolution and get passed to Discord as an invalid emoji.
+ */
+function isUnicodeEmoji(value: string): boolean {
+  const emojiAtom = String.raw`(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}]\uFE0F?\p{Emoji_Modifier}?)`;
+  const zwjSequence = new RegExp(
+    String.raw`^(?:\p{Regional_Indicator}{2}|(?:${emojiAtom})(?:\u200D(?:${emojiAtom}))*)$`,
+    'u',
+  );
+  const keycap = /^(?:[0-9#*])\uFE0F?\u20E3$/u;
+  return zwjSequence.test(value) || keycap.test(value);
 }
 
 async function resolveById(client: LevitateClient, id: string): Promise<any | null> {

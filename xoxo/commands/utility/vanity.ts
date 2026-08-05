@@ -1,6 +1,6 @@
 // xoxo/commands/utility/vanity.ts
 //
-// $vanity <code> — checks a Discord vanity URL.
+// $vanity [code] — checks a Discord vanity URL, or shows the current server's vanity.
 // If a server is using it: shows name, ID, member counts, icon, banner, invite link.
 // If no server has it: reports that it's available.
 //
@@ -11,14 +11,16 @@
 
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError }      from '../../components/statusMessages.js';
-import { sendWrongUsage } from '../../components/wrongUsage.js';
-import { buildVanityPayload } from '../../components/utility/vanity.js';
+import {
+  buildCurrentGuildVanityPayload,
+  buildVanityPayload,
+} from '../../components/utility/vanity.js';
 
 export const options = {
   name:        'vanity',
   aliases:     [] as string[],
-  description: "Look up a Discord vanity URL — see who owns it or grab it if it's free.",
-  usage:       'vanity <code>',
+  description: "Look up a Discord vanity URL, or show this server's vanity when no code is provided.",
+  usage:       'vanity [code]',
   category:    'utility',
   owner:       false,
   cooldown:    5,
@@ -67,7 +69,15 @@ export async function prefixExecute(
 ): Promise<any> {
   const ctx = { message };
 
-  if (!args[0]) return sendWrongUsage(ctx, 'vanity', options.usage);
+  if (!args[0]) {
+    if (!message.guild) {
+      return sendError(ctx, 'Provide a vanity code when using this command outside a server.');
+    }
+    return message.channel.send(buildCurrentGuildVanityPayload({
+      guild:           message.guild,
+      invokerUsername: message.author.username,
+    }));
+  }
 
   // Strip discord.gg / https:// if the user pastes a full link
   const raw  = args[0].trim().replace(/^(?:https?:\/\/)?(?:www\.)?discord\.gg\//i, '');
@@ -100,7 +110,18 @@ export async function prefixExecute(
 export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
   await interaction.deferReply();
 
-  const raw  = (interaction.options.getString('code') as string).trim()
+  const input = interaction.options.getString('code');
+  if (!input) {
+    if (!interaction.guild) {
+      return sendError({ interaction }, 'Provide a vanity code when using this command outside a server.');
+    }
+    return interaction.editReply(buildCurrentGuildVanityPayload({
+      guild:           interaction.guild,
+      invokerUsername: interaction.user.username,
+    }));
+  }
+
+  const raw  = input.trim()
     .replace(/^(?:https?:\/\/)?(?:www\.)?discord\.gg\//i, '');
   const code = raw.split('/')[0];
   if (!code) return sendError({ interaction }, 'Please provide a valid vanity code.');

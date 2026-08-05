@@ -12,6 +12,7 @@ import {
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
+import { formatClock } from '../../utils/formatting.js';
 
 export const options = {
   name: 'membercount',
@@ -46,11 +47,7 @@ async function buildMembercountPayload(guild: any, requestedBy: string): Promise
   // Use guild.memberCount for total — it's always accurate regardless of intent.
   const total = guild.memberCount as number;
 
-  const time = new Date().toLocaleTimeString('en-GB', {
-    hour:   '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  const time = formatClock();
 
   const breakdown = usingCache
     ? [

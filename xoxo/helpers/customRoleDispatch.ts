@@ -6,7 +6,8 @@
 //
 // Rules enforced here (not in the command):
 //   • Never fires on noprefix (usedPrefix === ''); callers must check.
-//   • Invoker must have ManageRoles.
+//   • Invoker must have the guild's configured access role.
+//   • Server owners bypass the access-role check.
 //   • Bot must have ManageRoles.
 //   • Linked roles must be below the bot's highest role.
 //   • Max 10 mentioned members acted on per invocation.
@@ -36,10 +37,31 @@ export async function dispatchCustomRole(
 
   // ── Permission: invoker ──────────────────────────────────────────────────
   const invoker = message.member;
-  if (!invoker?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
+  const isOwner = message.guild.ownerId === message.author?.id;
+  const accessRoleId = await client.db.getCustomRoleAccessRoleId(message.guild.id).catch((): null => null);
+  const hasAccessRole = !!accessRoleId && !!invoker?.roles?.cache?.has?.(accessRoleId);
+  if (!isOwner && !hasAccessRole && !invoker?.permissions?.has?.(PermissionFlagsBits.Administrator)) {
     await sendError(
       { message },
-      `You need **Manage Roles** permission to use the \`${doc.keyword}\` custom role command.`,
+      `You don't have permission to use the \`${doc.keyword}\` custom role command.`,
+    ).catch((): null => null);
+    return true;
+  }
+
+  // ── Permission: configured access role ────────────────────────────────────
+  if (!isOwner && !hasAccessRole) {
+    if (!accessRoleId) {
+      await sendError(
+        { message },
+        'No server-wide access role is configured for custom roles. Ask an administrator to run `customrole access <@role>`.',
+      ).catch((): null => null);
+      return true;
+    }
+    const accessRole = message.guild.roles.cache.get(accessRoleId);
+    const accessLabel = accessRole ? `<@&${accessRole.id}>` : 'the configured access role';
+    await sendError(
+      { message },
+      `You need the ${accessLabel} role to use the \`${doc.keyword}\` custom role command.`,
     ).catch((): null => null);
     return true;
   }

@@ -11,6 +11,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import { emojis } from '../emojis.js';
+import { formatClock } from '../utils/formatting.js';
 
 export type AfkScope = 'server' | 'global';
 
@@ -97,7 +98,7 @@ export function buildAfkNoticePayload(options: AfkNoticeOptions): any {
 
   container
     .addSeparatorComponents(new SeparatorBuilder())
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# Mentioned by ${options.mentionedBy} at ${mentionedAt} UTC`));
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# Mentioned by ${options.mentionedBy} at ${mentionedAt}`));
 
   return {
     components: [container],
@@ -147,10 +148,6 @@ export function formatHumanDuration(ms: number): string {
 
 function toRelativeTimestamp(date: Date): string {
   return `<t:${Math.floor(date.getTime() / 1000)}:R>`;
-}
-
-function formatClock(date: Date): string {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function formatFullDateTime(date: Date): string {

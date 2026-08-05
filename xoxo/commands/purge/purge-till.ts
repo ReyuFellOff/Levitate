@@ -28,7 +28,7 @@ export const options = {
   usage: `purge-till <message-id-or-link>
 purge-till <message-id-or-link> <n>
 (or reply to a message and run purge-till with no args)`,
-  category: 'purge',
+  category: 'utility',
   owner:    false,
   cooldown: 5,
 };

@@ -27,7 +27,7 @@ sticky set text <content>
 sticky enable
 sticky disable
 sticky view`,
-  category: 'utility',
+  category: 'features',
   owner:    false,
   cooldown: 3,
 };

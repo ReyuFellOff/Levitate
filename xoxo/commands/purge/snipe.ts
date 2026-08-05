@@ -13,7 +13,7 @@ export const options = {
   aliases:     ['s'] as string[],
   description: 'Show the last deleted message in a channel.',
   usage:       'snipe [#channel]',
-  category:    'purge',
+  category:    'utility',
   owner:       false,
   cooldown:    3,
 };

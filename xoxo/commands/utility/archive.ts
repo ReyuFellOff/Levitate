@@ -15,7 +15,7 @@ export const options = {
   aliases:     [] as string[],
   description: 'Save recent channel messages to a file and DM it to you.',
   usage:       'archive [count]',
-  category:    'utility',
+  category:    'miscellaneous',
   owner:       false,
   cooldown:    10,
 };

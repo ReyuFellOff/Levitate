@@ -138,6 +138,7 @@ export class LevitateClient extends Client {
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
       ],
@@ -146,6 +147,7 @@ export class LevitateClient extends Client {
         Partials.Message,
         Partials.User,
         Partials.GuildMember,
+        Partials.Reaction,
       ],
       // Let discord-hybrid-sharding tell this cluster which shards it owns.
       shards:     getInfo().SHARD_LIST,

@@ -11,6 +11,6 @@ export const data = new SlashCommandBuilder()
   )
   .addStringOption((o) =>
     o.setName('emoji')
-      .setDescription('Emoji name or ID to react with.')
+      .setDescription('Unicode emoji, custom emoji name, or emoji ID to react with.')
       .setRequired(true),
   );

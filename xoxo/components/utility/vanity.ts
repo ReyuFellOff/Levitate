@@ -150,3 +150,35 @@ export function buildVanityPayload(opts: {
 
   return wrap(container);
 }
+
+/** Build a compact lookup result for the guild where the command was used. */
+export function buildCurrentGuildVanityPayload(opts: {
+  guild:           any;
+  invokerUsername: string;
+}): any {
+  const { guild, invokerUsername } = opts;
+  const code = guild.vanityURLCode ?? null;
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${code ? `${emojis.blackCross} Server Vanity` : `${emojis.info} Server Vanity`}`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        code
+          ? [
+              `${emojis.whiteArrow} **Server:** ${guild.name}`,
+              `${emojis.whiteArrow} **Vanity URL:** https://discord.gg/${code}`,
+            ].join('\n')
+          : `${emojis.whiteArrow} **${guild.name}** does not have a vanity URL.`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`-# Requested by ${invokerUsername}`),
+    );
+
+  return wrap(container);
+}

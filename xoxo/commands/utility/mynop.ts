@@ -14,7 +14,7 @@ export const options = {
   usage: `mynop
   mynop on
   mynop off`,
-  category: 'utility',
+  category: 'settings',
   owner: false,
   cooldown: 3,
 };

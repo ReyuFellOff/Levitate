@@ -129,10 +129,10 @@ function buildNavDropdown(botName: string, disabled = false): ActionRowBuilder<S
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
 }
 
-/** Format the current UTC time as HH:MM. */
+/** Format the current local time as HH:MM. */
 export function formatSentAt(): string {
   return new Date().toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
+    hour: '2-digit', minute: '2-digit', hour12: false,
   });
 }
 

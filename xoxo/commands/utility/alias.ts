@@ -17,7 +17,7 @@ export const options = {
   aliases:     [] as string[],
   description: 'Create, delete, or list your personal command aliases.',
   usage:       'alias create <name> <command name>\nalias delete <name>\nalias [list]',
-  category:    'utility',
+  category:    'features',
   owner:       false,
   cooldown:    3,
 };

@@ -18,7 +18,7 @@ export const options = {
   aliases:     ['wp', 'whoponged'] as string[],
   description: 'Show the last 10 messages that pinged a user in this channel.',
   usage:       'whoping [@user | user ID]',
-  category:    'utility',
+  category:    'miscellaneous',
   owner:       false,
   cooldown:    5,
 };

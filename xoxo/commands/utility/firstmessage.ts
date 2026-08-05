@@ -21,7 +21,7 @@ export const options = {
   aliases:     ['firstmsg'] as string[],
   description: 'Get details about the first message ever sent in this channel.',
   usage:       'firstmessage',
-  category:    'utility',
+  category:    'miscellaneous',
   owner:       false,
   cooldown:    5,
 };

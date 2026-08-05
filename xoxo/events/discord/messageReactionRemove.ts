@@ -6,14 +6,26 @@
 
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { pushReactionSnipe }   from '../../components/moderation/snipeStore.js';
+import { syncStarboardReaction } from '../../helpers/starboard.js';
 
 export const name = 'messageReactionRemove';
 export const once = false;
 
-export async function execute(reaction: any, user: any, _client: LevitateClient): Promise<void> {
-  // Skip DMs and bots
-  if (!reaction.message?.guild) return;
+export async function execute(reaction: any, user: any, client?: LevitateClient): Promise<void> {
+  // Skip bots. The shared Starboard path fetches partial reactions/messages.
   if (user?.bot) return;
+
+  const candidates = [client, reaction?.client, reaction?.message?.client];
+  const runtimeClient = candidates.find((candidate: any) =>
+    candidate?.db && typeof candidate.db.getStarboardSettings === 'function',
+  ) as LevitateClient | undefined;
+  if (!runtimeClient) {
+    console.error(`[starboard] Reaction remove had no database client reference (injectedDb=${Boolean((client as any)?.db)} reactionDb=${Boolean(reaction?.client?.db)} messageDb=${Boolean(reaction?.message?.client?.db)})`);
+    return;
+  }
+  await syncStarboardReaction(reaction, user, runtimeClient).catch((error: unknown) => {
+    console.error(`[starboard] Failed to sync reaction remove: ${error instanceof Error ? error.message : String(error)}`);
+  });
 
   // Fetch partial reaction / message if needed
   let r = reaction;

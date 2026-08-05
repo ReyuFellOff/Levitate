@@ -19,7 +19,7 @@ export const options = {
   aliases:     ['jumbo', 'big'] as string[],
   description: 'Show a custom emoji as a large image.',
   usage:       'enlarge <emoji | emoji ID | :name:>',
-  category:    'utility',
+  category:    'miscellaneous',
   owner:       false,
   cooldown:    3,
   noTyping:    true,

@@ -14,8 +14,8 @@ export const options = {
   name: 'react',
   aliases: ['re'] as string[],
   description: 'React to a message with an emoji.',
-  usage: `react <emoji name or ID>     (reply to the target message)
-  react <emoji name or ID>     (uses the previous message if no reply)`,
+  usage: `react <Unicode emoji, custom emoji name, or ID>     (reply to the target message)
+  react <Unicode emoji, custom emoji name, or ID>     (uses the previous message if no reply)`,
   category: 'utility',
   owner: false,
   cooldown: 2,
@@ -52,7 +52,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
 export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
   if (!args.length) {
-    return sendError({ message }, 'Please provide an emoji name or ID to react with.');
+    return sendError({ message }, 'Please provide a Unicode emoji, custom emoji name, or emoji ID to react with.');
   }
 
   const identifier = args.join(' ').trim();

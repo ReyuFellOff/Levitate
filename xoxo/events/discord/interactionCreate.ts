@@ -68,6 +68,7 @@ import { handleNsInteraction }           from '../../components/utility/namestyl
 import { handleCustomiseInteraction }    from '../../components/customisation/customise.js';
 import { handleVanityRoleInteraction } from '../../components/utility/vanityrole.js';
 import { handleAutoroleInteraction }   from '../../components/utility/autorole.js';
+import { handleStarboardInteraction }  from '../../components/features/starboard.js';
 import { handleRpsInteraction }       from '../../components/fun/rpsHandler.js';
 import { handleImageInteraction }     from '../../components/fun/imageHandler.js';
 import {
@@ -97,6 +98,7 @@ const REGISTERED_CUSTOM_ID_PREFIXES = [
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
   'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue', 'player',
   'customise',
+  'sb',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -173,6 +175,11 @@ export async function execute(interaction: any, client: LevitateClient): Promise
         await interaction.reply(errPayload).catch((): null => null);
       }
     }
+    return;
+  }
+
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('sb:')) {
+    await handleStarboardInteraction(interaction, client);
     return;
   }
 

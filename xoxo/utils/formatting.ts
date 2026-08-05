@@ -93,20 +93,17 @@ export function formatCreatedAt(date: Date): string {
   const days   = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
+  const value = new Date(date);
+  return `${days[value.getDay()]}, ${formatClock(value)}, ${value.getDate()} ${months[value.getMonth()]}, ${formatShortYear(value.getFullYear())}`;
+}
 
-  const day     = days[date.getUTCDay()];
-  const dateNum = date.getUTCDate();
-  const month   = months[date.getUTCMonth()];
-  const year    = formatShortYear(date.getUTCFullYear());
-
-  let hours     = date.getUTCHours();
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-  const ampm    = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  const time = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
-
-  return `${day}, ${time}, ${dateNum} ${month}, ${year}`;
+/** User-facing clock format used throughout bot messages. */
+export function formatClock(date: Date | number = new Date()): string {
+  return new Date(date).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 /**

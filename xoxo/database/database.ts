@@ -309,6 +309,38 @@ export interface AutoroleConfigDoc {
   updated_at:      Date;
 }
 
+export interface StarboardSettingsDoc {
+  guild_id:            string;
+  enabled:             boolean;
+  channel_id:          string | null;
+  threshold:           number;
+  emoji:               string;
+  color:               number;
+  ignored_channel_ids: string[];
+  ignored_role_ids:    string[];
+  updated_at:          Date;
+}
+
+export interface StarboardPostDoc {
+  guild_id:          string;
+  source_channel_id: string;
+  source_message_id: string;
+  board_channel_id:  string;
+  board_message_id:  string | null;
+  author_id:         string;
+  author_name:       string;
+  author_avatar:     string | null;
+  message_content:   string;
+  attachment_urls:   string[];
+  source_nsfw:       boolean;
+  source_message_url: string;
+  source_created_at: Date;
+  star_count:        number;
+  active:            boolean;
+  created_at:        Date;
+  updated_at:        Date;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Custom Roles
 // ─────────────────────────────────────────────────────────────────────────────
@@ -323,6 +355,13 @@ export interface CustomRoleDoc {
   role_ids:   string[];  // 1–5 role IDs
   created_by: string;    // user ID of whoever ran $customrole create
   created_at: Date;
+}
+
+/** One access role shared by every custom-role keyword in a guild. */
+export interface CustomRoleSettingsDoc {
+  guild_id:       string;
+  access_role_id: string;
+  updated_at:     Date;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1681,6 +1720,103 @@ export class Database {
     );
   }
 
+  // ── Starboard ─────────────────────────────────────────────────────────────
+
+  async getStarboardSettings(guildId: string): Promise<StarboardSettingsDoc | null> {
+    await this.connect();
+    return this.col<StarboardSettingsDoc>('starboard_settings').findOne({ guild_id: guildId });
+  }
+
+  async setStarboardSettings(
+    guildId: string,
+    data: Partial<Pick<StarboardSettingsDoc,
+      'enabled' | 'channel_id' | 'threshold' | 'emoji' | 'color' |
+      'ignored_channel_ids' | 'ignored_role_ids'>>,
+  ): Promise<void> {
+    await this.connect();
+    const defaults: Record<string, any> = {
+      enabled: true,
+      channel_id: null,
+      threshold: 3,
+      emoji: '⭐',
+      color: 0xFEE75C,
+      ignored_channel_ids: [],
+      ignored_role_ids: [],
+    };
+    for (const key of Object.keys(data)) delete defaults[key];
+    await this.col<StarboardSettingsDoc>('starboard_settings').updateOne(
+      { guild_id: guildId },
+      {
+        $set: { ...data, updated_at: new Date() },
+        $setOnInsert: defaults as any,
+      },
+      { upsert: true },
+    );
+  }
+
+  async upsertStarboardPost(
+    guildId: string,
+    sourceMessageId: string,
+    data: Partial<Omit<StarboardPostDoc, 'guild_id' | 'source_message_id' | 'created_at' | 'updated_at'>>,
+  ): Promise<StarboardPostDoc | null> {
+    await this.connect();
+    await this.col<StarboardPostDoc>('starboard_posts').updateOne(
+      { guild_id: guildId, source_message_id: sourceMessageId },
+      {
+        $set: { ...data, updated_at: new Date() },
+        $setOnInsert: { guild_id: guildId, source_message_id: sourceMessageId, created_at: new Date() },
+      },
+      { upsert: true },
+    );
+    return this.col<StarboardPostDoc>('starboard_posts').findOne({
+      guild_id: guildId,
+      source_message_id: sourceMessageId,
+    });
+  }
+
+  async getStarboardPost(guildId: string, sourceMessageId: string): Promise<StarboardPostDoc | null> {
+    await this.connect();
+    return this.col<StarboardPostDoc>('starboard_posts').findOne({
+      guild_id: guildId,
+      source_message_id: sourceMessageId,
+    });
+  }
+
+  async getTopStarboardPosts(guildId: string, limit = 10): Promise<StarboardPostDoc[]> {
+    await this.connect();
+    return this.col<StarboardPostDoc>('starboard_posts')
+      .find({ guild_id: guildId })
+      .sort({ star_count: -1, updated_at: -1 })
+      .limit(Math.max(1, Math.min(limit, 25)))
+      .toArray();
+  }
+
+  async getRandomStarboardPost(guildId: string): Promise<StarboardPostDoc | null> {
+    await this.connect();
+    const count = await this.col<StarboardPostDoc>('starboard_posts').countDocuments({ guild_id: guildId });
+    if (!count) return null;
+    const skip = Math.floor(Math.random() * count);
+    return this.col<StarboardPostDoc>('starboard_posts')
+      .find({ guild_id: guildId })
+      .skip(skip)
+      .limit(1)
+      .next();
+  }
+
+  async setStarboardPostBoardMessage(
+    guildId: string,
+    sourceMessageId: string,
+    boardMessageId: string | null,
+    active: boolean,
+    starCount: number,
+  ): Promise<void> {
+    await this.connect();
+    await this.col<StarboardPostDoc>('starboard_posts').updateOne(
+      { guild_id: guildId, source_message_id: sourceMessageId },
+      { $set: { board_message_id: boardMessageId, active, star_count: starCount, updated_at: new Date() } },
+    );
+  }
+
   // ── Name Styles ────────────────────────────────────────────────────────────
 
   async getNameStyle(guildId: string): Promise<NameStyleDoc | null> {
@@ -1937,6 +2073,23 @@ export class Database {
   // ── Custom Roles ──────────────────────────────────────────────────────────────
   // Collection: `custom_roles` — one document per (guild_id + keyword).
 
+  async getCustomRoleAccessRoleId(guildId: string): Promise<string | null> {
+    await this.connect();
+    const settings = await this.col<CustomRoleSettingsDoc>('custom_role_settings').findOne({
+      guild_id: guildId,
+    });
+    return settings?.access_role_id ?? null;
+  }
+
+  async setCustomRoleAccessRole(guildId: string, accessRoleId: string): Promise<void> {
+    await this.connect();
+    await this.col<CustomRoleSettingsDoc>('custom_role_settings').updateOne(
+      { guild_id: guildId },
+      { $set: { access_role_id: accessRoleId, updated_at: new Date() } },
+      { upsert: true },
+    );
+  }
+
   async getCustomRole(guildId: string, keyword: string): Promise<CustomRoleDoc | null> {
     await this.connect();
     return this.col<CustomRoleDoc>('custom_roles').findOne({
@@ -1954,9 +2107,9 @@ export class Database {
   }
 
   async createCustomRole(
-    guildId:   string,
-    keyword:   string,
-    roleIds:   string[],
+    guildId:  string,
+    keyword:  string,
+    roleIds:  string[],
     createdBy: string,
   ): Promise<CustomRoleDoc | 'exists' | 'limit'> {
     await this.connect();

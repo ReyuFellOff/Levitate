@@ -2,11 +2,11 @@ import { SlashCommandBuilder, ApplicationIntegrationType, InteractionContextType
 
 export const data = new SlashCommandBuilder()
   .setName('vanity')
-  .setDescription("Look up a Discord vanity URL — see who owns it or check if it's available.")
+  .setDescription("Look up a Discord vanity URL, or show this server's vanity when no code is provided.")
   .addStringOption((o) =>
     o.setName('code')
       .setDescription('The vanity code or full discord.gg link to look up.')
-      .setRequired(true)
+      .setRequired(false)
       .setMaxLength(64),
   )
   .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])

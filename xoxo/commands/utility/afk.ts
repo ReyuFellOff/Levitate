@@ -29,7 +29,7 @@ export const options = {
   usage: `afk
 afk <reason>
 afk <reason> <image URL>`,
-  category: 'utility',
+  category: 'features',
   owner:    false,
   cooldown: 5,
 };
