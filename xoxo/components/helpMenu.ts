@@ -1,0 +1,392 @@
+// xoxo/components/helpMenu.ts
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ContainerBuilder,
+  MessageFlags,
+  SectionBuilder,
+  SeparatorBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  TextDisplayBuilder,
+  ThumbnailBuilder,
+} from 'discord.js';
+import type { LevitateClient } from '../structures/LevitateClient.js';
+import { emojis } from '../emojis.js';
+import { categories, excludedCategories } from '../config/categories.js';
+import { getInviteUrl } from '../config.js';
+
+const NO_USER_PING = { parse: [] as any[] };
+
+const INACTIVITY_MS = 3 * 60 * 1000;
+
+// ─────────────────────────── Session tracking ───────────────────────────
+
+export interface HelpSession {
+  page: string; // 'home' | 'allcommands' | <categoryName>
+  userId: string;
+  guildId: string | null;
+  channelId: string;
+  client: LevitateClient;
+}
+
+export const helpSessions = new Map<string, HelpSession>();
+const helpTimeouts = new Map<string, NodeJS.Timeout>();
+
+export function registerHelpSession(messageId: string, session: HelpSession): void {
+  helpSessions.set(messageId, session);
+  resetHelpTimeout(messageId);
+}
+
+export function resetHelpTimeout(messageId: string): void {
+  const session = helpSessions.get(messageId);
+  if (!session) return;
+
+  clearTimeout(helpTimeouts.get(messageId));
+
+  const timeout = setTimeout(async () => {
+    try {
+      const channel = await session.client.channels.fetch(session.channelId);
+      const message = await (channel as any).messages.fetch(messageId);
+      let payload: any;
+      if (session.page === 'home') {
+        payload = await buildHelpMenuPayload(session.client, session.userId, session.guildId, true);
+      } else if (session.page === 'allcommands') {
+        payload = await buildAllCommandsPayload(session.client, session.userId, session.guildId, true);
+      } else {
+        payload = await buildCategoryPayload(session.client, session.userId, session.page, session.guildId, true);
+      }
+      await message.edit(payload);
+    } catch (_err) {
+      // Message was deleted or inaccessible — silently ignore
+    } finally {
+      helpSessions.delete(messageId);
+      helpTimeouts.delete(messageId);
+    }
+  }, INACTIVITY_MS);
+
+  helpTimeouts.set(messageId, timeout);
+}
+
+// ─────────────────────────── Internal helpers ───────────────────────────
+
+function getCategoryMap(client: LevitateClient): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  const seen = new Set<string>();
+
+  // Union of prefix and slash commands — a command like `lockdown-lift`
+  // (slash-only) is still a real command and must count once, alongside
+  // every prefix-loadable command. Deduped by name so commands that expose
+  // both a prefix and slash handler (the common case) aren't counted twice.
+  const allCommands = [
+    ...(client.commands?.values() ?? []),
+    ...(client.slashCommands?.values() ?? []),
+  ];
+
+  for (const cmd of allCommands) {
+    const name: string = (cmd as any).options?.name as string;
+    const cat: string = (cmd as any).options?.category as string;
+    if (!cat || excludedCategories.includes(cat.toLowerCase())) continue;
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+
+    const key = cat.toLowerCase();
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(name);
+  }
+  return map;
+}
+
+function buildHeaderSection(client: LevitateClient, compact = false, guildId?: string | null): SectionBuilder {
+  // Prefer the bot's server-specific avatar when inside a guild
+  const guild      = guildId ? client.guilds.cache.get(guildId) : null;
+  const botMember  = guild?.members?.me;
+  const avatarUrl  =
+    botMember?.displayAvatarURL({ forceStatic: false }) ??
+    client.user?.displayAvatarURL({ forceStatic: false }) ??
+    '';
+  const descContent = compact
+    ? `**Built for your server.**`
+    : `Ascend above the noise. A quiet vanguard of precision and grace—shaping an effortless, elevated sanctuary for your community.`;
+
+  const section = new SectionBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(`# __${client.config.botName}__ ${emojis.brownishSparkles}`),
+    new TextDisplayBuilder().setContent(descContent),
+  );
+  if (avatarUrl) {
+    section.setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
+  }
+  return section;
+}
+
+function buildFooterLinks(client: LevitateClient): string | null {
+  const clientId = client.config?.clientId ?? '';
+  const supportServer: string = (client.config as any).supportServer ?? '';
+  const inviteUrl = getInviteUrl(clientId);
+  const parts: string[] = [];
+  if (supportServer) parts.push(`[Support Server](${supportServer})`);
+  if (inviteUrl) parts.push(`[Invite Me](${inviteUrl})`);
+  return parts.length ? parts.join(' • ') : null;
+}
+
+function buildNavRow(page: string, disabled = false): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel('Home')
+      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('help:home')
+      .setEmoji({ id: '1494789744717074543', name: 'ChemtrailsGrey_VINYL', animated: true })
+      .setDisabled(disabled || page === 'home'),
+    new ButtonBuilder()
+      .setLabel('All commands')
+      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('help:allcommands')
+      .setEmoji({ id: '1494789896567525416', name: 'LustForLife_VINYL', animated: true })
+      .setDisabled(disabled || page === 'allcommands'),
+  );
+}
+
+function buildNavDropdown(
+  client: LevitateClient,
+  disabled = false,
+): ActionRowBuilder<StringSelectMenuBuilder> {
+  const validCategories = getCategoryMap(client);
+
+  const options = categories
+    .filter((cat) => validCategories.has(cat.name.toLowerCase()))
+    .sort((a, b) => a.index - b.index)
+    .map((cat) =>
+      new StringSelectMenuOptionBuilder()
+        .setValue(cat.name)
+        .setLabel(cat.displayName)
+        .setDescription(cat.description)
+        .setEmoji({ id: '1472173690274971740', name: 'green_sparkles', animated: true }),
+    );
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId('help:nav')
+    .setPlaceholder('Browse commands by category.')
+    .addOptions(options)
+    .setDisabled(disabled);
+
+  return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
+}
+
+async function resolvePrefix(
+  client: LevitateClient,
+  guildId?: string | null,
+): Promise<{ prefix: string; isCustom: boolean }> {
+  const defaultPrefix = client.config?.prefix ?? '$';
+  if (guildId && (client as any).db?.getGuildPrefix) {
+    const guildPrefix = await (client as any).db.getGuildPrefix(guildId).catch((): null => null);
+    if (guildPrefix) return { prefix: guildPrefix, isCustom: true };
+  }
+  return { prefix: defaultPrefix, isCustom: false };
+}
+
+// ─────────────────────────── Public payload builders ───────────────────────────
+
+export async function buildHelpMenuPayload(
+  client: LevitateClient,
+  userId: string,
+  guildId?: string | null,
+  disabled = false,
+) {
+  const { prefix, isCustom } = await resolvePrefix(client, guildId);
+  const categoryMap = getCategoryMap(client);
+  const totalCommands = [...categoryMap.values()].reduce((sum, cmds) => sum + cmds.length, 0);
+
+  const categoryLines = [...categoryMap.entries()]
+    .sort(([a], [b]) => {
+      const ai = categories.find((c) => c.name.toLowerCase() === a)?.index ?? 99;
+      const bi = categories.find((c) => c.name.toLowerCase() === b)?.index ?? 99;
+      return ai - bi;
+    })
+    .map(([cat]) => {
+      const info = categories.find((c) => c.name.toLowerCase() === cat);
+      const display = info?.displayName ?? (cat.charAt(0).toUpperCase() + cat.slice(1));
+      return `${emojis.whiteCards} | **${display}**`;
+    })
+    .join('\n');
+
+  const linksText = buildFooterLinks(client);
+
+  const container = new ContainerBuilder()
+    .addSectionComponents(buildHeaderSection(client, false, guildId))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `**Hey** <@${userId}> ${emojis.gothicHeart}\n` +
+          `${isCustom ? '**Native prefix:**' : '**Prefix:**'} \`${prefix}\`\n` +
+          `**Total commands:** ${totalCommands}`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  if (categoryLines) {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(categoryLines));
+  }
+
+  container
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow('home', disabled))
+    .addActionRowComponents(buildNavDropdown(client, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  if (linksText) {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${linksText}`));
+  }
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.SuppressNotifications,
+    allowedMentions: NO_USER_PING,
+  };
+}
+
+export async function buildAllCommandsPayload(
+  client: LevitateClient,
+  _userId: string,
+  _guildId?: string | null,
+  disabled = false,
+) {
+  const categoryMap = getCategoryMap(client);
+  const linksText = buildFooterLinks(client);
+
+  const sortedEntries = [...categoryMap.entries()].sort(([a], [b]) => {
+    const ai = categories.find((c) => c.name.toLowerCase() === a)?.index ?? 99;
+    const bi = categories.find((c) => c.name.toLowerCase() === b)?.index ?? 99;
+    return ai - bi;
+  });
+
+  const container = new ContainerBuilder()
+    .addSectionComponents(buildHeaderSection(client, false, _guildId))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  let first = true;
+  for (const [cat, cmds] of sortedEntries) {
+    if (!first) {
+      container.addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+    }
+    first = false;
+    const info = categories.find((c) => c.name.toLowerCase() === cat);
+    const displayName = info?.displayName ?? (cat.charAt(0).toUpperCase() + cat.slice(1));
+    const cmdList = cmds.map((c) => `\`${c}\``).join(', ');
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`${emojis.blackButterfly} **${displayName}**\n- ${cmdList}`),
+    );
+  }
+
+  container
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow('allcommands', disabled))
+    .addActionRowComponents(buildNavDropdown(client, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  if (linksText) {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${linksText}`));
+  }
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.SuppressNotifications,
+  };
+}
+
+export async function buildCategoryPayload(
+  client: LevitateClient,
+  _userId: string,
+  categoryName: string,
+  _guildId?: string | null,
+  disabled = false,
+) {
+  const categoryMap = getCategoryMap(client);
+  const cmds = categoryMap.get(categoryName.toLowerCase()) ?? [];
+  const catInfo = categories.find((c) => c.name.toLowerCase() === categoryName.toLowerCase());
+  const displayName =
+    catInfo?.displayName ?? (categoryName.charAt(0).toUpperCase() + categoryName.slice(1));
+  const cmdList = cmds.map((c) => `\`${c}\``).join(', ');
+  const linksText = buildFooterLinks(client);
+
+  const container = new ContainerBuilder()
+    .addSectionComponents(buildHeaderSection(client, true, _guildId))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `## ${emojis.blackCross} ${displayName}\n${cmdList || '*No commands available.*'}`,
+      ),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow(categoryName.toLowerCase(), disabled))
+    .addActionRowComponents(buildNavDropdown(client, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
+
+  if (linksText) {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${linksText}`));
+  }
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.SuppressNotifications,
+  };
+}
+
+export async function buildCommandInfoPayload(
+  client: LevitateClient,
+  commandName: string,
+  guildId?: string | null,
+) {
+  const cmd = (client.commands as any)?.get(commandName);
+  if (!cmd) return null;
+
+  const opts = (cmd as any).options ?? {};
+  const name: string = opts.name ?? commandName;
+  const description: string = opts.description ?? 'No description provided.';
+  const usageRaw: string = opts.usage ?? name;
+  const aliases: string[] = Array.isArray(opts.aliases) ? opts.aliases : [];
+  const categoryName: string = (opts.category ?? '').toLowerCase();
+  const categoryInfo = categories.find((c) => c.name.toLowerCase() === categoryName);
+  const categoryDisplay = categoryInfo?.displayName ??
+    (categoryName ? categoryName.charAt(0).toUpperCase() + categoryName.slice(1) : 'Uncategorised');
+  const { prefix } = await resolvePrefix(client, guildId);
+
+  const usageLines = usageRaw
+    .split('\n')
+    .map((l: string) => l.trim())
+    .filter(Boolean);
+
+  let usageBlock: string;
+  if (usageLines.length === 1) {
+    usageBlock = `${emojis.whiteArrow} **Usage:** \`${usageLines[0]}\``;
+  } else {
+    usageBlock =
+      `${emojis.whiteArrow} **Usage:**\n` +
+      usageLines.map((l: string) => `  \`${l}\``).join('\n');
+  }
+
+  const aliasText = aliases.length ? aliases.join(', ') : 'No aliases exist.';
+
+  const body =
+    `## ${name} command\n` +
+    `${emojis.whiteArrow} **Category:** ${categoryDisplay}\n` +
+    `${emojis.whiteArrow} **Description:** ${description}\n` +
+    `${usageBlock}\n` +
+    `${emojis.whiteArrow} **Aliases:** ${aliasText}`;
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`# ${emojis.bloodRip} Command Info`),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(body))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`-# Use \`${prefix}help\` to see all commands.`),
+    );
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.SuppressNotifications,
+  };
+}

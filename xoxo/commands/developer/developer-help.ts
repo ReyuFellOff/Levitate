@@ -1,0 +1,41 @@
+export const options = {
+  name: 'developer-help',
+  aliases: ['dev-help', 'devh'],
+  description: 'Show the developer-only commands.',
+  usage: 'developer-help',
+  category: 'developer',
+  owner: true,
+  cooldown: 0,
+};
+
+export async function prefixExecute(message: any) {
+  return message.channel.send(
+    [
+      '**Developer Commands**',
+      '',
+      '`$bias` — Manage developer bias settings',
+      '`$blacklist` — Manage user blacklists',
+      '`$blacklist-server` — Manage server blacklists',
+      '`$console-log` — View console logs',
+      '`$db` — Run read-only database diagnostics',
+      '`$emoji` — Manage developer emoji tools',
+      '`$eval` — Evaluate JavaScript',
+      '`$exec` — Run an allowlisted diagnostic command',
+      '`$fixbotroles` — Rename the bot-managed roles',
+      '`$global-ar` — Manage global auto-responses',
+      '`$guild` — Inspect a guild',
+      '`$noprefix` — Manage user no-prefix access',
+      '`$note` — Manage developer notes',
+      '`$reload` — Reload a prefix command',
+      '`$restart-bot` — Restart the bot',
+      '`$say-cv2` — Send a Components V2 message',
+      '`$say-embed` — Send an embed as the bot',
+      '`$serverlist` — List the bot’s servers',
+      '`$source` — View a source file',
+      '`$special-afk` — Manage special AFK settings',
+      '`$special-purge` — Run special purge tools',
+      '`$steal` — Steal an emoji or sticker',
+      '`$stop-bot` — Stop the bot',
+    ].join('\n'),
+  );
+}

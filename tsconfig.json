@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    // Target modern JS — ES2022 is required for top-level await
+    "target": "ES2022",
+    // ESM with Node.js resolution — import paths must use .js extensions
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+
+    // Output
+    "outDir": "./dist",
+    "rootDir": "./",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Interop
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // ── Strict (moderate) ────────────────────────────────────────────────────
+    // Master switch OFF — individual rules are toggled below for fine control.
+    "strict": false,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    // Disabled: discord.js channel types cause cascading null errors with this on.
+    "strictNullChecks": false,
+    // Disabled: class properties often initialised in init methods.
+    "strictPropertyInitialization": false,
+    // Disabled: unused vars/params are common during active development.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    // Enabled: all code paths should return a value.
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // Enabled: unknown catch variables are safer.
+    "useUnknownInCatchVariables": true
+  },
+  "include": ["*.ts", "xoxo/**/*"],
+  "exclude": ["node_modules", "dist", "reference1"]
+}
