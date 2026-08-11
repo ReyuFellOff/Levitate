@@ -19,6 +19,7 @@ import { buildWarnSuccessPayload, buildWarnDmPayload } from '../../components/mo
 import { buildModLogWarn } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'warn',
@@ -71,7 +72,15 @@ export async function prefixExecute(
     await dm.send(buildWarnDmPayload(message.guild.name, reason, message.author.username, count));
   } catch { /* DMs closed — non-fatal */ }
 
-  await message.channel.send(buildWarnSuccessPayload(targetUser, reason, message.author.username, count));
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'warn',
+    { targetUser, reason, count },
+  );
+  if (!invoked) {
+    await message.channel.send(buildWarnSuccessPayload(targetUser, reason, message.author.username, count));
+  }
   sendModLog(client, message.guild.id, buildModLogWarn(targetUser, reason, message.author.username, count));
 }
 
@@ -102,6 +111,14 @@ export async function slashExecute(
     await dm.send(buildWarnDmPayload(interaction.guild.name, reason, interaction.user.username, count));
   } catch { /* DMs closed — non-fatal */ }
 
-  await interaction.editReply(buildWarnSuccessPayload(targetUser, reason, interaction.user.username, count));
+  const invoked = await sendInvokeResponse(
+    { interaction },
+    client,
+    'warn',
+    { targetUser, reason, count },
+  );
+  if (!invoked) {
+    await interaction.editReply(buildWarnSuccessPayload(targetUser, reason, interaction.user.username, count));
+  }
   sendModLog(client, interaction.guild.id, buildModLogWarn(targetUser, reason, interaction.user.username, count));
 }

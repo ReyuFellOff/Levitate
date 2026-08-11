@@ -19,7 +19,7 @@ export const categories: CategoryInfo[] = [
     index: 2,
     name: 'moderation',
     displayName: 'Moderation',
-    description: 'Moderate your server — ban, kick, mute, warn, timeout, and more.',
+    description: 'Moderate your server — ban, kick, mute, warn, timeout, jail, and more.',
   },
   {
     index: 3,
@@ -86,6 +86,12 @@ export const categories: CategoryInfo[] = [
     name: 'fun',
     displayName: 'Fun',
     description: 'Fun commands — ship, games, image macros, and more.',
+  },
+  {
+    index: 14,
+    name: 'roleplay',
+    displayName: 'Roleplay',
+    description: 'Anime GIF roleplay actions for you and other members.',
   },
 ];
 

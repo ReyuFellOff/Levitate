@@ -67,29 +67,29 @@ async function scanDir(client: LevitateClient, dir: string, stats: LoadStats): P
 
     try {
       const raw = await import(pathToFileURL(full).href);
-      const mod  = (raw.default ?? raw) as Partial<PrefixCommandModule>;
+      const exported = (raw.default ?? raw) as any;
+      const modules: Partial<PrefixCommandModule>[] = Array.isArray(exported.commands)
+        ? exported.commands
+        : [exported];
 
-      if (typeof mod.prefixExecute !== 'function') {
-        // File has no prefix handler — not an error, just not a prefix command.
-        stats.skipped++;
-        continue;
+      for (const mod of modules) {
+        if (typeof mod.prefixExecute !== 'function') {
+          stats.skipped++;
+          continue;
+        }
+
+        const opts = mod.options;
+        if (!opts?.name || !opts.category || opts.usage === undefined) {
+          console.warn(`[COMMANDS LOADER] Skipping ${entry.name}: missing required options fields`);
+          stats.skipped++;
+          continue;
+        }
+
+        const name = opts.name.toLowerCase();
+        client.commands.set(name, mod);
+        for (const alias of opts.aliases ?? []) client.aliases.set(alias.toLowerCase(), name);
+        stats.loaded++;
       }
-
-      const opts = mod.options;
-      if (!opts?.name || !opts.category || opts.usage === undefined) {
-        console.warn(`[COMMANDS LOADER] Skipping ${entry.name}: missing required options fields`);
-        stats.skipped++;
-        continue;
-      }
-
-      const name = opts.name.toLowerCase();
-      client.commands.set(name, mod);
-
-      for (const alias of opts.aliases ?? []) {
-        client.aliases.set(alias.toLowerCase(), name);
-      }
-
-      stats.loaded++;
     } catch (err: unknown) {
       console.error(`[COMMANDS LOADER] Failed to load ${entry.name}:`, err);
       stats.skipped++;

@@ -34,6 +34,7 @@ import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { parseDuration } from '../../helpers/parseDuration.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'timeout',
@@ -148,7 +149,16 @@ export async function prefixExecute(
     if (!removed) return sendError(ctx, `Failed to remove timeout from **${targetUser.username}**.`);
 
     sendModLog(client, message.guild.id, buildModLogUnTimeout(targetUser, reason, message.author.username));
-    return message.channel.send(buildTimeoutRemovePayload(targetUser, reason, message.author.username, dmSent));
+    const invoked = await sendInvokeResponse(
+      { message },
+      client,
+      'timeout',
+      { targetUser, reason },
+    );
+    if (!invoked) {
+      return message.channel.send(buildTimeoutRemovePayload(targetUser, reason, message.author.username, dmSent));
+    }
+    return;
   }
 
   const durationMs = parseDuration(durationRaw);
@@ -171,7 +181,15 @@ export async function prefixExecute(
   if (!timed) return sendError(ctx, `Failed to timeout **${targetUser.username}**.`);
 
   sendModLog(client, message.guild.id, buildModLogTimeout(targetUser, durationMs, reason, message.author.username, dmSent));
-  await message.channel.send(buildTimeoutAddPayload(targetUser, durationMs, reason, message.author.username, dmSent));
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'timeout',
+    { targetUser, reason, duration: durationRaw },
+  );
+  if (!invoked) {
+    await message.channel.send(buildTimeoutAddPayload(targetUser, durationMs, reason, message.author.username, dmSent));
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -234,7 +252,15 @@ export async function slashExecute(
           return;
         }
 
-        await interaction.editReply(buildTimeoutRemovePayload(targetUser, reason, interaction.user.username, dmSent));
+         const invoked = await sendInvokeResponse(
+           { interaction },
+           client,
+           'timeout',
+           { targetUser, reason },
+         );
+         if (!invoked) {
+           await interaction.editReply(buildTimeoutRemovePayload(targetUser, reason, interaction.user.username, dmSent));
+         }
         sendModLog(client, interaction.guild.id, buildModLogUnTimeout(targetUser, reason, interaction.user.username));
       },
     });
@@ -269,7 +295,15 @@ export async function slashExecute(
         return;
       }
 
-      await interaction.editReply(buildTimeoutAddPayload(targetUser, durationMs, reason, interaction.user.username, dmSent));
+       const invoked = await sendInvokeResponse(
+         { interaction },
+         client,
+         'timeout',
+         { targetUser, reason, duration: durationRaw },
+       );
+       if (!invoked) {
+         await interaction.editReply(buildTimeoutAddPayload(targetUser, durationMs, reason, interaction.user.username, dmSent));
+       }
       sendModLog(client, interaction.guild.id, buildModLogTimeout(targetUser, durationMs, reason, interaction.user.username, dmSent));
     },
   });

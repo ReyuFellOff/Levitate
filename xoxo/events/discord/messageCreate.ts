@@ -31,8 +31,16 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     updateSticky(client, message).catch((): void => undefined);
   }
 
-  if (message.author?.bot) return;
   if (!message.guild) return;
+
+  // External bots can trigger autoresponders, but ignore this bot's own
+  // responses so an autoresponder cannot loop against itself.
+  if (message.author?.bot) {
+    if (message.author.id !== client.user?.id) {
+      dispatchAutoresponders(client, message).catch((): void => undefined);
+    }
+    return;
+  }
 
   // Enforce member-targeted image mutes before commands, autoresponders, and
   // other message side effects can process prohibited content.

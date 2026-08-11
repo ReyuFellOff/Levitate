@@ -114,6 +114,11 @@ export class LevitateClient extends Client {
    */
   public userAliases: Map<string, Map<string, string>> = new Map();
   /**
+   * In-memory per-user invoke message cache.
+   * Key: userId → Map(command name → plain-text replacement message).
+   */
+  public userInvokes: Map<string, Map<string, string>> = new Map();
+  /**
    * Database interface — populated once MongoDB is wired.
    * Until then, commands that call client.db must be guarded with `if (client.db)`.
    */

@@ -139,6 +139,13 @@ export interface MediaChannelsDoc {
   updated_at: Date;
 }
 
+export interface JailConfigDoc {
+  guild_id:           string;
+  role_id:            string;
+  allowed_channel_id: string | null;
+  updated_at:         Date;
+}
+
 export type LogCategoryKey = 'channel' | 'member' | 'role' | 'vc' | 'message' | 'server' | 'modlog';
 
 export interface LogCategoryConfig {
@@ -423,6 +430,18 @@ export interface UserCommandAliasDoc {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// User Invoke Messages
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** One personal, global replacement message for a supported moderation command. */
+export interface UserInvokeDoc {
+  user_id:    string;
+  command:    string;
+  message:    string;
+  updated_at: Date;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Database Class
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -562,6 +581,40 @@ export class Database {
   async removeGuildPrefix(guildId: string): Promise<boolean> {
     await this.connect();
     const result = await this.col<GuildPrefixDoc>('guild_prefixes').deleteOne({ guild_id: guildId });
+    return result.deletedCount > 0;
+  }
+
+  // ── Jail configuration ────────────────────────────────────────────────────
+
+  async getJailConfig(guildId: string): Promise<JailConfigDoc | null> {
+    await this.connect();
+    return this.col<JailConfigDoc>('jail_configs').findOne({ guild_id: guildId });
+  }
+
+  async setJailConfig(
+    guildId: string,
+    roleId: string,
+    allowedChannelId: string | null,
+  ): Promise<boolean> {
+    await this.connect();
+    await this.col<JailConfigDoc>('jail_configs').updateOne(
+      { guild_id: guildId },
+      {
+        $set: {
+          role_id: roleId,
+          allowed_channel_id: allowedChannelId,
+          updated_at: new Date(),
+        },
+        $setOnInsert: { guild_id: guildId },
+      },
+      { upsert: true },
+    );
+    return true;
+  }
+
+  async deleteJailConfig(guildId: string): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<JailConfigDoc>('jail_configs').deleteOne({ guild_id: guildId });
     return result.deletedCount > 0;
   }
 
@@ -1744,6 +1797,53 @@ export class Database {
     await this.connect();
     const result = await this.col<UserCommandAliasDoc>('user_command_aliases')
       .deleteOne({ user_id: userId, alias_lower: aliasLower });
+    return result.deletedCount > 0;
+  }
+
+  private async ensureInvokeIndexes(): Promise<void> {
+    await this.col<UserInvokeDoc>('user_invokes')
+      .createIndex({ user_id: 1, command: 1 }, { unique: true })
+      .catch((): null => null);
+  }
+
+  async getUserInvokes(userId: string): Promise<UserInvokeDoc[]> {
+    await this.connect();
+    return this.col<UserInvokeDoc>('user_invokes')
+      .find({ user_id: userId })
+      .sort({ command: 1 })
+      .toArray();
+  }
+
+  /** Boot-time cache: userId → (command → invoke message). */
+  async getAllUserInvokes(): Promise<Map<string, Map<string, string>>> {
+    await this.connect();
+    const docs = await this.col<UserInvokeDoc>('user_invokes').find().toArray();
+    const map = new Map<string, Map<string, string>>();
+    for (const doc of docs) {
+      if (!map.has(doc.user_id)) map.set(doc.user_id, new Map());
+      map.get(doc.user_id)!.set(doc.command, doc.message);
+    }
+    return map;
+  }
+
+  async setUserInvoke(userId: string, command: string, message: string): Promise<boolean> {
+    await this.connect();
+    await this.ensureInvokeIndexes();
+    await this.col<UserInvokeDoc>('user_invokes').updateOne(
+      { user_id: userId, command },
+      {
+        $set: { message, updated_at: new Date() },
+        $setOnInsert: { user_id: userId, command },
+      },
+      { upsert: true },
+    );
+    return true;
+  }
+
+  async deleteUserInvoke(userId: string, command: string): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<UserInvokeDoc>('user_invokes')
+      .deleteOne({ user_id: userId, command });
     return result.deletedCount > 0;
   }
 

@@ -24,6 +24,7 @@ import { buildModLogKick } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'kick',
@@ -126,7 +127,15 @@ export async function prefixExecute(
   if (!kicked)
     return sendError(ctx, `Failed to kick **${targetUser.username}**. Check my permissions and role position.`);
 
-  await message.channel.send(buildKickSuccessPayload(targetUser, reason, message.author.username, dmSent));
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'kick',
+    { targetUser, reason },
+  );
+  if (!invoked) {
+    await message.channel.send(buildKickSuccessPayload(targetUser, reason, message.author.username, dmSent));
+  }
   sendModLog(client, message.guild.id, buildModLogKick(targetUser, reason, message.author.username, dmSent));
 }
 
@@ -185,7 +194,15 @@ export async function slashExecute(
         return;
       }
 
-      await interaction.editReply(buildKickSuccessPayload(targetUser, reason, interaction.user.username, dmSent));
+      const invoked = await sendInvokeResponse(
+        { interaction },
+        client,
+        'kick',
+        { targetUser, reason },
+      );
+      if (!invoked) {
+        await interaction.editReply(buildKickSuccessPayload(targetUser, reason, interaction.user.username, dmSent));
+      }
       sendModLog(client, interaction.guild.id, buildModLogKick(targetUser, reason, interaction.user.username, dmSent));
     },
   });

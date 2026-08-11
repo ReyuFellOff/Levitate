@@ -28,6 +28,12 @@ const PREFIX_ONLY_SLASH_COMMANDS = new Set([
   'developer',
   'invite',
   'uptime',
+  // Keep the global command payload below Discord's 100-command limit.
+  // These low-priority rating commands remain available as prefix commands.
+  'howautistic',
+  'howcute',
+  'howgay',
+  'howsimp',
 ]);
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -100,9 +106,11 @@ async function collectBuilders(dir: string, builders: any[]): Promise<void> {
     try {
       const raw  = await import(pathToFileURL(full).href);
       // Support both: `export const data = ...` and `export default { data }`
-      const data = raw.data ?? raw.default?.data;
+      const exported = raw.data ?? raw.default?.data;
+      const dataList = Array.isArray(exported) ? exported : [exported];
 
-      if (data && typeof data.toJSON === 'function') {
+      for (const data of dataList) {
+        if (!data || typeof data.toJSON !== 'function') continue;
         const name = data.toJSON()?.name;
         if (PREFIX_ONLY_SLASH_COMMANDS.has(name)) {
           console.info(`[SLASH REG] Keeping /${name} prefix-only to stay within Discord's 100-command limit.`);

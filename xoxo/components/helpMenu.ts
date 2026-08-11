@@ -39,6 +39,47 @@ export function registerHelpSession(messageId: string, session: HelpSession): vo
   resetHelpTimeout(messageId);
 }
 
+/**
+ * Resolve a user-provided help category to the canonical category key used by
+ * help sessions and the category map.
+ *
+ * Accepts the internal name (`vccontrols`), the display name (`VC Controls`),
+ * and a compact display-name form (`vccontrols`).
+ */
+export function resolveHelpCategory(
+  client: LevitateClient,
+  input: string,
+): string | undefined {
+  const normalized = input.trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  const compact = normalized.replace(/[\s_-]+/g, '');
+  const categoryMap = getCategoryMap(client);
+
+  for (const category of categories) {
+    const key = category.name.toLowerCase();
+    if (!categoryMap.has(key)) continue;
+
+    const display = category.displayName.toLowerCase();
+    if (
+      normalized === key ||
+      normalized === display ||
+      compact === display.replace(/[\s_-]+/g, '')
+    ) {
+      return key;
+    }
+  }
+
+  // Keep custom, non-configured categories usable if they are ever introduced
+  // by a command module, while still excluding hidden developer categories.
+  for (const key of categoryMap.keys()) {
+    if (excludedCategories.includes(key)) continue;
+    if (normalized === key || compact === key.replace(/[\s_-]+/g, '')) return key;
+  }
+
+  return undefined;
+}
+
 export function resetHelpTimeout(messageId: string): void {
   const session = helpSessions.get(messageId);
   if (!session) return;

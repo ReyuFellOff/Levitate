@@ -23,6 +23,7 @@ import { buildModLogBan } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'ban',
@@ -55,20 +56,18 @@ async function runChecks(opts: {
     return 'You cannot ban a bot developer.';
 
   const targetMember = await guild.members.fetch(targetUser.id).catch((): null => null);
-
-  if (targetMember) {
-    const invokerIsOwner = invokerId === guild.ownerId;
-    const invokerTop     = invokerMember?.roles?.highest?.position ?? 0;
-    const targetTop      = targetMember.roles?.highest?.position   ?? 0;
-    const botTop         = botMember?.roles?.highest?.position     ?? 0;
-
-    if (!invokerIsOwner && targetTop >= invokerTop)
-      return `You cannot ban **${targetUser.username}** — they have an equal or higher role than you.`;
-    if (targetTop >= botTop)
-      return `I cannot ban **${targetUser.username}** — their role is equal to or higher than mine.`;
-    if (!targetMember.bannable)
-      return `I cannot ban **${targetUser.username}** — missing permissions.`;
-  }
+  if (!targetMember)
+    return `**${targetUser.username}** is not a member of this server. Use \`hackban\` to ban users who are not in the server.`;
+  const invokerIsOwner = invokerId === guild.ownerId;
+  const invokerTop     = invokerMember?.roles?.highest?.position ?? 0;
+  const targetTop      = targetMember.roles?.highest?.position   ?? 0;
+  const botTop         = botMember?.roles?.highest?.position     ?? 0;
+  if (!invokerIsOwner && targetTop >= invokerTop)
+    return `You cannot ban **${targetUser.username}** — they have an equal or higher role than you.`;
+  if (targetTop >= botTop)
+    return `I cannot ban **${targetUser.username}** — their role is equal to or higher than mine.`;
+  if (!targetMember.bannable)
+    return `I cannot ban **${targetUser.username}** — missing permissions.`;
 
   return null;
 }
@@ -129,7 +128,15 @@ export async function prefixExecute(
   if (!banned)
     return sendError(ctx, `Failed to ban **${targetUser.username}**. Check my permissions and role position.`);
 
-  await message.channel.send(buildBanSuccessPayload(targetUser, reason, 0, message.author.username, dmSent));
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'ban',
+    { targetUser, reason },
+  );
+  if (!invoked) {
+    await message.channel.send(buildBanSuccessPayload(targetUser, reason, 0, message.author.username, dmSent));
+  }
   sendModLog(client, message.guild.id, buildModLogBan(targetUser, reason, message.author.username, 0, dmSent));
 }
 
@@ -192,7 +199,15 @@ export async function slashExecute(
         return;
       }
 
-      await interaction.editReply(buildBanSuccessPayload(targetUser, reason, deleteDays, interaction.user.username, dmSent));
+      const invoked = await sendInvokeResponse(
+        { interaction },
+        client,
+        'ban',
+        { targetUser, reason },
+      );
+      if (!invoked) {
+        await interaction.editReply(buildBanSuccessPayload(targetUser, reason, deleteDays, interaction.user.username, dmSent));
+      }
       sendModLog(client, interaction.guild.id, buildModLogBan(targetUser, reason, interaction.user.username, deleteDays, dmSent));
     },
   });

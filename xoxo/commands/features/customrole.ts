@@ -23,6 +23,7 @@ import { PermissionFlagsBits }           from 'discord.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { Database }                      from '../../database/database.js';
 import { resolveRole }                   from '../../helpers/roleResolver.js';
+import { buildCustomRoleListPayload }    from '../../components/features/customrole.js';
 
 export const options = {
   name:        'customrole',
@@ -239,19 +240,8 @@ async function handleList(
 
   const accessRoleId = await client.db!.getCustomRoleAccessRoleId(message.guild.id);
   const accessRole = accessRoleId ? message.guild.roles.cache.get(accessRoleId) : null;
-  const lines: string[] = docs.map((doc, i) => {
-    const roleList = doc.role_ids
-      .map((id: string) => {
-        const r = message.guild.roles.cache.get(id);
-        return r ? `<@&${r.id}>` : `~~${id}~~`;
-      })
-      .join(', ');
-    return `**${i + 1}.** \`${doc.keyword}\` → ${roleList}`;
-  });
-
-  await sendInfo(
-    { message },
-    `**Custom Roles** (${docs.length}/${Database.CUSTOM_ROLE_MAX_PER_GUILD})\nAccess role for all: ${accessRole ? `<@&${accessRole.id}>` : 'not configured'}\n${lines.join('\n')}`,
+  await message.channel.send(
+    buildCustomRoleListPayload(docs, message.guild, accessRole),
   );
 }
 

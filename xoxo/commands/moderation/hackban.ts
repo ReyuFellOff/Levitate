@@ -13,6 +13,7 @@ import { buildHackbanSuccessPayload } from '../../components/moderation/hackban.
 import { buildModLogHackban } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'hackban',
@@ -68,9 +69,17 @@ export async function prefixExecute(
   if (!banned)
     return sendError(ctx, `Failed to hackban \`${userId}\`. Check that the ID is valid and I have permission.`);
 
-  await message.channel.send(
-    buildHackbanSuccessPayload(userId, target?.username ?? null, reason, message.author.username),
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'hackban',
+    { targetUser: target ?? { id: userId, username: userId }, reason },
   );
+  if (!invoked) {
+    await message.channel.send(
+      buildHackbanSuccessPayload(userId, target?.username ?? null, reason, message.author.username),
+    );
+  }
   sendModLog(client, message.guild.id, buildModLogHackban(userId, target?.username ?? null, reason, message.author.username));
 }
 
@@ -119,9 +128,17 @@ export async function slashExecute(
         return;
       }
 
-      await interaction.editReply(
-        buildHackbanSuccessPayload(userId, target?.username ?? null, reason, interaction.user.username),
+      const invoked = await sendInvokeResponse(
+        { interaction },
+        client,
+        'hackban',
+        { targetUser: target ?? { id: userId, username: userId }, reason },
       );
+      if (!invoked) {
+        await interaction.editReply(
+          buildHackbanSuccessPayload(userId, target?.username ?? null, reason, interaction.user.username),
+        );
+      }
       sendModLog(client, interaction.guild.id, buildModLogHackban(userId, target?.username ?? null, reason, interaction.user.username));
     },
   });

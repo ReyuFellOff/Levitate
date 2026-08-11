@@ -55,22 +55,27 @@ async function scanDir(client: LevitateClient, dir: string, stats: LoadStats): P
 
     try {
       const raw = await import(pathToFileURL(full).href);
-      const mod  = (raw.default ?? raw) as Partial<SlashCommandModule>;
+      const exported = (raw.default ?? raw) as any;
+      const modules: Partial<SlashCommandModule>[] = Array.isArray(exported.commands)
+        ? exported.commands
+        : [exported];
 
-      if (typeof mod.slashExecute !== 'function') {
-        stats.skipped++;
-        continue;
+      for (const mod of modules) {
+        if (typeof mod.slashExecute !== 'function') {
+          stats.skipped++;
+          continue;
+        }
+
+        const name = mod.options?.name?.toLowerCase();
+        if (!name) {
+          console.warn(`[SLASH LOADER] Skipping ${entry.name}: no name in options`);
+          stats.skipped++;
+          continue;
+        }
+
+        client.slashCommands.set(name, mod);
+        stats.loaded++;
       }
-
-      const name = mod.options?.name?.toLowerCase();
-      if (!name) {
-        console.warn(`[SLASH LOADER] Skipping ${entry.name}: no name in options`);
-        stats.skipped++;
-        continue;
-      }
-
-      client.slashCommands.set(name, mod);
-      stats.loaded++;
     } catch (err: unknown) {
       console.error(`[SLASH LOADER] Failed to load ${entry.name}:`, err);
       stats.skipped++;

@@ -13,6 +13,7 @@ import { buildModLogStrip } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'strip',
@@ -88,7 +89,15 @@ export async function prefixExecute(
   if (removed === 0 && skipped === 0)
     return sendError(ctx, `**${targetUser.username}** has no roles to remove.`);
 
-  await message.channel.send(buildStripSuccessPayload(targetUser, removed, skipped, message.author.username));
+  const invoked = await sendInvokeResponse(
+    { message },
+    client,
+    'strip',
+    { targetUser },
+  );
+  if (!invoked) {
+    await message.channel.send(buildStripSuccessPayload(targetUser, removed, skipped, message.author.username));
+  }
   sendModLog(client, message.guild.id, buildModLogStrip(targetUser, removed, skipped, message.author.username));
 }
 
@@ -127,7 +136,15 @@ export async function slashExecute(
         await sendError(ctx, `**${targetUser.username}** has no roles to remove.`);
         return;
       }
-      await interaction.editReply(buildStripSuccessPayload(targetUser, removed, skipped, interaction.user.username));
+       const invoked = await sendInvokeResponse(
+         { interaction },
+         client,
+         'strip',
+         { targetUser },
+       );
+       if (!invoked) {
+         await interaction.editReply(buildStripSuccessPayload(targetUser, removed, skipped, interaction.user.username));
+       }
       sendModLog(client, interaction.guild.id, buildModLogStrip(targetUser, removed, skipped, interaction.user.username));
     },
   });

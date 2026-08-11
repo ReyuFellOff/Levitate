@@ -93,6 +93,35 @@ export function buildModLogBan(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Softban
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function buildModLogSoftban(
+  targetUser:        any,
+  reason:            string,
+  historyChoice:     'none' | '1h' | '6h' | '12h' | '1d' | '3d' | '7d',
+  moderatorUsername: string,
+): any {
+  const historyLabel = {
+    none: 'Don’t delete any',
+    '1h': 'Previous hour',
+    '6h': 'Previous 6 hours',
+    '12h': 'Previous 12 hours',
+    '1d': 'Previous 24 hours',
+    '3d': 'Previous 3 days',
+    '7d': 'Previous 7 days',
+  }[historyChoice];
+  const lines = [
+    `<@${targetUser.id}> (${targetUser.username})`,
+    `**User ID:** \`${targetUser.id}\``,
+    `**Deleted messages:** ${historyLabel}`,
+    `**Reason:** ${reason}`,
+    `**Moderator:** ${moderatorUsername}`,
+  ];
+  return buildEntry(`## ${emojis.blackCards} Softbanned`, lines, targetUser);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Kick
 // ─────────────────────────────────────────────────────────────────────────────
 

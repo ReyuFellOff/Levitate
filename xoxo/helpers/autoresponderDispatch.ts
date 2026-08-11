@@ -53,7 +53,8 @@ async function fireResponses(message: any, doc: AutoresponderDoc): Promise<void>
 
 export async function dispatchAutoresponders(client: LevitateClient, message: any): Promise<void> {
   if (!client.db || !message.guild) return;
-  if (message.author?.bot) return;
+  // Process other bots' messages, but never process this bot's own responses.
+  if (message.author?.id && message.author.id === client.user?.id) return;
   if (typeof message.content !== 'string' || !message.content.trim()) return;
 
   const guildId: string = message.guild.id;

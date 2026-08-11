@@ -74,6 +74,9 @@ export const emojis = {
   gayHeart: '<:gayHeart:1522469195302830100>',
   greenTick: '<:greenTick:1495228086265057280>',
   brownishSparkles: '<a:brownishSparkles:1526846190342377472>',
+  blackStar: "<:blackStar:1536623376351764612>",
+  FIRE: '<a:FIRE:1536677389625589760>',
+  CarrLo<:CarLol:1536680244860293270>"ort: "<:Motorsport:1536679493429633124>",
 
   // Butterflies
   butterflyDarkBlue:    '<a:butterflyDarkBlue:1494790001559343214>',

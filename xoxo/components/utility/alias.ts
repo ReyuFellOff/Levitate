@@ -45,7 +45,7 @@ export function buildAliasListPayload(
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         docs
-          .map((doc) => `${emojis.whiteArrow} \`${doc.alias}\` → \`${doc.command}\``)
+          .map((doc) => `${emojis.whiteArrow} \`${doc.alias}\`: \`${doc.command}\``)
           .join('\n'),
       ),
     );

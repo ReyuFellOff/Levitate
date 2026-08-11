@@ -6,6 +6,6 @@ export const data = new SlashCommandBuilder()
   .setDescription('View all commands or get details on a specific one.')
   .addStringOption(o =>
     o.setName('command')
-      .setDescription('The command name to get detailed help for.')
+      .setDescription('A command or category name to open in the help menu.')
       .setRequired(false),
   );

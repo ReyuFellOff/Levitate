@@ -206,6 +206,11 @@ async function loadCachedDataBlock(client: LevitateClient): Promise<void> {
   client.userAliases = userAliases;
   const aliasCount = [...userAliases.values()].reduce((sum, m) => sum + m.size, 0);
   console.log(`[DATABASE - LOADING DATA] ✨ Loaded ${aliasCount} user command alias(es) across ${userAliases.size} user(s)`);
+
+  const userInvokes = await db.getAllUserInvokes().catch((): Map<string, Map<string, string>> => new Map());
+  client.userInvokes = userInvokes;
+  const invokeCount = [...userInvokes.values()].reduce((sum, m) => sum + m.size, 0);
+  console.log(`[DATABASE - LOADING DATA] ✨ Loaded ${invokeCount} user invoke message(s) across ${userInvokes.size} user(s)`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
