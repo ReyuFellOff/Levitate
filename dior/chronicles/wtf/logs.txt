@@ -1,0 +1,24 @@
+I want you to add a logging system. It logs everything that happens in the server. CV2 messages ofcourse. Make in components/logging for the logs. And also for the configuration.
+
+Command will be:
+log/logs/logging
+first optional argument: all, channel, member, role, vc, message, server
+no other arguments.
+
+Only certain members can use the command to configure.
+
+Now see, for example I type "log" then it will list all the logs that can be configured which are: channel, member, role, vc, message, server OR All
+
+And there will be a dropdown to go to the page of any one of these. On the page of specific one will be channel and exceptions. Channel with single dropdown to select a channel and exceptions with a dropdown to select multiple of exceptions.
+
+For example, on role logs page, I can select the channel in which I want role logs to be sent. In exceptions, I can select which roles I don't want logs for.
+
+In message logs, I can provide channel ofc. Then in exceptions, I can provide channel whose message changes or deletes won't be logged.
+
+In Vc logs, exceptions will be voice channels (if two voice channels are in a log then it will be visible.)
+
+And rest you can figure out.
+
+In case of all, ALL THE LOGS are sent in one channel. No exceptions. On the specific page will be home button go the home page.
+
+In case of "log <log name>" it will open the page of that log with home button ofcourse.

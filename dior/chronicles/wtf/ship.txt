@@ -1,0 +1,15 @@
+New command in category "Fun"
+command name: ship
+2 optional argument of user.
+that is,
+ship
+ship <user>
+ship <user1> <user2>
+
+What it does is that it generates a percentage of love between the users and shows in a generated image with the user's display names and pfp. Many other bots do so, research it. I don't know how they do but it is possible. I don't even know how they calculate love percentage, random or some god-forsaken algorithm. Just do it as you please. It should be detailed and awesome looking. Also, it should be in CV2 and templave can be like:
+normal message attached with CV2: Shipping <user1> and <user2> (any heart emoji from emojis.ts)
+In CV2, do as you please.
+
+If one user argument then ships the author with that user. If two users then ships those two users. If no argument then ships the user with random member in the server (not a bot)
+If bot is given in argument then you can use the bot, but in case of random, don't use bot.
+And also, don't ship the user with themselves. If explicitlthe user does so then always give high percentage as to say that the user loves themselves ofc. Write this too in message when shippping themself. BUT IN RANDOM, don't ship the user with themself.

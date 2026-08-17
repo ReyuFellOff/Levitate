@@ -1,7 +1,7 @@
 // index.ts — top-level cluster manager
 //
 // Spawns clusters via discord-hybrid-sharding. Each cluster process runs
-// `xoxo/levitate.ts` which handles login, loaders, and the full bot bootstrap.
+// `dior/levitate.ts` which handles login, loaders, and the full bot bootstrap.
 //
 // discord-hybrid-sharding sits above discord.js's built-in ShardingManager:
 //   • Clusters  → OS-level processes (one per CPU core by default)
@@ -42,7 +42,7 @@ if (!token) {
   process.exit(1);
 }
 
-const manager = new ClusterManager(join(__dirname, 'xoxo', 'levitate.js'), {
+const manager = new ClusterManager(join(__dirname, 'dior', 'levitate.js'), {
   token,
   totalShards:       'auto',
   shardsPerClusters: 2,

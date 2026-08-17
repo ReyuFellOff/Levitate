@@ -1,0 +1,273 @@
+// xoxo/messages/debug.ts
+//
+// Components V2 payload builders for the debug command.
+// Lavalink / music sections are intentionally omitted.
+
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ContainerBuilder,
+  MessageFlags,
+  SectionBuilder,
+  SeparatorBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  TextDisplayBuilder,
+  ThumbnailBuilder,
+} from 'discord.js';
+import { emojis } from '../emojis.js';
+import debugConfig from '../config/debugConfig.js';
+import { config } from '../config.js';
+import type { DebugStats } from '../helpers/debugStats.js';
+import {
+  buildGeneralLines,
+  buildSystemLines,
+  buildClusterLines,
+  buildLatencyLines,
+  buildArchitectureLines,
+  buildOtherLines,
+  getCategoryDisplayName,
+} from '../helpers/debugStats.js';
+import { getHostingProviderName } from '../helpers/getHostingServiceIP.js';
+
+// ─────────────────────────── Session tracking ───────────────────────────
+
+export interface DebugSession {
+  page:           string;
+  stats:          DebugStats;
+  userId:         string;
+  authorUsername: string;
+  channelId:      string;
+  prefix:         string;
+  client:         any;
+}
+
+export const debugSessions  = new Map<string, DebugSession>();
+const debugTimeouts          = new Map<string, NodeJS.Timeout>();
+
+export function registerDebugSession(messageId: string, session: DebugSession): void {
+  debugSessions.set(messageId, session);
+  resetDebugTimeout(messageId);
+}
+
+export function resetDebugTimeout(messageId: string, _interaction?: any): void {
+  const session = debugSessions.get(messageId);
+  if (!session) return;
+
+  clearTimeout(debugTimeouts.get(messageId));
+
+  const timeout = setTimeout(async () => {
+    try {
+      const channel = await session.client.channels.fetch(session.channelId);
+      const message = await (channel as any).messages.fetch(messageId);
+      let payload: any;
+      if (session.page === 'allstats') {
+        payload = buildDebugAllStatsPayload(session.stats, session.authorUsername, session.prefix, true, session.client);
+      } else if (session.page === 'home') {
+        payload = buildDebugHomePayload(session.stats, session.authorUsername, session.prefix, true, session.client);
+      } else {
+        payload = buildDebugCategoryPayload(session.stats, session.page, session.authorUsername, session.prefix, true, session.client);
+      }
+      await message.edit(payload);
+    } catch {
+      // Message deleted or inaccessible — silently ignore
+    } finally {
+      debugSessions.delete(messageId);
+      debugTimeouts.delete(messageId);
+    }
+  }, debugConfig.sessionTimeoutMs);
+
+  debugTimeouts.set(messageId, timeout);
+}
+
+// ─────────────────────────── Category definitions ───────────────────────────
+
+const DEBUG_CATEGORIES = [
+  { key: 'general',      label: 'General',            description: 'Servers, users and uptime' },
+  { key: 'system',       label: 'System',             description: 'RAM, CPU and thread metrics' },
+  { key: 'cluster',      label: 'Cluster & Sharding', description: 'Cluster ID, shards and heartbeat' },
+  { key: 'latency',      label: 'Latencies',          description: 'API, WS and database pings' },
+  { key: 'architecture', label: 'Architecture',       description: 'Build, versions and platform info' },
+  { key: 'other',        label: 'Other',              description: 'Counters and sync status' },
+];
+
+// ─────────────────────────── Internal builders ───────────────────────────
+
+function buildNavRow(page: string, disabled = false): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel('Home')
+      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('debug:home')
+      .setEmoji({ id: '1495280146658361426', name: 'butterflyLightBlue', animated: true })
+      .setDisabled(disabled || page === 'home'),
+    new ButtonBuilder()
+      .setLabel('All stats')
+      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('debug:allstats')
+      .setEmoji({ id: '1495280188957917266', name: 'butterflyPink', animated: true })
+      .setDisabled(disabled || page === 'allstats'),
+  );
+}
+
+function buildNavDropdown(botName: string, disabled = false): ActionRowBuilder<StringSelectMenuBuilder> {
+  const options = DEBUG_CATEGORIES.map(cat =>
+    new StringSelectMenuOptionBuilder()
+      .setValue(cat.key)
+      .setLabel(cat.label)
+      .setDescription(cat.description)
+      .setEmoji({ id: '1495274694851694602', name: 'blackBughunter', animated: false }),
+  );
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId('debug:nav')
+    .setPlaceholder(`Browse through ${botName}'s stats`)
+    .addOptions(options)
+    .setDisabled(disabled);
+
+  return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
+}
+
+/** Format the current local time as HH:MM. */
+export function formatSentAt(): string {
+  return new Date().toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
+
+function buildFooter(authorUsername: string, prefix: string): string {
+  return `-# Requested by ${authorUsername} | Use \`${prefix}debug\` for more info`;
+}
+
+function buildInfoLines(): string {
+  const provider = getHostingProviderName();
+  const db       = config.databaseProvider ?? 'MongoDB Atlas';
+  const language = config.language         ?? 'TypeScript';
+  return `Database on **${db}**\nPowered by **${provider}**\nWritten in **${language}**`;
+}
+
+// ─────────────────────────── Public payload builders ───────────────────────────
+
+export function buildDebugHomePayload(
+  stats:          DebugStats,
+  authorUsername: string,
+  prefix:         string,
+  disabled        = false,
+  client?:        any,
+): object {
+  const botName:   string = client?.config?.botName ?? config.botName;
+  const avatarUrl: string = client?.user?.displayAvatarURL?.({ forceStatic: false }) ?? '';
+
+  const categoryList = DEBUG_CATEGORIES
+    .map(cat => `${emojis.whiteArrow2}**${cat.label}**`)
+    .join('\n');
+
+  const headerText = `# ${emojis.blackbatman} Stats of ${botName}\n${buildInfoLines()}`;
+
+  const headerSection = new SectionBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(headerText),
+  );
+  if (avatarUrl) {
+    headerSection.setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .addSectionComponents(headerSection)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(categoryList))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow('home', disabled))
+    .addActionRowComponents(buildNavDropdown(botName, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildFooter(authorUsername, prefix)));
+
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
+}
+
+export function buildDebugCategoryPayload(
+  stats:          DebugStats,
+  category:       string,
+  authorUsername: string,
+  prefix:         string,
+  disabled        = false,
+  client?:        any,
+): object {
+  const botName:    string = client?.config?.botName ?? config.botName;
+  const displayName        = getCategoryDisplayName(category);
+
+  let lines: string;
+  switch (category) {
+    case 'general':      lines = buildGeneralLines(stats);      break;
+    case 'system':       lines = buildSystemLines(stats);       break;
+    case 'cluster':      lines = buildClusterLines(stats);      break;
+    case 'latency':      lines = buildLatencyLines(stats);      break;
+    case 'architecture': lines = buildArchitectureLines(stats); break;
+    case 'other':        lines = buildOtherLines(stats);        break;
+    default:             lines = '*No data available.*';
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Stats — ${displayName}`),
+    )
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow(category, disabled))
+    .addActionRowComponents(buildNavDropdown(botName, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildFooter(authorUsername, prefix)));
+
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
+}
+
+export function buildDebugAllStatsPayload(
+  stats:          DebugStats,
+  authorUsername: string,
+  prefix:         string,
+  disabled        = false,
+  client?:        any,
+): object {
+  const botName:   string = client?.config?.botName ?? config.botName;
+  const avatarUrl: string = client?.user?.displayAvatarURL?.({ forceStatic: false }) ?? '';
+
+  const headerText = `# ${emojis.blackbatman} All stats of ${botName}\n${buildInfoLines()}`;
+
+  const headerSection = new SectionBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(headerText),
+  );
+  if (avatarUrl) {
+    headerSection.setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .addSectionComponents(headerSection);
+
+  const sections: Array<{ label: string; lines: string }> = [
+    { label: 'General',            lines: buildGeneralLines(stats) },
+    { label: 'System',             lines: buildSystemLines(stats) },
+    { label: 'Cluster & Sharding', lines: buildClusterLines(stats) },
+    { label: 'Latencies',          lines: buildLatencyLines(stats) },
+    { label: 'Architecture',       lines: buildArchitectureLines(stats) },
+    { label: 'Other',              lines: buildOtherLines(stats) },
+  ];
+
+  for (const { label, lines } of sections) {
+    container
+      .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${label}\n${lines}`));
+  }
+
+  container
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addActionRowComponents(buildNavRow('allstats', disabled))
+    .addActionRowComponents(buildNavDropdown(botName, disabled) as any)
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildFooter(authorUsername, prefix)));
+
+  return { components: [container], flags: MessageFlags.IsComponentsV2 };
+}

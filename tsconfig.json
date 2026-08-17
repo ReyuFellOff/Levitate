@@ -43,6 +43,6 @@
     // Enabled: unknown catch variables are safer.
     "useUnknownInCatchVariables": true
   },
-  "include": ["*.ts", "xoxo/**/*"],
+  "include": ["*.ts", "dior/**/*"],
   "exclude": ["node_modules", "dist", "reference1"]
 }

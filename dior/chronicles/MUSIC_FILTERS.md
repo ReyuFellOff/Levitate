@@ -1,0 +1,30 @@
+# Music Filters
+
+- [x] 3d
+- [x] 8d
+- [x] bass
+- [x] bassboost
+- [x] chipmunk
+- [x] clear
+- [x] dance
+- [x] darthvader
+- [x] daycore
+- [x] distort
+- [x] earrape
+- [x] electronic
+- [x] enhance
+- [x] equalizer
+- [x] karaoke
+- [x] lofi
+- [x] lowpass
+- [x] nightcore
+- [x] pitch
+- [x] rotation
+- [ ] slowreverb — cannot implement true reverb with the current Lavalink filter API
+- [x] soft
+- [x] speed
+- [x] treblebass
+- [x] tremolo
+- [x] vaporwave
+- [x] vibrato
+- [x] vocalboost

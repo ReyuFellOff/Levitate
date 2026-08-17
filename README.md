@@ -177,7 +177,7 @@ npm run dev
 
 ```
 index.ts                  ← ClusterManager entry point
-xoxo/
+dior/
   levitate.ts             ← Per-cluster bootstrap (login → ready)
   config.ts               ← Central runtime configuration
   commands/               ← Prefix + slash execute logic (by category)
@@ -191,7 +191,7 @@ xoxo/
   structures/             ← LevitateClient, StatusManager
 ```
 
-All user-visible responses use Discord's **Components V2** format (`MessageFlags.IsComponentsV2`). CV2 builders live exclusively in `xoxo/components/` — never inline in command files.
+All user-visible responses use Discord's **Components V2** format (`MessageFlags.IsComponentsV2`). CV2 builders live exclusively in `dior/components/` — never inline in command files.
 
 ---
 
