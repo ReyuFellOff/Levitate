@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/antinuke/antinuke.ts
 //
 // Configure the antinuke system for this server.

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/info/debug.ts
 //
 // Display a detailed multi-page stats menu for the bot.
@@ -26,7 +27,7 @@ export const options = {
 // ── Prefix ───────────────────────────────────────────────────────────────────
 
 export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<void> {
-  const loadingContainer = new ContainerBuilder().addTextDisplayComponents(
+  const loadingContainer = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`${emojis.loading} Gathering stats…`),
   );
 
@@ -62,7 +63,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
 
   await interaction.reply({
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`${emojis.loading} Gathering stats…`),
       ),
     ],

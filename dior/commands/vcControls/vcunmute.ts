@@ -1,10 +1,9 @@
-// xoxo/commands/vcControls/mute.ts
+// xoxo/commands/vcControls/vcunmute.ts
 //
-// Server-mute a member in voice. Defaults to the invoker themselves.
-// This is a VOICE server-mute — unrelated to timeout/chat mute.
+// Remove server-mute from a member in voice. Defaults to the invoker.
 //
-// Prefix:  $mute [user]
-// Slash:   /mute [user]
+// Prefix:  $vcunmute [user]
+// Slash:   /vcunmute [user]
 
 import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
@@ -12,10 +11,10 @@ import { sendSuccess, sendError } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 
 export const options = {
-  name:        'mute',
+  name:        'vcunmute',
   aliases:     [] as string[],
-  description: 'Server-mute a member in voice. Defaults to yourself.',
-  usage:       'mute [user]',
+  description: 'Remove server-mute from a member in voice. Defaults to yourself.',
+  usage:       'unmute [user]',
   category:    'vcControls',
   owner:       false,
   cooldown:    3,
@@ -39,22 +38,22 @@ async function handle(
     );
   }
 
-  if (targetMember.voice.serverMute) {
+  if (!targetMember.voice.serverMute) {
     return sendError(
       ctx,
       targetUser.id === commandUserId
-        ? 'You are already server-muted.'
-        : `<@${targetUser.id}> is already server-muted.`,
+        ? 'You are not server-muted.'
+        : `<@${targetUser.id}> is not server-muted.`,
     );
   }
 
-  const muted = await targetMember.voice.setMute(true).catch((): null => null);
-  if (!muted) return sendError(ctx, 'Failed to server-mute that member.');
+  const unmuted = await targetMember.voice.setMute(false).catch((): null => null);
+  if (!unmuted) return sendError(ctx, 'Failed to remove server-mute from that member.');
 
   const text =
     targetUser.id === commandUserId
-      ? `Muted you in <#${targetMember.voice.channel.id}>.`
-      : `Muted <@${targetUser.id}> in <#${targetMember.voice.channel.id}>.`;
+      ? `Unmuted you in <#${targetMember.voice.channel.id}>.`
+      : `Unmuted <@${targetUser.id}> in <#${targetMember.voice.channel.id}>.`;
   return sendSuccess(ctx, text);
 }
 
@@ -72,7 +71,7 @@ export async function prefixExecute(
 
   const botMember = await message.guild.members.fetchMe().catch((): null => null);
   if (!botMember?.permissions?.has?.(PermissionFlagsBits.MuteMembers))
-    return sendError(ctx, 'I need the **Mute Members** permission to server-mute members.');
+    return sendError(ctx, 'I need the **Mute Members** permission to remove server-mutes.');
 
   let targetUser = message.author;
   if (args[0]) {
@@ -98,7 +97,7 @@ export async function slashExecute(
 
   const botMember = await interaction.guild.members.fetchMe().catch((): null => null);
   if (!botMember?.permissions?.has?.(PermissionFlagsBits.MuteMembers))
-    return sendError(ctx, 'I need the **Mute Members** permission to server-mute members.');
+    return sendError(ctx, 'I need the **Mute Members** permission to remove server-mutes.');
 
   const targetUser = interaction.options.getUser('user') ?? interaction.user;
   return handle(ctx, interaction.guild, targetUser, interaction.user.id);

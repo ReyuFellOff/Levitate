@@ -16,12 +16,12 @@ import { sendError } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 
 export const options = {
-  name: 'emoji',
+  name: 'emoji-send',
   aliases: ['em'] as string[],
   description: 'Send one or more emojis as a message (developer only).',
-  usage: `emoji <name or ID>
-  emoji <name1>|$|<name2>
-  emoji <name1> <name2>`,
+  usage: `emoji-send <name or ID>
+  emoji-send <name1>|$|<name2>
+  emoji-send <name1> <name2>`,
   category: 'developer',
   owner: true,
   cooldown: 2,

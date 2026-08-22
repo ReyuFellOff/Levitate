@@ -18,7 +18,7 @@ export async function execute(client: any, player: any): Promise<void> {
   // Apply saved server volume
   if (client.db?.getGuildVolume) {
     const volume = await client.db.getGuildVolume(player.guildId).catch((): null => null);
-    if (volume) {
+    if (volume !== null) {
       player.data?.set?.('serverVolume', volume);
       await player.setVolume(volume).catch((): null => null);
     }

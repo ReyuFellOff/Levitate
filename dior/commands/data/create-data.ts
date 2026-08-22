@@ -98,7 +98,7 @@ function buildConfirmPayload(
   timedOut = false,
 ): any {
   const typeLabel = type === 'message' ? 'Message' : type === 'embed' ? 'Embed' : 'CV2';
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${emojis.blackCards} Save this ${typeLabel}?`,
@@ -251,7 +251,7 @@ export async function prefixExecute(
   // ── 4. Ask for a name ────────────────────────────────────────────────────
   const askPayload: any = {
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `## ${emojis.blackCards} What should this be saved as?\n` +
@@ -283,7 +283,7 @@ export async function prefixExecute(
     // Timed out
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Timed out waiting for a name. Cancelled.`,
           ),
@@ -298,7 +298,7 @@ export async function prefixExecute(
   if (!collectedName) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Name cannot be empty. Cancelled.`,
           ),
@@ -313,7 +313,7 @@ export async function prefixExecute(
   if (collectedName.length > MAX_NAME_LENGTH) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Name is too long (${collectedName.length} / ${MAX_NAME_LENGTH} characters). Cancelled.`,
           ),
@@ -332,7 +332,7 @@ export async function prefixExecute(
   } catch {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Database error while checking name availability. Please try again.`,
           ),
@@ -347,7 +347,7 @@ export async function prefixExecute(
   if (exists) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} A saved item named \`${collectedName}\` already exists in this server. Cancelled.`,
           ),
@@ -390,7 +390,7 @@ export async function prefixExecute(
   if (interaction.customId === cancelId) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(`${emojis.redcross} Cancelled.`),
         ),
       ],
@@ -403,7 +403,7 @@ export async function prefixExecute(
   // ── 7. Confirmed — post to the storage channel ────────────────────────────
   await askMsg.edit({
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `${emojis.loading} Saving \`${collectedName}\`…`,
         ),
@@ -417,7 +417,7 @@ export async function prefixExecute(
   if (!storageChannelId) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Storage channel is not configured (\`config.savedDataChannelId\`).`,
           ),
@@ -436,7 +436,7 @@ export async function prefixExecute(
   if (!storageChannel || typeof storageChannel.send !== 'function') {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Could not reach the storage channel. Check the channel ID in config.`,
           ),
@@ -480,7 +480,7 @@ export async function prefixExecute(
   if (!storageMsg) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} Failed to post to the storage channel.`,
           ),
@@ -510,7 +510,7 @@ export async function prefixExecute(
   if (saveResult === 'duplicate') {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} A name conflict was detected at the database level (concurrent save). ` +
             `Payload is in the storage channel (message ID: \`${storageMsg.id}\`) but was not recorded. ` +
@@ -527,7 +527,7 @@ export async function prefixExecute(
   if (saveResult === false) {
     await askMsg.edit({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.redcross} The payload was posted to the storage channel (message ID: \`${storageMsg.id}\`) **but the database write failed**. You may need to save the entry manually.`,
           ),
@@ -542,7 +542,7 @@ export async function prefixExecute(
   // ── 9. Success ────────────────────────────────────────────────────────────
   await askMsg.edit({
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
             `${emojis.blacktick} Saved **${typeLabel}** as \`${collectedName}\` successfully.`,

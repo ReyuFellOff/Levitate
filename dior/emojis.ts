@@ -6,6 +6,7 @@ export const emojis = {
   greentick:    '<a:greentick:1473316237093376060>',
   greentick1:   '<a:greentick1:1489866447491694825>',
   redcross:     '<a:cross:1471741638203408454>',
+  warning:      '<:redWarning:1540482500852457512>',
   calculus:     '<:calculus:1473326503931412540>',
   clock:        '<:clock:1492491587664740392>',
   blackflower:  '<:black_flower:1475520432642719764>',
@@ -24,7 +25,6 @@ export const emojis = {
   emmarawr:     '<:emma_myers_rawr:1471740355769798687>',
   catready:     '<a:cat_ready:1471740197577293954>',
   blade:        '<:blade:1471739598383353856>',
-  whiteArrow:   '<:white_arrow:1489612642523025458>',
   aestheticCam: '<a:Camera:1535035506201464832>',
   wait:   '⏳',
   stop:   '⏹',
@@ -89,7 +89,8 @@ export const emojis = {
   blueFlowers:  '<:flowersBlue:1495277146459869308>',
   blackbatman:  '<:blackBatman:1494806627860222144>',
   blackBughunter: '<:blackBughunter:1495274694851694602>',
-  whiteArrow2:  '<:whiteArrow2:1495276732482064545>',
+  whiteArrow:   '<:whiteArrow:1494806878134337708>',
+  glowyWhiteArrow:  '<:glowyWhiteArrow:1495276732482064545>',
   pinkHearts:   '<a:pinkHearts:1522180594350559314>',
   gayHeart: '<:gayHeart:1522469195302830100>',
   greenTick: '<:greenTick:1495228086265057280>',
@@ -101,6 +102,12 @@ export const emojis = {
   KuromiTV: '<a:KuromiTV:1537010444978487387>',
   smallYellowStar: '<a:smallYellowStar:1537433842544148650>',
   silveryButterfly: '<:silveryButterfly:1537469815550378118>',
+  youtubeEmojiForYoutubeCommand: '<:youtube:1538866982630465557>',
+
+  // Honeypot
+  honeypot:       '🍯',
+  honeypotTrap:   '🪤',
+  honeypotShield: '🛡️',
 
   // Butterflies
   butterflyDarkBlue:    '<a:butterflyDarkBlue:1494790001559343214>',

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/info/tmdb.ts
 //
 // Components V2 presentation for TMDB movie and TV-show results.
@@ -174,7 +175,7 @@ export function buildTmdbPayload(details: TmdbMediaDetails) {
     );
   }
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addSectionComponents(header)
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildDetailsText(details)))

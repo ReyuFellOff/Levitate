@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/avatarBanner.ts
 //
 // CV2 builders for the server-vs-global choice prompt used by
@@ -23,7 +24,7 @@ export type MediaType = 'avatar' | 'banner';
 export function buildChoicePayload(displayName: string, type: MediaType): any {
   const label = type === 'avatar' ? 'Avatar' : 'Banner';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# Choose ${label}`),
     )
@@ -58,7 +59,7 @@ export function buildChoicePayload(displayName: string, type: MediaType): any {
 export function buildTimedOutChoicePayload(displayName: string, type: MediaType): any {
   const label = type === 'avatar' ? 'Avatar' : 'Banner';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# Choose ${label}`),
     )

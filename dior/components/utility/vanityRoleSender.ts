@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/vanityRoleSender.ts
 //
 // Shared message dispatcher for the vanity-role system.

@@ -22,9 +22,10 @@ export const options = {
 
 export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
   const input = args[0]?.toLowerCase();
+  const categoryInput = args.join(' ').trim().toLowerCase();
 
   if (input) {
-    const categoryName = resolveHelpCategory(client, input);
+    const categoryName = resolveHelpCategory(client, categoryInput);
     if (categoryName) {
       const payload = await buildCategoryPayload(
         client,

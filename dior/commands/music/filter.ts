@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/music/filter.ts
 //
 // Composable Lavalink music filters.
@@ -261,7 +262,7 @@ function visibleSeparator(): SeparatorBuilder {
 }
 
 export function buildFilterHelpPayload(client: LevitateClient): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${emojis.musicHeartNote} Music Filters`,

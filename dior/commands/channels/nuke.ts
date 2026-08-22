@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/moderation/nuke.ts
 //
 // Nuke one or more channels: delete each then immediately recreate it with
@@ -208,7 +209,7 @@ async function runNuke(message: any, guild: any, targets: any[]): Promise<void> 
     .join('\n');
   const payload = {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],

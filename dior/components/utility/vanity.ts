@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/vanity.ts
 //
 // CV2 payload builder for the $vanity command.
@@ -67,7 +68,7 @@ export function buildVanityPayload(opts: {
 
   // ── Vanity is AVAILABLE ───────────────────────────────────────────────────
   if (!invite || !invite.guild) {
-    const container = new ContainerBuilder()
+    const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`## ${emojis.greenTick} Vanity Available`),
       )
@@ -106,7 +107,7 @@ export function buildVanityPayload(opts: {
     line('Online',      `\`${onlineCount}\``),
   ].join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCross} Vanity: In Use`),
     )
@@ -158,7 +159,7 @@ export function buildCurrentGuildVanityPayload(opts: {
 }): any {
   const { guild, invokerUsername } = opts;
   const code = guild.vanityURLCode ?? null;
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${code ? `${emojis.blackCross} Server Vanity` : `${emojis.info} Server Vanity`}`,

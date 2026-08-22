@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/kick.ts
 //
 // CV2 payloads for the kick command — success panel and DM notification.
@@ -36,7 +37,7 @@ export function buildKickSuccessPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Kicked`),
     )
@@ -60,7 +61,7 @@ export function buildKickDmPayload(
   reason:            string,
   moderatorUsername: string,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.blackCards} You have been kicked from **${guildName}**\n` +
       `**Reason:** ${reason || 'None provided.'}\n` +

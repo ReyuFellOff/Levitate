@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/info/ping.ts
 
 import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
@@ -23,7 +24,7 @@ export async function prefixExecute(message: any, _args: string[], client: Levit
 
   const sent = await message.channel.send({
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`${emojis.loading} Checking latencies…`),
       ),
     ],

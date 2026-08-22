@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/welcomer/greetSender.ts
 //
 // Shared welcome-message dispatcher.

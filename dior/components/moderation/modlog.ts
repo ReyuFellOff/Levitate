@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/modlog.ts
 //
 // CV2 payload builders for modlog entries.
@@ -26,7 +27,7 @@ function buildEntry(
   const nowSec   = Math.floor(Date.now() / 1000);
   const bodyText = [...lines, `**Time:** <t:${nowSec}:f>`].join('\n');
 
-  let container = new ContainerBuilder().addTextDisplayComponents(
+  let container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(header),
   );
 

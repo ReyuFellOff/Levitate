@@ -42,6 +42,8 @@ const PREFIX_ONLY_SLASH_COMMANDS = new Set([
   'howsimp',
 ]);
 
+const MAX_GLOBAL_SLASH_COMMANDS = 100;
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export async function registerSlashCommands(client: LevitateClient): Promise<void> {
@@ -69,6 +71,14 @@ export async function registerSlashCommands(client: LevitateClient): Promise<voi
   if (builders.length === 0) {
     console.info('[SLASH REG] No slash command builders found.');
     return;
+  }
+
+  if (builders.length > MAX_GLOBAL_SLASH_COMMANDS) {
+    const overflow = builders.splice(MAX_GLOBAL_SLASH_COMMANDS);
+    console.warn(
+      `[SLASH REG] Found ${builders.length + overflow.length} commands; registering the first ${MAX_GLOBAL_SLASH_COMMANDS}. ` +
+      `Prefix-only overflow: ${overflow.map((builder) => builder.toJSON()?.name).join(', ')}`,
+    );
   }
 
   const rest = new REST({ version: '10' }).setToken(token);

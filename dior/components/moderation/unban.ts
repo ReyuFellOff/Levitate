@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/unban.ts
 //
 // CV2 payloads and interaction handler for the unban command.
@@ -54,7 +55,7 @@ export interface BannedEntry {
 
 export function buildUnbanListPayload(entries: BannedEntry[]): any {
   const listText = entries
-    .map(e => `${emojis.whiteArrow2} **${e.username}** — ${e.reason || 'No reason provided.'}`)
+    .map(e => `${emojis.glowyWhiteArrow} **${e.username}** — ${e.reason || 'No reason provided.'}`)
     .join('\n');
 
   const maxSelect = Math.min(entries.length, 25);
@@ -75,7 +76,7 @@ export function buildUnbanListPayload(entries: BannedEntry[]): any {
 
   const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Banned Users`),
     )
@@ -102,7 +103,7 @@ export function buildUnbanResultPayload(
     r.failed ? `- **${r.username}** — failed to unban` : `- **${r.username}** — unbanned`,
   );
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greentick} User${results.length === 1 ? '' : 's'} Unbanned`),
     )
@@ -139,7 +140,7 @@ export function buildUnbanSuccessPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greentick} Unbanned`),
     )
@@ -159,7 +160,7 @@ export function buildUnbanDmPayload(
   reason:            string,
   moderatorUsername: string,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.greentick} You have been unbanned from **${guildName}**\n` +
       `**Reason:** ${reason || 'None provided.'}\n` +

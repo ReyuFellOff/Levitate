@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/developer/fixbotroles.ts
 //
 // Developer-only command. Renames the bot's own managed integration role in
@@ -49,7 +50,7 @@ function buildResultPayload(
     `${emojis.redcross} **Failed:** ${failed}`,
   ];
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.info} Bot Role Rename Report`),
     )

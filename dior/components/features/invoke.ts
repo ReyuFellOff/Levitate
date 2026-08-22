@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/features/invoke.ts
 //
 // Static Components V2 views for personal invoke responses.
@@ -33,7 +34,7 @@ export function buildInvokeListPayload(
   docs: Array<{ command: string; message: string }>,
   _username: string,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${docs.length} response${docs.length === 1 ? '' : 's'}`,
@@ -78,7 +79,7 @@ export function buildInvokeSavedPayload(
   command: string,
   message: string,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         'Invoke response saved',

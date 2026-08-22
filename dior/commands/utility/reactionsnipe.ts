@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/utility/reactionsnipe.ts
 //
 // Show the last removed reaction in a channel.
@@ -54,7 +55,7 @@ function buildReactionSnipePayload(snipe: import('../../components/moderation/sn
     `**Removed:** <t:${removedSec}:R> (<t:${removedSec}:f>)`,
   ].filter(Boolean).join('\n');
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(

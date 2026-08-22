@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/intelligence.ts
 //
 // CV2 payload builder for the $intelligence / $iq command.
@@ -35,7 +36,7 @@ export async function buildIntelligencePayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://intelligence.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.blacksparkles} **How intelligent is <@${user.id}>?**`,

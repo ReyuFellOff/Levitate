@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/viewDataMenu.ts
 //
 // Session tracking, payload builder, and interaction handlers for $view-data.
@@ -148,7 +149,7 @@ export function buildViewDataPayload(
     : ['-# Select an item from the dropdown to send it in this channel.'];
   if (lastSent && !disabled) footerLines.push(`-# Last sent: \`${lastSent}\``);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.whiteCards} Saved Data`),
     )

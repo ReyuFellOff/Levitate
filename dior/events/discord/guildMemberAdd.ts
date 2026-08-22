@@ -38,8 +38,28 @@ async function applyAutorole(member: any, client: LevitateClient): Promise<void>
   });
 }
 
+/** Applies the configured prepend/append text to every new member, including bots. */
+async function applyAutonick(member: any, client: LevitateClient): Promise<void> {
+  if (!client.db) return;
+  const cfg = await client.db.getAutonickConfig(member.guild.id).catch((): null => null);
+  const prepend = member.user?.bot ? cfg?.bot_prepend : (cfg?.member_prepend ?? cfg?.prepend);
+  const append = member.user?.bot ? cfg?.bot_append : (cfg?.member_append ?? cfg?.append);
+  if (!prepend && !append) return;
+
+  const botMember = member.guild.members.me;
+  if (!botMember?.permissions?.has('ManageNicknames') || !member.manageable) return;
+
+  const base = member.user?.globalName ?? member.user?.username ?? 'Member';
+  const nickname = `${prepend ? `${prepend} ` : ''}${base}${append ? ` ${append}` : ''}`
+    .slice(0, 32);
+  await member.setNickname(nickname, 'Autonick on join').catch((err: unknown) => {
+    console.error(`[autonick] Failed to set nickname for ${member.id} in ${member.guild.id}: ${err instanceof Error ? err.message : err}`);
+  });
+}
+
 export async function execute(member: any, client: LevitateClient): Promise<void> {
   if (!member.guild) return;
+  await applyAutonick(member, client);
   await applyAutorole(member, client);
   await sendGreetMessage(member, client, false);
   await dispatchLog(client, member.guild.id, 'member', [member.id], buildMemberJoinPayload(member));

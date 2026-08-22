@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/helpers/stickyHelper.ts
 //
 // Sticky-message engine.
@@ -16,10 +17,21 @@
 //   sticky.ts        → setStickyAndPost(...)             [sticky set command]
 
 import { AttachmentBuilder, MessageFlags } from 'discord.js';
+import type { StickyDoc } from '../database/database.js';
 
 const updatingLocks = new Set<string>();
+const stickyCache = new Map<string, { expiresAt: number; data: StickyDoc | null }>();
+const STICKY_CACHE_TTL_MS = 15_000;
 
 export type StickyType = 'text' | 'cv2' | 'embed';
+
+function stickyCacheKey(guildId: string, channelId: string): string {
+  return `${guildId}-${channelId}`;
+}
+
+export function invalidateStickyCache(guildId: string, channelId: string): void {
+  stickyCache.delete(stickyCacheKey(guildId, channelId));
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Payload builder
@@ -75,6 +87,7 @@ export async function postStickyToChannel(
   const key = `${guildId}-${channelId}`;
   client.stickyMessages.set(key, sent.id);
   await client.db.setStickyLastMessageId(guildId, channelId, sent.id).catch((): null => null);
+  invalidateStickyCache(guildId, channelId);
   return sent;
 }
 
@@ -102,6 +115,7 @@ export async function setStickyAndPost(
 
   // Persist payload to MongoDB (enables fast per-message reads).
   await client.db.setSticky(guildId, channelId, type, payload, null);
+  invalidateStickyCache(guildId, channelId);
 
   // Archive a copy to the sticky data channel.
   uploadToStickyChannel(client, type, payload).catch((): null => null);
@@ -165,7 +179,13 @@ export async function updateSticky(client: any, message: any): Promise<void> {
   try {
     if (!client.db) return;
 
-    const data = await client.db.getSticky(guildId, channelId);
+    const cached = stickyCache.get(key);
+    const data = cached && cached.expiresAt > Date.now()
+      ? cached.data
+      : await client.db.getSticky(guildId, channelId).then((value: StickyDoc | null) => {
+        stickyCache.set(key, { expiresAt: Date.now() + STICKY_CACHE_TTL_MS, data: value });
+        return value;
+      });
     if (!data || !data.enabled || !data.payload) return;
 
     // DB-backed loop guard (handles first message after restart)

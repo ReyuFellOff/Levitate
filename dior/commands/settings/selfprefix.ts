@@ -3,10 +3,8 @@
 // $selfprefix — manage a personal prefix that works globally for the invoker.
 //
 // Usage:
-//   $selfprefix <prefix>      — set a personal prefix (max 10 chars)
+//   $selfprefix set <prefix>  — set a personal prefix (max 10 chars)
 //   $selfprefix reset         — remove the personal prefix
-//   $selfprefix remove        — alias for reset
-//   $selfprefix               — show the current personal prefix
 //
 // No special permissions required — any user can set their own prefix.
 // The self prefix works alongside the server prefix; both always work.
@@ -22,7 +20,7 @@ export const options = {
   name:        'selfprefix',
   aliases:     ['sp', 'myprefix'] as string[],
   description: 'Set a personal command prefix that works for you across all servers.',
-  usage:       'selfprefix [prefix | reset]',
+  usage:       'selfprefix set <prefix>\nselfprefix reset',
   category:    'settings',
   owner:       false,
   cooldown:    3,
@@ -41,17 +39,13 @@ export async function prefixExecute(
 
   const sub = args[0]?.toLowerCase();
 
-  // ── View current prefix ──────────────────────────────────────────────────
-  if (!sub) {
-    const current = client.userPrefixes.get(message.author.id);
-    if (!current) {
-      return sendInfo(ctx, "You don't have a personal prefix set. Use `selfprefix <prefix>` to set one.");
-    }
-    return sendInfo(ctx, `Your personal prefix is \`${current}\`.`);
+  if (sub !== 'set' && sub !== 'reset') {
+    return sendError(ctx, `Usage: \`${options.usage}\``);
   }
 
   // ── Remove / Reset ───────────────────────────────────────────────────────
-  if (sub === 'reset' || sub === 'remove') {
+  if (sub === 'reset') {
+    if (args.length !== 1) return sendError(ctx, `Usage: \`${options.usage}\``);
     const had = client.userPrefixes.has(message.author.id);
     if (!had) {
       return sendInfo(ctx, "You don't have a personal prefix set — nothing to remove.");
@@ -70,7 +64,8 @@ export async function prefixExecute(
   }
 
   // ── Set prefix ───────────────────────────────────────────────────────────
-  const newPrefix = args[0]; // preserve original casing
+  if (args.length !== 2) return sendError(ctx, `Usage: \`${options.usage}\``);
+  const newPrefix = args[1]; // preserve original casing
 
   if (newPrefix.length > MAX_PREFIX_LEN) {
     return sendError(ctx, `Prefix is too long. Maximum length is **${MAX_PREFIX_LEN}** characters.`);

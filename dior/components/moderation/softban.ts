@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/softban.ts
 //
 // Components V2 payload for the softban command.
@@ -45,7 +46,7 @@ export function buildSoftbanSuccessPayload(
       new ThumbnailBuilder().setURL(targetUser.displayAvatarURL({ forceStatic: false, size: 128 })),
     );
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent('## Softbanned'))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addSectionComponents(section)

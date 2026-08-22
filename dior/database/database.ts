@@ -1,6 +1,6 @@
 // xoxo/database/database.ts
-import { MongoClient, Db, Collection, Document } from 'mongodb';
 import { randomBytes } from 'crypto';
+import { PostgresDocumentStore, type PostgresCollection } from './postgresDocumentStore.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types & Interfaces
@@ -21,6 +21,19 @@ export interface AFKEntry {
 export interface GuildPrefixDoc {
   guild_id: string;
   prefix: string;
+}
+
+export interface GuildVolumeDoc {
+  guild_id:  string;
+  volume:    number;
+  updated_at?: Date;
+}
+
+export interface DisabledCommandDoc {
+  command: string;
+  reason: string;
+  disabled_by: string;
+  disabled_at: Date;
 }
 
 export interface NoPrefixUserDoc {
@@ -85,6 +98,20 @@ export interface GreetSettingsDoc {
   message_data: string | null;
   greet_bots:   boolean;
   updated_at:   Date;
+}
+
+export type HoneypotAction = 'kick' | 'ban';
+
+export interface HoneypotSettingsDoc {
+  guild_id: string;
+  channel_id: string | null;
+  log_channel_id: string | null;
+  warning_data: string | null;
+  warning_message_id?: string | null;
+  moderated_count?: number;
+  action: HoneypotAction;
+  enabled: boolean;
+  updated_at: Date;
 }
 
 export interface BirthdayDoc {
@@ -355,6 +382,17 @@ export interface AutoroleConfigDoc {
   updated_at:      Date;
 }
 
+export interface AutonickConfigDoc {
+  guild_id:       string;
+  prepend?:       string | null;
+  append?:        string | null;
+  member_prepend: string | null;
+  member_append:  string | null;
+  bot_prepend:    string | null;
+  bot_append:     string | null;
+  updated_at:     Date;
+}
+
 export interface StarboardSettingsDoc {
   guild_id:            string;
   enabled:             boolean;
@@ -467,46 +505,47 @@ export interface UserInvokeDoc {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export class Database {
-  private client: MongoClient;
-  private db: Db | null = null;
+  private client: PostgresDocumentStore;
+  private db: PostgresDocumentStore | null = null;
   private connected = false;
   private readonly botId: string;
-  private readonly dbName = 'LevitateDiscordBot';
+  private readonly dbName = 'PostgreSQL';
 
   /** In-memory set of user IDs currently AFK — avoids a DB hit on every message. */
   private afkCache = new Set<string>();
+  private readonly messageSettingTtlMs = 10_000;
+  private guildPrefixCache = new Map<string, { expiresAt: number; value: string | null }>();
+  private blacklistGlobalCache: { expiresAt: number; value: boolean } | null = null;
+  private blacklistServerGlobalCache: { expiresAt: number; value: boolean } | null = null;
+  private userBlacklistCache = new Map<string, { expiresAt: number; value: boolean }>();
+  private serverBlacklistCache = new Map<string, { expiresAt: number; value: boolean }>();
+  private disabledCommandCache = new Map<string, { expiresAt: number; value: DisabledCommandDoc | null }>();
 
   constructor() {
     this.botId = process.env['BOT_IDENTIFIER'] || '';
-    const uri = process.env['MONGO_URI'];
-    if (!uri) throw new Error('MONGO_URI environment variable is required');
-
-    this.client = new MongoClient(uri, {
-      tls: true,
-      connectTimeoutMS: 30_000,
-      socketTimeoutMS: 45_000,
-    });
+    const uri = process.env['DATABASE_URL'];
+    if (!uri) throw new Error('DATABASE_URL environment variable is required');
+    this.client = new PostgresDocumentStore({ connectionString: uri, botId: this.botId });
   }
 
   // ── Collection helper ──────────────────────────────────────────────────────
 
-  private col<T extends Document>(name: string): Collection<T> {
+  private col<T extends Record<string, any>>(name: string): PostgresCollection<T> {
     if (!this.db) throw new Error('Database not connected');
-    const prefixed = this.botId ? `${this.botId}_${name}` : name;
-    return this.db.collection<T>(prefixed);
+    return this.db.collection<T>(name);
   }
 
   // ── Connection management ──────────────────────────────────────────────────
 
   /**
-   * Lazy connect — every public method calls this before touching MongoDB.
+  * Lazy connect — every public method calls this before touching PostgreSQL.
    * Returns `true` if the connection succeeded (or was already open).
    */
   async connect(): Promise<boolean> {
     if (this.connected) return true;
     try {
       await this.client.connect();
-      this.db = this.client.db(this.dbName);
+      this.db = this.client;
       this.connected = true;
       return true;
     } catch (err) {
@@ -517,7 +556,7 @@ export class Database {
 
   /**
    * Boot-block initialiser.
-   * Connects to MongoDB and emits startup log lines exactly once per boot.
+  * Connects to PostgreSQL and emits startup log lines exactly once per boot.
    */
   async initWithLogs(buildName: string): Promise<void> {
     const usePrefix = !!this.botId;
@@ -529,7 +568,7 @@ export class Database {
     if (!this.connected) {
       try {
         await this.client.connect();
-        this.db = this.client.db(this.dbName);
+        this.db = this.client;
         this.connected = true;
       } catch (err) {
         console.error(`[DATABASE] Connection failed: ${(err as Error).message}`);
@@ -554,7 +593,7 @@ export class Database {
     if (!this.db || !this.connected) return null;
     try {
       const start = Date.now();
-      await this.db.command({ ping: 1 });
+      await this.client.query('SELECT 1');
       return Date.now() - start;
     } catch {
       return null;
@@ -585,8 +624,12 @@ export class Database {
 
   async getGuildPrefix(guildId: string): Promise<string | null> {
     await this.connect();
+    const cached = this.guildPrefixCache.get(guildId);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
     const doc = await this.col<GuildPrefixDoc>('guild_prefixes').findOne({ guild_id: guildId });
-    return doc?.prefix ?? null;
+    const value = doc?.prefix ?? null;
+    this.guildPrefixCache.set(guildId, { expiresAt: Date.now() + this.messageSettingTtlMs, value });
+    return value;
   }
 
   async setGuildPrefix(guildId: string, prefix: string): Promise<boolean> {
@@ -596,12 +639,72 @@ export class Database {
       { $set: { prefix, updated_at: new Date() } },
       { upsert: true },
     );
+    this.guildPrefixCache.delete(guildId);
     return true;
   }
 
   async removeGuildPrefix(guildId: string): Promise<boolean> {
     await this.connect();
     const result = await this.col<GuildPrefixDoc>('guild_prefixes').deleteOne({ guild_id: guildId });
+    this.guildPrefixCache.delete(guildId);
+    return result.deletedCount > 0;
+  }
+
+  // ── Disabled Commands ─────────────────────────────────────────────────────
+
+  async getDisabledCommand(command: string): Promise<DisabledCommandDoc | null> {
+    await this.connect();
+    const key = command.toLowerCase();
+    const cached = this.disabledCommandCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    const value = await this.col<DisabledCommandDoc>('disabled_commands').findOne({ command: key });
+    this.disabledCommandCache.set(key, { expiresAt: Date.now() + this.messageSettingTtlMs, value });
+    return value;
+  }
+
+  async disableCommand(command: string, reason: string, disabledBy: string): Promise<void> {
+    await this.connect();
+    await this.col<DisabledCommandDoc>('disabled_commands').updateOne(
+      { command: command.toLowerCase() },
+      { $set: { command: command.toLowerCase(), reason, disabled_by: disabledBy, disabled_at: new Date() } },
+      { upsert: true },
+    );
+    this.disabledCommandCache.delete(command.toLowerCase());
+  }
+
+  async enableCommand(command: string): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<DisabledCommandDoc>('disabled_commands').deleteOne({ command: command.toLowerCase() });
+    this.disabledCommandCache.delete(command.toLowerCase());
+    return result.deletedCount > 0;
+  }
+
+  async getDisabledCommands(): Promise<DisabledCommandDoc[]> {
+    await this.connect();
+    return this.col<DisabledCommandDoc>('disabled_commands').find().sort({ command: 1 }).toArray();
+  }
+
+  // ── Guild Music Volume ───────────────────────────────────────────────────
+
+  async getGuildVolume(guildId: string): Promise<number | null> {
+    await this.connect();
+    const doc = await this.col<GuildVolumeDoc>('volumes').findOne({ guild_id: guildId });
+    return doc?.volume ?? null;
+  }
+
+  async setGuildVolume(guildId: string, volume: number): Promise<boolean> {
+    await this.connect();
+    await this.col<GuildVolumeDoc>('volumes').updateOne(
+      { guild_id: guildId },
+      { $set: { volume, updated_at: new Date() } },
+      { upsert: true },
+    );
+    return true;
+  }
+
+  async removeGuildVolume(guildId: string): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<GuildVolumeDoc>('volumes').deleteOne({ guild_id: guildId });
     return result.deletedCount > 0;
   }
 
@@ -947,8 +1050,13 @@ export class Database {
 
   async getBlacklistGlobalEnabled(): Promise<boolean> {
     await this.connect();
+    if (this.blacklistGlobalCache && this.blacklistGlobalCache.expiresAt > Date.now()) {
+      return this.blacklistGlobalCache.value;
+    }
     const doc = await this.col<{ _id?: string; enabled: boolean }>('settings').findOne({ _id: 'blacklist_global' } as any);
-    return doc?.enabled ?? true;
+    const value = doc?.enabled ?? true;
+    this.blacklistGlobalCache = { expiresAt: Date.now() + this.messageSettingTtlMs, value };
+    return value;
   }
 
   async setBlacklistGlobalEnabled(enabled: boolean): Promise<boolean> {
@@ -958,12 +1066,17 @@ export class Database {
       { $set: { enabled, updatedAt: new Date() } },
       { upsert: true },
     );
+    this.blacklistGlobalCache = { expiresAt: Date.now() + this.messageSettingTtlMs, value: enabled };
     return true;
   }
 
   async isUserBlacklisted(userId: string): Promise<boolean> {
     await this.connect();
-    return !!(await this.col<BlacklistUserDoc>('blacklist_users').findOne({ user_id: userId }));
+    const cached = this.userBlacklistCache.get(userId);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    const value = !!(await this.col<BlacklistUserDoc>('blacklist_users').findOne({ user_id: userId }));
+    this.userBlacklistCache.set(userId, { expiresAt: Date.now() + this.messageSettingTtlMs, value });
+    return value;
   }
 
   async addBlacklistedUser(userId: string, addedBy?: string): Promise<boolean> {
@@ -973,12 +1086,14 @@ export class Database {
       { $set: { addedAt: new Date(), addedBy } },
       { upsert: true },
     );
+    this.userBlacklistCache.set(userId, { expiresAt: Date.now() + this.messageSettingTtlMs, value: true });
     return true;
   }
 
   async removeBlacklistedUser(userId: string): Promise<boolean> {
     await this.connect();
     const result = await this.col<BlacklistUserDoc>('blacklist_users').deleteOne({ user_id: userId });
+    this.userBlacklistCache.set(userId, { expiresAt: Date.now() + this.messageSettingTtlMs, value: false });
     return result.deletedCount > 0;
   }
 
@@ -991,8 +1106,13 @@ export class Database {
 
   async getBlacklistServerGlobalEnabled(): Promise<boolean> {
     await this.connect();
+    if (this.blacklistServerGlobalCache && this.blacklistServerGlobalCache.expiresAt > Date.now()) {
+      return this.blacklistServerGlobalCache.value;
+    }
     const doc = await this.col<{ _id?: string; enabled: boolean }>('settings').findOne({ _id: 'blacklist_server_global' } as any);
-    return doc?.enabled ?? true;
+    const value = doc?.enabled ?? true;
+    this.blacklistServerGlobalCache = { expiresAt: Date.now() + this.messageSettingTtlMs, value };
+    return value;
   }
 
   async setBlacklistServerGlobalEnabled(enabled: boolean): Promise<boolean> {
@@ -1002,12 +1122,17 @@ export class Database {
       { $set: { enabled, updatedAt: new Date() } },
       { upsert: true },
     );
+    this.blacklistServerGlobalCache = { expiresAt: Date.now() + this.messageSettingTtlMs, value: enabled };
     return true;
   }
 
   async isServerBlacklisted(guildId: string): Promise<boolean> {
     await this.connect();
-    return !!(await this.col<BlacklistServerDoc>('blacklist_servers').findOne({ guild_id: guildId }));
+    const cached = this.serverBlacklistCache.get(guildId);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+    const value = !!(await this.col<BlacklistServerDoc>('blacklist_servers').findOne({ guild_id: guildId }));
+    this.serverBlacklistCache.set(guildId, { expiresAt: Date.now() + this.messageSettingTtlMs, value });
+    return value;
   }
 
   async addBlacklistedServer(guildId: string, addedBy?: string): Promise<boolean> {
@@ -1017,12 +1142,14 @@ export class Database {
       { $set: { addedAt: new Date(), addedBy } },
       { upsert: true },
     );
+    this.serverBlacklistCache.set(guildId, { expiresAt: Date.now() + this.messageSettingTtlMs, value: true });
     return true;
   }
 
   async removeBlacklistedServer(guildId: string): Promise<boolean> {
     await this.connect();
     const result = await this.col<BlacklistServerDoc>('blacklist_servers').deleteOne({ guild_id: guildId });
+    this.serverBlacklistCache.set(guildId, { expiresAt: Date.now() + this.messageSettingTtlMs, value: false });
     return result.deletedCount > 0;
   }
 
@@ -1258,6 +1385,43 @@ export class Database {
       },
       { upsert: true },
     );
+  }
+
+  // ── Honeypot ─────────────────────────────────────────────────────────────
+
+  async getHoneypotSettings(guildId: string): Promise<HoneypotSettingsDoc | null> {
+    await this.connect();
+    return this.col<HoneypotSettingsDoc>('honeypot_settings').findOne({ guild_id: guildId });
+  }
+
+  async setHoneypotSettings(
+    guildId: string,
+    data: Partial<Pick<HoneypotSettingsDoc, 'channel_id' | 'log_channel_id' | 'warning_data' | 'warning_message_id' | 'moderated_count' | 'action' | 'enabled'>>,
+  ): Promise<void> {
+    await this.connect();
+    const defaults: Record<string, any> = {
+      channel_id: null,
+      log_channel_id: null,
+      warning_data: null,
+      warning_message_id: null,
+      moderated_count: 0,
+      action: 'kick' as const,
+      enabled: true,
+    };
+    for (const key of Object.keys(data)) delete (defaults as any)[key];
+    await this.col<HoneypotSettingsDoc>('honeypot_settings').updateOne(
+      { guild_id: guildId },
+      {
+        $set: { ...data, updated_at: new Date() },
+        $setOnInsert: defaults,
+      },
+      { upsert: true },
+    );
+  }
+
+  async deleteHoneypotSettings(guildId: string): Promise<void> {
+    await this.connect();
+    await this.col<HoneypotSettingsDoc>('honeypot_settings').deleteOne({ guild_id: guildId });
   }
 
   // ── Birthdays ────────────────────────────────────────────────────────────
@@ -2034,6 +2198,35 @@ export class Database {
       { guild_id: guildId },
       {
         $set:         { ...data, updated_at: new Date() },
+        $setOnInsert: defaults,
+      },
+      { upsert: true },
+    );
+  }
+
+  // ── Autonick ──────────────────────────────────────────────────────────────
+
+  async getAutonickConfig(guildId: string): Promise<AutonickConfigDoc | null> {
+    await this.connect();
+    return this.col<AutonickConfigDoc>('autonick_configs').findOne({ guild_id: guildId });
+  }
+
+  async setAutonickConfig(
+    guildId: string,
+    data: Partial<Pick<AutonickConfigDoc, 'member_prepend' | 'member_append' | 'bot_prepend' | 'bot_append'>>,
+  ): Promise<void> {
+    await this.connect();
+    const defaults: Record<string, string | null> = {
+      member_prepend: null,
+      member_append:  null,
+      bot_prepend:    null,
+      bot_append:     null,
+    };
+    for (const key of Object.keys(data)) delete defaults[key];
+    await this.col<AutonickConfigDoc>('autonick_configs').updateOne(
+      { guild_id: guildId },
+      {
+        $set: { ...data, updated_at: new Date() },
         $setOnInsert: defaults,
       },
       { upsert: true },

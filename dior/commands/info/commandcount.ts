@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 import {
   ContainerBuilder,
   MessageFlags,
@@ -36,7 +37,7 @@ export async function prefixExecute(
       .filter(Boolean),
   );
 
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `${emojis.silveryButterfly} **${allCommands.size} commands** across **${categories.size} categories**.`,
     ),

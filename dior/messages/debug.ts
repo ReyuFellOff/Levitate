@@ -160,7 +160,7 @@ export function buildDebugHomePayload(
   const avatarUrl: string = client?.user?.displayAvatarURL?.({ forceStatic: false }) ?? '';
 
   const categoryList = DEBUG_CATEGORIES
-    .map(cat => `${emojis.whiteArrow2}**${cat.label}**`)
+    .map(cat => `${emojis.glowyWhiteArrow}**${cat.label}**`)
     .join('\n');
 
   const headerText = `# ${emojis.blackbatman} Stats of ${botName}\n${buildInfoLines()}`;

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/developer/steal.ts
 //
 // CV2 payload builders for the $steal developer command.
@@ -53,7 +54,7 @@ export function buildStealPreviewPayload(opts: {
     ? (animated ? 'Animated Emoji' : 'Emoji')
     : 'Sticker';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal — ${typeLabel}`),
     )
@@ -91,7 +92,7 @@ export function buildStealImageTypeSelectPayload(opts: {
 }): any {
   const { imageUrl, token } = opts;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent('## Steal — Image URL'),
     )
@@ -159,7 +160,7 @@ export function buildStealGuildSelectPayload(opts: {
   const yesStyle = cropClicked && cropChoice   ? ButtonStyle.Success : ButtonStyle.Secondary;
   const noStyle  = cropClicked && !cropChoice  ? ButtonStyle.Success : ButtonStyle.Secondary;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal — Select Server${shown.length > 1 ? 's' : ''}`),
     )
@@ -268,7 +269,7 @@ export function buildStealBulkPreviewPayload(opts: {
 
   const lines = targets.map((t) => `- \`${t.name}\` (${t.kind})`);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal — ${parts.join(' + ')}`),
     )
@@ -315,7 +316,7 @@ export function buildStealBulkResultPayload(opts: {
     return `- \`${r.guildName}\` — ${r.added.length} added, ${r.failed.length} failed\n${failLines}`;
   });
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal Complete`),
     )
@@ -338,7 +339,7 @@ export function buildStealProgressPayload(opts: {
   guildCount: number;
 }): any {
   const { name, type, imageUrl, guildCount } = opts;
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal — Adding...`),
     )
@@ -377,7 +378,7 @@ export function buildStealResultPayload(opts: {
     ? `Added \`${name}\` to all **${succeeded}** server${succeeded !== 1 ? 's' : ''}.`
     : `Added to **${succeeded}** server${succeeded !== 1 ? 's' : ''}. **${failed}** failed.`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Steal Complete`),
     )
@@ -398,7 +399,7 @@ export function buildStealResultPayload(opts: {
 
 export function buildStealCancelledPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Steal cancelled.'),
     ),
   );
@@ -406,7 +407,7 @@ export function buildStealCancelledPayload(): any {
 
 export function buildStealTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Steal timed out — no response received.'),
     ),
   );

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/cute.ts
 //
 // CV2 payload builder for the $cute / $howcute command.
@@ -37,7 +38,7 @@ export async function buildCutePayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://cute.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.butterflyPink} **How cute is <@${user.id}>?**`,

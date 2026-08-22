@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/rps.ts
 //
 // CV2 payload builders + session manager for $rps (rock paper scissors).
@@ -173,7 +174,7 @@ function wrap(container: ContainerBuilder): any {
 }
 
 function base(): ContainerBuilder {
-  return new ContainerBuilder()
+  return new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(HEADER))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 }

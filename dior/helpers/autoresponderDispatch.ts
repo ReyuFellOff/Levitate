@@ -18,7 +18,10 @@ import { messageMatchesTrigger } from './autoresponderMatcher.js';
 import type { AutoresponderDoc, AutoresponderReplyMode } from '../database/database.js';
 
 const COOLDOWN_MS = 1_000;
+const CACHE_TTL_MS = 15_000;
 const lastFired = new Map<string, number>();
+const guildCache = new Map<string, { expiresAt: number; docs: AutoresponderDoc[] }>();
+let globalCache: { expiresAt: number; docs: AutoresponderDoc[] } | null = null;
 
 // Periodic sweep so the cooldown map doesn't grow unbounded on busy bots.
 setInterval(() => {
@@ -59,8 +62,17 @@ export async function dispatchAutoresponders(client: LevitateClient, message: an
 
   const guildId: string = message.guild.id;
 
-  // Native guild triggers
-  const docs = await client.db.getAllAutoresponders(guildId).catch((): AutoresponderDoc[] => []);
+  // Cache these reads briefly: the PostgreSQL document adapter otherwise scans
+  // the whole collection for every incoming message.
+  const now = Date.now();
+  const cachedGuild = guildCache.get(guildId);
+  let docs: AutoresponderDoc[];
+  if (cachedGuild && cachedGuild.expiresAt > now) {
+    docs = cachedGuild.docs;
+  } else {
+    docs = await client.db.getAllAutoresponders(guildId).catch((): AutoresponderDoc[] => []);
+    guildCache.set(guildId, { expiresAt: now + CACHE_TTL_MS, docs });
+  }
 
   // Track which triggers have been processed (by trigger_lower) to avoid double-firing
   const firedTriggers = new Set<string>();
@@ -73,7 +85,13 @@ export async function dispatchAutoresponders(client: LevitateClient, message: an
   }
 
   // Global autoresponders from OTHER guilds
-  const globalDocs = await client.db.getGlobalAutoresponders().catch((): AutoresponderDoc[] => []);
+  let globalDocs: AutoresponderDoc[];
+  if (globalCache && globalCache.expiresAt > now) {
+    globalDocs = globalCache.docs;
+  } else {
+    globalDocs = await client.db.getGlobalAutoresponders().catch((): AutoresponderDoc[] => []);
+    globalCache = { expiresAt: now + CACHE_TTL_MS, docs: globalDocs };
+  }
   for (const doc of globalDocs) {
     // Skip if this doc belongs to the current guild (already processed above)
     if (doc.guild_id === guildId) continue;

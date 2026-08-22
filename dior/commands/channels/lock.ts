@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/moderation/lock.ts
 //
 // Lock one or more channels so @everyone cannot send messages or add reactions.
@@ -77,7 +78,7 @@ async function sendResults(
     .join('\n');
   const payload = {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],

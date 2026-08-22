@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/welcomer/greet.ts
 //
 // $greet                                   — show the current welcome message settings for this server.
@@ -82,7 +83,7 @@ async function buildSettingsContainer(guild: any, client: LevitateClient, prefix
   const botsLine = `**Greet bots:** ${s?.greet_bots ? 'Yes' : 'No'}`;
   const statusLine = s?.channel_id ? `Welcome messages are **active**.` : `Welcome messages are **inactive** — no channel set.`;
 
-  return new ContainerBuilder()
+  return new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Greet Settings`))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent([channelLine, messageLine, botsLine].join('\n')))

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/simp.ts
 //
 // CV2 payload builder for the $simp command. Reuses RatingCanvas (pinkTheme).
@@ -34,7 +35,7 @@ export async function buildSimpPayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://simp.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.butterflyPink ?? '💗'} **How much of a simp is <@${user.id}>?**`,

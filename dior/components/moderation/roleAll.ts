@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/roleAll.ts
 //
 // CV2 payload builders for the $roleall command's target-type selection panel
@@ -33,7 +34,7 @@ export function buildRoleAllTargetPanel(
   memberCount: number,
   token: string,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Role Assignment — <@&${roleId}>\n` +
@@ -74,7 +75,7 @@ export function buildRoleAllTargetPanel(
 /** Shown while members are being fetched and the role is being applied. */
 export function buildRoleAllProgressPayload(roleName: string, targetType: RoleAllTargetType): any {
   const targetLabel = targetType === 'all' ? 'all members' : targetType === 'humans' ? 'humans' : 'bots';
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Role Assignment in Progress\n` +
@@ -102,7 +103,7 @@ export function buildRoleAllResultPayload(
   if (skipped > 0) lines.push(`**${skipped}** already had the role.`);
   if (failed > 0) lines.push(`**${failed}** failed (role too high or permission error).`);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Role Assignment Complete\n-# Target: ${targetLabel}`,
@@ -128,7 +129,7 @@ export function buildRoleAllResultPayload(
 
 export function buildRoleAllTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Role assignment panel timed out. No changes were made.'),
     ),
   );
@@ -136,7 +137,7 @@ export function buildRoleAllTimedOutPayload(): any {
 
 export function buildRoleAllCancelledPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Role assignment cancelled. No changes were made.'),
     ),
   );

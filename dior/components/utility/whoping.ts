@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/whoping.ts
 //
 // CV2 payload builder for $whoping — minimal ping history panel.
@@ -24,7 +25,7 @@ export function buildWhopingPayload(
   pings:        PingEntry[],
   scanned:      number,
 ): any {
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
@@ -65,7 +66,7 @@ export function buildWhopingPayload(
 }
 
 export function buildWhopingNonePayload(targetUserId: string, scanned: number): any {
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(

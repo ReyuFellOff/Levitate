@@ -99,11 +99,11 @@ export function buildPanel(
   const hasConfig  = memberIds.length > 0 || botIds.length > 0;
 
   const info = [
-    `${emojis.whiteArrow2} **Status:** ${isEnabled
+    `${emojis.glowyWhiteArrow} **Status:** ${isEnabled
       ? (hasConfig ? `${emojis.greenTick} Active` : 'Enabled — but no roles are set yet')
       : `${emojis.redcross} Disabled — config is saved, re-enable to activate`}`,
-    `${emojis.whiteArrow2} **Member roles:** ${roleListLine(memberIds)}`,
-    `${emojis.whiteArrow2} **Bot roles:** ${roleListLine(botIds)}`,
+    `${emojis.glowyWhiteArrow} **Member roles:** ${roleListLine(memberIds)}`,
+    `${emojis.glowyWhiteArrow} **Bot roles:** ${roleListLine(botIds)}`,
   ].join('\n');
 
   const memberSelect = new RoleSelectMenuBuilder()

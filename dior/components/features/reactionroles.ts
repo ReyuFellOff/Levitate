@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/features/reactionroles.ts
 //
 // Components V2 panel for adding emoji/role mappings to an existing message.
@@ -59,7 +60,7 @@ function payload(container: ContainerBuilder): any {
 function ephemeralNotice(content: string): any {
   return {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],
@@ -85,7 +86,7 @@ function panelContainer(
   guild: any,
   disabled = false,
 ): ContainerBuilder {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title()))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent([
@@ -126,7 +127,7 @@ function panelContainer(
 
 function resultContainer(header: string, body: string): any {
   return payload(
-    new ContainerBuilder()
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(header)))
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(body)),

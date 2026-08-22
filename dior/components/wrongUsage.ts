@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/wrongUsage.ts
 import {
   ContainerBuilder,
@@ -30,7 +31,7 @@ export async function sendWrongUsage(
   const usageLines = usage.split('\n').map(l => l.trim()).filter(l => l);
   const bulletLines = usageLines.map(l => `- ${l}`).join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Wrong usage`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(

@@ -29,6 +29,7 @@ export async function resolveAndInjectAlternate(
   player: any,
   originalTrack: any,
   retrySource: string,
+  position?: number,
 ): Promise<any | null> {
   const queryParts = [originalTrack?.author, originalTrack?.title].filter(Boolean) as string[];
   if (!queryParts.length) return null;
@@ -60,7 +61,10 @@ export async function resolveAndInjectAlternate(
   }
 
   try {
-    await player.play(retryTrack, { replaceCurrent: true });
+    await player.play(retryTrack, {
+      replaceCurrent: true,
+      ...(position !== undefined ? { position } : {}),
+    });
   } catch {
     return null;
   }

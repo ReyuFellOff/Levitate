@@ -31,7 +31,7 @@ export const options = {
 };
 
 function buildPayload(requestedBy: string): object {
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   // Optional banner image at the top
   if (dev.bannerUrl) {

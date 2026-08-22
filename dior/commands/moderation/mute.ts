@@ -1,12 +1,12 @@
-// xoxo/commands/moderation/timeout.ts
+// xoxo/commands/moderation/mute.ts
 //
 // Timeout (or un-timeout) a member in this server.
 //
-// Prefix:  $timeout <@user|ID|username> <duration|remove> [reason]
+// Prefix:  $mute <@user|ID|username> <duration|remove> [reason]
 //          Duration examples: 10s, 5m, 1h, 12h, 1d, 7d, 28d
 //          Use "remove" or "off" to clear an active timeout.
-// Slash:   /timeout add  user duration [reason]
-//          /timeout remove user [reason]
+// Slash:   /mute add  user duration [reason]
+//          /mute remove user [reason]
 //
 // Checks:
 //   • Invoker has ModerateMembers
@@ -37,10 +37,10 @@ import { confirmSlashAction } from '../../components/moderation/actionConfirm.js
 import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
-  name:        'timeout',
-  aliases:     [] as string[],
+  name:        'mute',
+  aliases:     ['timeout'] as string[],
   description: 'Timeout or un-timeout a member.',
-  usage:       'timeout <@user|ID|username> <duration|remove> [reason]\n' +
+  usage:       'mute <@user|ID|username> <duration|remove> [reason]\n' +
                'Duration: 10s · 5m · 1h · 12h · 1d · 7d · 28d (max)\n' +
                'Remove: use "remove" or "off" to lift a timeout.',
   category:    'moderation',

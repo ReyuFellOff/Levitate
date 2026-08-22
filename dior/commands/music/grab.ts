@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/music/grab.ts
 import {
   ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder,
@@ -32,7 +33,7 @@ function buildPayload(track: any): any {
     track.requester?.username ? `**Originally requested by:** ${track.requester.username}` : null,
   ].filter(Boolean) as string[];
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines.join('\n')));
 
   if (thumb) {

@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import {
   ContainerBuilder,
   MediaGalleryBuilder,
@@ -118,7 +119,7 @@ function payload(action: RoleplayAction, user1: any, user2: any | null, gif: str
   const content = user2
     ? `### ${emojis.blackStar} <@${user1.id}> ${action.phrase} <@${user2.id}>`
     : `### ${emojis.blackStar} <@${user1.id}> ${action.phrase}`;
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(content))
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(gif)),
@@ -178,7 +179,7 @@ const singlePhrases: Record<string, string> = {
   slowclap: 'slow-clapped',
   sneeze: 'sneezed',
   sorry: 'said sorry',
-  stop: 'said stop',
+  rstop: 'said stop',
   surprised: 'was surprised',
   sweat: 'started sweating',
   tired: 'is tired',
@@ -215,6 +216,7 @@ const singlePhrases: Record<string, string> = {
 
 const apiNames: Record<string, string> = {
   rkick: 'kick',
+  rstop: 'stop',
   evilaugh: 'evillaugh',
   headband: 'headbang',
 };

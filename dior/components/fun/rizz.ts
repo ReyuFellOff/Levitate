@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/rizz.ts
 //
 // CV2 payload builder for the $rizz command. Reuses RatingCanvas (rainbowTheme).
@@ -34,7 +35,7 @@ export async function buildRizzPayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://rizz.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.butterflyPink ?? '✨'} **How much rizz does <@${user.id}> have?**`,

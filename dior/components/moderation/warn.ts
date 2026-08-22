@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/warn.ts
 //
 // CV2 payloads for warn / warnings / clearwarnings.
@@ -37,7 +38,7 @@ export function buildWarnSuccessPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Warned`),
     )
@@ -58,7 +59,7 @@ export function buildWarnDmPayload(
   moderatorUsername: string,
   warningCount:      number,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.blackCards} You have been warned in **${guildName}**\n` +
       `**Reason:** ${reason || 'None provided.'}\n` +
@@ -79,7 +80,7 @@ export function buildWarnDmPayload(
 
 export function buildWarningsListPayload(targetUser: any, warnings: WarningDoc[]): any {
   if (warnings.length === 0) {
-    const container = new ContainerBuilder().addTextDisplayComponents(
+    const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.info} **${targetUser.username}** has no warnings.`),
     );
     return {
@@ -98,7 +99,7 @@ export function buildWarningsListPayload(targetUser: any, warnings: WarningDoc[]
 
   const note = warnings.length > 25 ? `\n-# Showing latest 25 of ${warnings.length} warnings.` : '';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${emojis.blackCards} Warnings for ${targetUser.username} (${warnings.length})`,
@@ -120,7 +121,7 @@ export function buildWarningsListPayload(targetUser: any, warnings: WarningDoc[]
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function buildClearWarningsResultPayload(targetUser: any, count: number): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.greentick} Cleared **${count}** warning${count !== 1 ? 's' : ''} for **${targetUser.username}**.`,
     ),

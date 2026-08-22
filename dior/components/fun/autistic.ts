@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/autistic.ts
 //
 // CV2 payload builder for the $autistic command.
@@ -35,7 +36,7 @@ export async function buildAutisticPayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://autistic.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.info} **How autistic is <@${user.id}>?**`,

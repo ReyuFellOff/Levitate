@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/untimeout.ts
 //
 // CV2 payloads and interaction handler for the untimeout command.
@@ -54,7 +55,7 @@ export function buildUnTimeoutListPayload(entries: TimedOutEntry[]): any {
   const listText = entries
     .map(e => {
       const expSec = Math.floor(e.expiresAt.getTime() / 1000);
-      return `${emojis.whiteArrow2} **${e.username}** — expires <t:${expSec}:R>`;
+      return `${emojis.glowyWhiteArrow} **${e.username}** — expires <t:${expSec}:R>`;
     })
     .join('\n');
 
@@ -77,7 +78,7 @@ export function buildUnTimeoutListPayload(entries: TimedOutEntry[]): any {
 
   const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.clock} Timed Out Members`),
     )
@@ -106,7 +107,7 @@ export function buildUnTimeoutResultPayload(
     return `- **${r.username}** — ${notify}`;
   });
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greentick} Timeout${results.length === 1 ? '' : 's'} Removed`),
     )

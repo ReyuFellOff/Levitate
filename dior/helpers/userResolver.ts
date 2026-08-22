@@ -69,14 +69,16 @@ export async function resolveUser(
       .fetch({ query: trimmed, limit: 10 })
       .catch(() => new Map());
 
-    for (const [, m] of members) {
-      if (
-        m.user.username.toLowerCase() === lowerArg ||
-        m.displayName?.toLowerCase() === lowerArg
-      ) {
-        return m.user;
-      }
-    }
+    const usernameMatches = [...members.values()].filter(
+      (m: any) => m.user.username.toLowerCase() === lowerArg,
+    );
+    if (usernameMatches.length === 1) return usernameMatches[0].user;
+    if (usernameMatches.length > 1) return null;
+
+    const displayNameMatches = [...members.values()].filter(
+      (m: any) => m.displayName?.toLowerCase() === lowerArg,
+    );
+    if (displayNameMatches.length === 1) return displayNameMatches[0].user;
   }
 
   return null;

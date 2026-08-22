@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/fun/car.ts
 //
 // $car — show a random car image.
@@ -34,7 +35,7 @@ function cleanTitle(title: string): string {
 }
 
 function buildPayload(title: string, imageUrl: string): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`### ${emojis.Car} ${title}`),
     )

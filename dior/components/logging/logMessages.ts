@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/logging/logMessages.ts
 //
 // CV2 payload builders for every loggable event. Each function returns a
@@ -18,7 +19,7 @@ function ts(date: Date = new Date()): string {
 }
 
 function build(headerEmoji: string, title: string, bodyLines: string[]): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${headerEmoji} ${title}`))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines.join('\n')))
@@ -33,7 +34,7 @@ function build(headerEmoji: string, title: string, bodyLines: string[]): any {
 }
 
 function bullet(label: string, value: string): string {
-  return `${emojis.whiteArrow2} **${label}:** ${value}`;
+  return `${emojis.glowyWhiteArrow} **${label}:** ${value}`;
 }
 
 function truncate(text: string, max = 950): string {
@@ -87,7 +88,7 @@ export function buildChannelUpdatePayload(
   changes: { field: string; before: string; after: string }[],
   executor: any | null,
 ): any {
-  const lines = changes.map((c) => `${emojis.whiteArrow2} **${c.field}:** ${c.before} → ${c.after}`);
+  const lines = changes.map((c) => `${emojis.glowyWhiteArrow} **${c.field}:** ${c.before} → ${c.after}`);
   return build(emojis.info, `Channel Updated — ${channel.name}`, [
     bullet('Channel', `<#${channel.id}> (\`${channel.id}\`)`),
     ...lines,
@@ -122,7 +123,7 @@ export function buildRoleUpdatePayload(
   changes: { field: string; before: string; after: string }[],
   executor: any | null,
 ): any {
-  const lines = changes.map((c) => `${emojis.whiteArrow2} **${c.field}:** ${c.before} → ${c.after}`);
+  const lines = changes.map((c) => `${emojis.glowyWhiteArrow} **${c.field}:** ${c.before} → ${c.after}`);
   return build(emojis.info, `Role Updated — ${role.name}`, [
     bullet('Role', `<@&${role.id}> (\`${role.id}\`)`),
     ...lines,
@@ -297,7 +298,7 @@ export function buildGuildUpdatePayload(
   guild: any,
   changes: { field: string; before: string; after: string }[],
 ): any {
-  const lines = changes.map((c) => `${emojis.whiteArrow2} **${c.field}:** ${c.before} → ${c.after}`);
+  const lines = changes.map((c) => `${emojis.glowyWhiteArrow} **${c.field}:** ${c.before} → ${c.after}`);
   return build(emojis.info, `Server Updated — ${guild.name}`, lines);
 }
 

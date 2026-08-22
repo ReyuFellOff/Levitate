@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/discord.js-v14-5865F2?style=flat-square&logo=discord&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Neon-00E599?style=flat-square&logo=postgresql&logoColor=white" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
 </p>
 
@@ -15,7 +15,7 @@
 
 ## About
 
-**Levitate** is a feature-rich Discord bot focused on server management and safety. Every response uses Discord's **Components V2** format — no classic embeds for bot-generated UI. It supports multiple named instances (Main, Beta, etc.) running from the same codebase, process-level clustering via `discord-hybrid-sharding`, and a custom MongoDB data layer.
+**Levitate** is a feature-rich Discord bot focused on server management and safety. Every response uses Discord's **Components V2** format — no classic embeds for bot-generated UI. It supports multiple named instances (Main, Beta, etc.) running from the same codebase, process-level clustering via `discord-hybrid-sharding`, and a PostgreSQL data layer hosted on Neon.
 
 Default prefix: `$` · Support server: [discord.gg/YpCfcCTXdv](https://discord.gg/YpCfcCTXdv)
 
@@ -119,7 +119,7 @@ Automatic protection against server nukes — no configuration required for base
 | Language | TypeScript (ESM, ES2022 target) |
 | Discord API | discord.js v14 |
 | Clustering | discord-hybrid-sharding |
-| Database | MongoDB (custom `Database` class) |
+| Database | PostgreSQL on Neon (custom `Database` class) |
 | Canvas | @napi-rs/canvas (ship images, rating cards) |
 | Runtime | Node.js v18+ |
 
@@ -143,8 +143,10 @@ Copy `.env.example` to `.env` and fill in the values:
 |---|---|---|
 | `DISCORD_TOKEN` | Yes | Your bot's token |
 | `DISCORD_CLIENT_ID` | Yes | Your application's client ID |
-| `MONGO_URI` | Yes | MongoDB connection string |
-| `BOT_IDENTIFIER` | Yes | Prefix for MongoDB collections (e.g. `levitate`) |
+| `DATABASE_URL` | Yes | Neon PostgreSQL connection string used by the bot |
+| `DIRECT_DATABASE_URL` | No | Direct Neon connection used by migrations |
+| `BOT_IDENTIFIER` | Yes | Separates documents for each bot instance |
+| `MONGO_URI` | No | Legacy MongoDB source used only by `npm run migrate:postgres` |
 | `READY_LOG_WEBHOOK_URL` | No | Webhook for ready-state logs |
 | `SHARD_LOG_WEBHOOK_URL` | No | Webhook for shard lifecycle events |
 | `JOIN_LEAVE_WEBHOOK_URL` | No | Webhook for guild join/leave events |
@@ -186,7 +188,7 @@ dior/
   events/discord/         ← discord.js event handlers
   helpers/                ← Helper factories loaded into client.helpers
   utils/                  ← Formatting, webhook logger, etc.
-  database/               ← MongoDB interface class
+  database/               ← PostgreSQL interface and migration adapter
   config/                 ← Bot instances, categories, antinuke modules
   structures/             ← LevitateClient, StatusManager
 ```

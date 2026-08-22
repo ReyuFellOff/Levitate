@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/sendDataMenu.ts
 //
 // Session tracking, payload builder, and interaction handlers for $send-data.
@@ -143,7 +144,7 @@ export function buildSendDataPayload(
     ? '-# This session has timed out. Run `$send-data` again.'
     : '-# Select an item — the panel will be removed and the item sent directly.';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.whiteCards} Send Saved Data`),
     )

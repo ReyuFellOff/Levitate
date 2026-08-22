@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/helpers/imagePanel.ts
 //
 // Reusable helper for sending an image panel with "Send in DM" + "Download" buttons.
@@ -26,7 +27,7 @@ import {
 function buildPanel(title: string, imageUrl: string, dmCustomId: string, disabled: boolean): any {
   return {
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${title}`))
         .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
         .addMediaGalleryComponents(
@@ -57,7 +58,7 @@ function buildPanel(title: string, imageUrl: string, dmCustomId: string, disable
 function buildDMPanel(title: string, imageUrl: string): any {
   return {
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${title}`))
         .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
         .addMediaGalleryComponents(

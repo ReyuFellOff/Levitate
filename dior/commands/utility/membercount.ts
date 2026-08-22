@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/utility/membercount.ts
 //
 // Show the server's member count breakdown (total / users / bots).
@@ -65,7 +66,7 @@ async function buildMembercountPayload(guild: any, requestedBy: string): Promise
     ? `-# Requested by ${requestedBy} at ${time} · User/bot split is approximate (cached members only)`
     : `-# Requested by ${requestedBy} at ${time}`;
 
-  return new ContainerBuilder()
+  return new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# ${guild.name} Member count`),
     )

@@ -8,5 +8,6 @@ Ref/
 grace.md
 .env
 *.zip
+scripts/
 .vscode
 xoxo/chronicles/

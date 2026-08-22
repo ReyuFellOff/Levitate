@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/namestyle.ts
 //
 // Interactive name-style form for $namestyle and the Customise panel.
@@ -133,7 +134,7 @@ function wrap(container: ContainerBuilder): any {
 }
 
 function headerContainer(): ContainerBuilder {
-  return new ContainerBuilder()
+  return new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(HEADER))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 }

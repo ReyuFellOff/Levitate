@@ -10,7 +10,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
-import { getInviteUrl }        from '../../config.js';
+import { config, getInviteUrl } from '../../config.js';
 import { emojis }              from '../../emojis.js';
 
 export const options = {
@@ -32,7 +32,7 @@ function buildPayload(client: LevitateClient): object {
     ? `${emojis.whiteArrow} [**Invite to a Server**](${inviteUrl})\nAdds ${botName} to any server you manage.`
     : `${emojis.whiteArrow} **Invite to a Server**\nContact a developer to get the invite link.`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${emojis.brownishSparkles} Add ${botName}`,

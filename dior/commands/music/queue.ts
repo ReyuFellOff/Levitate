@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/music/queue.ts
 //
 // Show the full session queue (completed + now playing + upcoming) with
@@ -62,7 +63,7 @@ async function handle(
     sent = await ctx.interaction.editReply(payload as any);
   } else {
     // Show a brief loading container first
-    const loading = new ContainerBuilder().addTextDisplayComponents(
+    const loading = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`${emojis.loading} Loading queue…`),
     );
     sent = await ctx.message.channel.send({

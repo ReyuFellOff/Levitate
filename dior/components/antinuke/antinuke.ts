@@ -1,3 +1,4 @@
+import { config as botConfig } from '../../config.js';
 // xoxo/components/antinuke/antinuke.ts
 //
 // CV2 payload builders for the antinuke command family.
@@ -51,7 +52,7 @@ export function buildAntinukeHomePayload(
   const enabledModules = antinukeModules.filter((info) => config.modules[info.key]?.enabled !== false).length;
   const totalModules = antinukeModules.length;
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16));
 
   container.addMediaGalleryComponents(
     new MediaGalleryBuilder({ items: [{ media: { url: bannerUrl } }] }),
@@ -95,7 +96,7 @@ export function buildAntinukeConfigContainer(
   currentLogChannelId: string | null,
   token: string,
 ): ContainerBuilder {
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16));
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`# Antinuke Config`),
@@ -162,7 +163,7 @@ export function buildAntinukeConfigSavedPayload(
   logChannelId: string | null,
   invokerAvatarUrl: string,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# Config Saved`),
     )
@@ -183,7 +184,7 @@ export function buildAntinukeConfigSavedPayload(
 
 export function buildAntinukeConfigTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Config panel timed out.'),
     ),
   );
@@ -191,7 +192,7 @@ export function buildAntinukeConfigTimedOutPayload(): any {
 
 export function buildAntinukeConfigCancelledPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Configuration cancelled.'),
     ),
   );
@@ -220,7 +221,7 @@ export function buildAntinukeModulesContainer(
 
   const enabledCount = Object.values(state).filter(Boolean).length;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `# Antinuke Modules\n` +
@@ -285,7 +286,7 @@ export function buildAntinukeModulesContainer(
 }
 
 export function buildAntinukeModulesSavedPayload(state: Record<AntinukeModuleKey, boolean>): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `# Modules Saved\n-# Antinuke module settings were updated.`,
@@ -299,7 +300,7 @@ export function buildAntinukeModulesSavedPayload(state: Record<AntinukeModuleKey
 
 export function buildAntinukeModulesTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Module panel timed out.'),
     ),
   );
@@ -331,7 +332,7 @@ export function buildAntinukeWhitelistContainer(
         .join('\n')
     : 'No whitelist entries yet.';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Antinuke Whitelist\n` +
@@ -389,7 +390,7 @@ export function buildAntinukeWhitelistInspectContainer(
   const mention = entry.type === 'role' ? `<@&${entry.id}>` : `<@${entry.id}>`;
   const typeLabel = entry.type === 'bot' ? 'Bot' : entry.type === 'role' ? 'Role' : 'User';
 
-  return new ContainerBuilder()
+  return new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Whitelist Entry\n` +
@@ -411,7 +412,7 @@ export function buildAntinukeWhitelistInspectContainer(
 
 export function buildAntinukeWhitelistTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Whitelist panel timed out.'),
     ),
   );
@@ -435,7 +436,7 @@ export function buildAntinukeStatusPayload(config: AntinukeConfigDoc, prefix: st
     })
     .join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# Antinuke Status`),
     )
@@ -487,7 +488,7 @@ export function buildAntinukeModuleInfoPayload(
     ? `**Threshold**: ${cfg?.limit ?? 2} action${(cfg?.limit ?? 2) !== 1 ? 's' : ''} within 5 minutes`
     : `**Threshold**: Instant — fires on the first action, no accumulation`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${info.displayName}`),
     )
@@ -532,7 +533,7 @@ export function buildAntinukeProfilesPayload(prefix: string): any {
     ].join('\n'))
     .join('\n\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`# Antinuke Profiles`),
     )
@@ -571,7 +572,7 @@ export function buildAntinukeProfileAppliedPayload(
     ? ''
     : `\n\n-# No log channel is set. Use \`${prefix}antinuke logs #channel\` to receive alerts.`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `# Profile Applied — ${profile.displayName}\n` +
@@ -591,7 +592,7 @@ export function buildAntinukeProfileAppliedPayload(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function buildAntinukeHelpPayload(prefix: string): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## Antinuke Commands`),
     )
@@ -645,7 +646,7 @@ export function buildAntinukeTriggerContainer(
 ): ContainerBuilder {
   const timestamp = `<t:${Math.floor(Date.now() / 1000)}:F>`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(botConfig.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Anti-Nuke Response\n-# Automated protection triggered`,

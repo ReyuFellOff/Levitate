@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/ban.ts
 //
 // CV2 payloads for the ban command — success panel and DM notification.
@@ -38,7 +39,7 @@ export function buildBanSuccessPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines.join('\n')))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Banned`),
     )
@@ -62,7 +63,7 @@ export function buildBanDmPayload(
   reason:            string,
   moderatorUsername: string,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.blackCards} You have been banned from **${guildName}**\n` +
       `**Reason:** ${reason || 'None provided.'}\n` +

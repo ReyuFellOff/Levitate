@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/developer/global-ar.ts
 //
 // Interactive panel for the $global-ar developer command.
@@ -42,7 +43,7 @@ function buildGlobalArPanel(
   const clampedPage = Math.min(Math.max(page, 0), totalPages - 1);
   const slice = docs.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE);
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   const noteText = statusNote ? `\n-# ${statusNote}` : '';
   container.addTextDisplayComponents(
@@ -217,7 +218,7 @@ export async function runGlobalArPanel(
       // ── Done ────────────────────────────────────────────────────────────
       if (i.isButton() && i.customId === 'gar-done') {
         collector.stop('done');
-        const container = new ContainerBuilder();
+        const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
         container.addTextDisplayComponents(
           new TextDisplayBuilder().setContent(`${emojis.blacktick} Closed the global autoresponder panel.`),
         );
@@ -231,7 +232,7 @@ export async function runGlobalArPanel(
 
   collector.on('end', async (_: any, reason: string) => {
     if (reason === 'time') {
-      const container = new ContainerBuilder();
+      const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
       container.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `# Global Autoresponders\n-# This panel has timed out. Run the command again to continue.`,

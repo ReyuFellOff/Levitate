@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/noprefixList.ts
 import {
   ContainerBuilder,
@@ -17,7 +18,7 @@ export function buildNoprefixListPayload(
     ? lines.map((line) => `- ${line}`).join('\n')
     : (emptyMessage ?? 'Nothing to show.');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${emojis.bloodRip} ${title}`))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(body))

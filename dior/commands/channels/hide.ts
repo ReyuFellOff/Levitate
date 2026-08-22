@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/moderation/hide.ts
 //
 // Hide one or more channels by denying ViewChannel for @everyone.
@@ -69,7 +70,7 @@ async function sendResults(
 
   const payload = {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],

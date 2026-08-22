@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/fun/iphone-alert.ts
 //
 // $iphone-alert <text> — generate an iPhone presidential alert image.
@@ -19,7 +20,7 @@ const API_URL = 'https://api.popcat.xyz/v2/alert';
 const REQUEST_TIMEOUT_MS = 10_000;
 
 function buildPayload(imageBuffer: Buffer): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`### ${emojis.FIRE} Presidential Alert`),
     )

@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/placeholderHelp.ts
 //
 // Paginated CV2 help panel listing all supported placeholder tokens.
@@ -150,7 +151,7 @@ export function buildPayload(page: number, timedOut = false): any {
 
   return {
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(contentLines.join('\n')),
         )

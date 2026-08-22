@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/ship.ts
 //
 // CV2 payload builder + canvas image generator for the $ship command.
@@ -229,7 +230,7 @@ export async function buildShipPayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://ship.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`${title}`),
     )

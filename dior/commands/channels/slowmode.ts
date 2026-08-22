@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/moderation/slowmode.ts
 //
 // Set the slowmode (rate limit) for one or more channels.
@@ -114,7 +115,7 @@ async function sendResults(
     .join('\n');
   const payload = {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],

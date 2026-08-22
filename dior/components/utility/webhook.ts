@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/webhook.ts
 //
 // Interactive Webhook Manager ("$webhook"). Entry point: startWebhookSession()
@@ -143,7 +144,7 @@ function statusLine(s: Session): string {
 }
 
 function homePayload(s: Session): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`## ${emojis.info} Webhook Manager\n${statusLine(s)}`),
   );
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true));
@@ -197,7 +198,7 @@ function homePayload(s: Session): any {
 
 function createChannelPayload(_s: Session): any {
   return wrap(
-    new ContainerBuilder()
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(`## Create Webhook\n-# Pick the channel this webhook should post in.`),
       )
@@ -225,7 +226,7 @@ function managePayload(s: Session): any {
     `**ID:** \`${w.id}\`\n` +
     `${statusLine(s)}`;
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
   if (w.avatarURL?.()) {
     container.addSectionComponents(
       new SectionBuilder()
@@ -258,7 +259,7 @@ function managePayload(s: Session): any {
 
 function moveChannelPayload(s: Session): any {
   return wrap(
-    new ContainerBuilder()
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `## Move Webhook\n-# Pick the new channel for **${s.selected.name}**.`,
@@ -288,7 +289,7 @@ function sendDataPickerPayload(s: Session): any {
   const p          = Math.min(Math.max(s.dataPage, 0), totalPages - 1);
   const slice      = items.slice(p * DATA_PAGE_SIZE, p * DATA_PAGE_SIZE + DATA_PAGE_SIZE);
 
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## Send Saved Data via Webhook\n-# ${items.length} item(s) — Page ${p + 1}/${totalPages}`,
     ),
@@ -347,7 +348,7 @@ function sendDataPickerPayload(s: Session): any {
 
 function deleteConfirmPayload(s: Session): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Delete Webhook?\n` +
         `This will permanently delete **${s.selected.name}** from <#${s.selected.channelId}>.\n` +
@@ -364,7 +365,7 @@ function deleteConfirmPayload(s: Session): any {
 
 function closedPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`${emojis.greentick} Webhook manager closed.`),
     ),
   );
@@ -1046,7 +1047,7 @@ export async function startWebhookSession(
   collector.on('end', (_collected: any, reason: string) => {
     if (reason !== 'time') return;
     msg.edit(wrap(
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `-# This webhook session timed out. Run \`${client.config.prefix}webhook\` again to start a new one.`,
         ),

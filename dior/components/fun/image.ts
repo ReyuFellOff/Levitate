@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/image.ts
 //
 // CV2 payload builders + session manager for the $image command.
@@ -188,13 +189,13 @@ export function buildImagePayload(session: ImageSession, disabled = false): any 
   const hasNext = index < total - 1;
   const msgId   = session.msgId;
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   // Header line
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `${emojis.blackCards} **Image Search** — \`${query}\`\n` +
-      `${emojis.whiteArrow2} Result **${index + 1}** of **${total}**`,
+      `${emojis.glowyWhiteArrow} Result **${index + 1}** of **${total}**`,
     ),
   );
 
@@ -252,7 +253,7 @@ export function buildImagePayload(session: ImageSession, disabled = false): any 
 
 /** Payload shown when there is only a single result (no navigation needed). */
 export function buildSingleImagePayload(result: ImageResult, query: string): any {
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(

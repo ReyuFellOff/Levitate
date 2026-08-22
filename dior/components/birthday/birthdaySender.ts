@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/birthday/birthdaySender.ts
 //
 // Shared birthday-message dispatcher. Sends the configured birthday message

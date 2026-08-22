@@ -24,6 +24,14 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const player  = (client as any).kazagumo.players.get(guildId);
   if (!player) return sendError(ctxObj, 'There is no active player in this server.');
+  const hasCurrentTrack = !!player.queue?.current;
+  const isPlaying = player.playing === true || player.paused === true;
+  if (!hasCurrentTrack || !isPlaying) {
+    return sendInfo(
+      ctxObj,
+      'There is no playback to stop. The bot is idle in the voice channel.',
+    );
+  }
 
   // If 24/7 mode is enabled, stop playback but keep the bot in the voice
   // channel. Destroying the player would cause voiceStateUpdate to fire and

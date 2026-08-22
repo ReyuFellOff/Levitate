@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/settings/setprefix.ts
 //
 // Sets or resets this server's custom command prefix.
@@ -15,6 +16,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
+import { buildPrefixInfoPayload } from '../../components/prefixInfo.js';
 
 export const options = {
   name: 'setprefix',
@@ -31,7 +33,7 @@ const MAX_LEN = 10;
 function reply(content: string) {
   return {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],
@@ -46,6 +48,17 @@ export async function prefixExecute(
   args: string[],
   client: LevitateClient,
 ): Promise<void> {
+  const input = args[0]?.toLowerCase();
+
+  if (!input) {
+    const current = await client.db?.getGuildPrefix(message.guild.id).catch((): null => null) ?? client.config.prefix;
+    const botId = client.user?.id;
+    if (botId) {
+      await message.reply(buildPrefixInfoPayload(current, client.userPrefixes.get(message.author.id), botId));
+    }
+    return;
+  }
+
   // Require Manage Guild
   if (!message.member?.permissions?.has('ManageGuild')) {
     await message.reply(reply(`${emojis.redcross} You need the **Manage Server** permission to change the prefix.`));
@@ -54,17 +67,6 @@ export async function prefixExecute(
 
   if (!client.db) {
     await message.reply(reply(`${emojis.redcross} Database is not connected. Please try again later.`));
-    return;
-  }
-
-  const input = args[0]?.toLowerCase();
-
-  if (!input) {
-    const current = await client.db.getGuildPrefix(message.guild.id).catch((): null => null) ?? client.config.prefix;
-    await message.reply(reply(
-      `${emojis.info} Current prefix for this server: \`${current}\`\n` +
-      `Use \`${current}setprefix <new prefix>\` to change it, or \`${current}setprefix reset\` to restore the default.`,
-    ));
     return;
   }
 

@@ -8,6 +8,7 @@ import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildMessageDeletePayload } from '../../components/logging/logMessages.js';
 import { pushSnipe } from '../../components/moderation/snipeStore.js';
 import { handleStarboardSourceDelete } from '../../helpers/starboard.js';
+import { restoreHoneypotWarning } from '../../components/features/honeypot.js';
 import {
   findVoiceMasterDeletionExecutor,
   isVoiceMasterControlMessage,
@@ -22,6 +23,7 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
   const channelId = message.channelId ?? message.channel?.id;
   const messageId = message.id;
+  if (channelId && messageId) await restoreHoneypotWarning(client, message.guild.id, messageId);
   if (channelId && messageId && await isVoiceMasterControlMessage(client, message.guild.id, channelId, messageId)) {
     const deleter = await findVoiceMasterDeletionExecutor(
       message.guild,

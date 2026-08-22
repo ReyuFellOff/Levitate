@@ -71,6 +71,18 @@ const TYPE_LABEL: Record<ListType, string> = {
   invites:  'Invites',
 };
 
+const TYPE_LABEL_SINGULAR: Record<ListType, string> = {
+  roles:    'Role',
+  members:  'Member',
+  bots:     'Bot',
+  boosters: 'Booster',
+  emojis:   'Emoji',
+  stickers: 'Sticker',
+  channels: 'Channel',
+  bans:     'Ban',
+  invites:  'Invite',
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,6 +95,7 @@ export interface ListSession {
   items:     any[];       // raw entity array
   page:      number;
   detailId:  string | null; // currently showing detail for this ID
+  heading?:  string;
   client:    LevitateClient;
 }
 
@@ -383,10 +396,11 @@ export function buildListPayload(session: ListSession, disabled = false): any {
   const start = safePage * PAGE_SIZE + 1;
   const end   = Math.min((safePage + 1) * PAGE_SIZE, items.length);
 
-  const titleLine = `## ${TYPE_EMOJI[listType]} ${TYPE_LABEL[listType]} — ${items.length} total`;
+  const titleLine = `## ${TYPE_EMOJI[listType]} ${session.heading ?? TYPE_LABEL[listType]} — ${items.length} total`;
+  const countLabel = (items.length === 1 ? TYPE_LABEL_SINGULAR[listType] : TYPE_LABEL[listType]).toLowerCase();
   const countLine = totalPages > 1
-    ? `Showing **${start}–${end}** of **${items.length}** ${TYPE_LABEL[listType].toLowerCase()}.`
-    : `${items.length} ${TYPE_LABEL[listType].toLowerCase()}${items.length === 1 ? '' : 's'} in this server.`;
+    ? `Showing **${start}–${end}** of **${items.length}** ${countLabel}.`
+    : `${items.length} ${countLabel} in this server.`;
 
   const footer = disabled
     ? '-# This session has timed out. Run the command again to browse.'
@@ -395,7 +409,6 @@ export function buildListPayload(session: ListSession, disabled = false): any {
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(titleLine))
-    .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(countLine))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(

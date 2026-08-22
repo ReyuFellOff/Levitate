@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/timeout.ts
 //
 // CV2 payloads for the timeout command — success panels and DM notifications.
@@ -40,7 +41,7 @@ export function buildTimeoutAddPayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.clock} Timed Out`),
     )
@@ -79,7 +80,7 @@ export function buildTimeoutRemovePayload(
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(bodyLines))
     .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greentick} Timeout Removed`),
     )
@@ -104,7 +105,7 @@ export function buildTimeoutAddDmPayload(
   reason:            string,
   moderatorUsername: string,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.clock} You have been timed out in **${guildName}**\n` +
       `**Duration:** ${formatDuration(durationMs)}\n` +
@@ -128,7 +129,7 @@ export function buildTimeoutRemoveDmPayload(
   reason:            string,
   moderatorUsername: string,
 ): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.greentick} Your timeout in **${guildName}** has been removed\n` +
       `**Reason:** ${reason || 'None provided.'}\n` +
@@ -147,7 +148,7 @@ export function buildTimeoutRemoveDmPayload(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function buildTimeoutExpiredDmPayload(guildName: string): any {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${emojis.greentick1} Your timeout in **${guildName}** has expired\n` +
       `-# You can now send messages and interact in the server again.`,

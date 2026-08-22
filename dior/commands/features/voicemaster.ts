@@ -1,4 +1,4 @@
-// xoxo/commands/vcControls/voicemaster.ts
+// xoxo/commands/features/voicemaster.ts
 //
 // Prefix-only VoiceMaster setup. There is intentionally no matching slash
 // command: the persistent panel itself is the user-facing control surface.
@@ -19,7 +19,7 @@ export const options = {
   aliases: ['vm'],
   description: 'Set up or manage temporary personal voice channels.',
   usage: 'voicemaster <setup [text-channel]|reset|status>',
-  category: 'vcControls',
+  category: 'features',
   owner: false,
   cooldown: 5,
 };

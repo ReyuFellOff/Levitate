@@ -10,7 +10,7 @@
 // The identifier after $emoji ends at: whitespace | pipe `|` | dollar `$` | end of string.
 // After all replacements, bare |$| separators are stripped (they become zero-width joiners).
 
-const SAY_EMOJI_REGEX = /(?:\$emoji(?:<([^>\s|$]+)>|([^\s|$]+))|:([A-Za-z0-9_\-]+):)/g;
+const SAY_EMOJI_REGEX = /(?:\$emoji(?:<([^>\s|$]+)>|([^\s|$]+))|(<a?:[A-Za-z0-9_\-]+:\d+>)|:([A-Za-z0-9_\-]+):)/g;
 const NO_SPACE_SEP = /\|\$\|/g;
 
 export interface ParseResult {
@@ -29,7 +29,7 @@ export async function parseSayText(
   const matches: Array<{ full: string; identifier: string }> = [];
   let m: RegExpExecArray | null;
   while ((m = SAY_EMOJI_REGEX.exec(raw)) !== null) {
-    matches.push({ full: m[0], identifier: m[1] ?? m[2] ?? m[3] });
+    matches.push({ full: m[0], identifier: m[1] ?? m[2] ?? m[3] ?? m[4] });
   }
 
   if (matches.length === 0) {

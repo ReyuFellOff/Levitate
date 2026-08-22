@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/helpers/antinukeEngine.ts
 //
 // Core antinuke runtime. Event files call `checkAntinukeModule()` whenever a

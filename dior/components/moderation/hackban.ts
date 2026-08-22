@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/hackban.ts
 //
 // CV2 payload for the hackban/forceban command — success panel only.
@@ -23,7 +24,7 @@ export function buildHackbanSuccessPayload(
     `**Moderator:** ${moderatorUsername}`,
   ].join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Hackbanned`),
     )

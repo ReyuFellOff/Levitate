@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/components/statusMessages.ts
 import {
   ContainerBuilder,
@@ -25,7 +26,7 @@ export interface StatusContext {
 const NO_MENTIONS = { parse: [] as any[] };
 
 async function sendStatus(context: StatusContext, formattedContent: string): Promise<Message | void> {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(formattedContent),
   );
 
@@ -80,6 +81,9 @@ export async function sendSuccess(context: StatusContext, content: string) {
 export async function sendError(context: StatusContext, content: string) {
   return sendStatus(context, `${emojis.redcross} ${content}`);
 }
+export async function sendWarning(context: StatusContext, content: string) {
+  return sendStatus(context, `${emojis.warning} ${content}`);
+}
 export async function sendInfo(context: StatusContext, content: string) {
   return sendStatus(context, `${emojis.info} ${content}`);
 }
@@ -102,7 +106,7 @@ export async function sendNote(
   const headerLabel = keyword.toLowerCase() === 'other' ? 'Stupid note' : `To ${upper}`;
   const content = `### ${emojis.sabrinaTaste} __${headerLabel}:__\n${body}`;
 
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(content),
   );
   if (imageUrl) {
@@ -137,7 +141,7 @@ export async function blacklistedServer(context: StatusContext, guild: any, clie
   const supportLine = supportServer ? `- [Support server](${supportServer})` : '- Support server';
   const ownerId = guild?.ownerId;
   const ownerLine = ownerId ? `<@${ownerId}>` : 'Server owner';
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `## ${ownerLine} This server has been blacklisted from using this bot. For help, kindly refer to:\n- ${developerName}\n${supportLine}`,
     ),

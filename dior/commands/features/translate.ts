@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/features/translate.ts
 //
 // $translate <text>          — auto-detect source → English

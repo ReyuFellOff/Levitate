@@ -153,7 +153,7 @@ export function buildDeleteDataPayload(
     ? '-# This session has timed out. Run `$delete-data` again.'
     : '-# Select an item from the dropdown to delete it.';
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Delete Saved Data`),
     )
@@ -191,7 +191,7 @@ export function buildDeleteDataPayload(
 function buildConfirmPayload(itemName: string, itemType: string, disabled = false): any {
   const typeLabel = TYPE_LABEL[itemType] ?? itemType;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Confirm Deletion`),
     )
@@ -436,7 +436,7 @@ export async function handleDeleteDataConfirm(
   }
 
   // Edit the message to a clean success state
-  const successContainer = new ContainerBuilder()
+  const successContainer = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Deleted`),
     )

@@ -12,11 +12,8 @@
 //   9.  [YAY!] ready
 
 import 'dotenv/config';
-import dns from 'dns';
 import { LevitateClient }         from './structures/LevitateClient.js';
 import { loadAllEvents }         from './handlers/eventLoader.js';
-
-dns.setServers(['8.8.8.8', '1.1.1.1']);
 import { loadHelpers }           from './handlers/helperLoader.js';
 import { loadPrefixCommands }    from './handlers/commandLoader.js';
 import { loadSlashCommands }     from './handlers/slashLoader.js';
@@ -248,7 +245,7 @@ async function sendPendingRestartNotification(client: LevitateClient): Promise<v
     const devId: string | undefined = client.config?.developers?.[0]?.[1];
     const mentionText = devId ? `<@${devId}>` : 'Developer';
 
-    const container = new ContainerBuilder().addTextDisplayComponents(
+    const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.blacktick} ${mentionText} Bot restarted successfully.`,
       ),

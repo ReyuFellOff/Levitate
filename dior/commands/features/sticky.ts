@@ -14,7 +14,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
-import { setStickyAndPost, postStickyToChannel, type StickyType } from '../../helpers/stickyHelper.js';
+import { setStickyAndPost, postStickyToChannel, invalidateStickyCache, type StickyType } from '../../helpers/stickyHelper.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 
@@ -157,6 +157,7 @@ async function handleEnable(
   if (data.enabled) return sendInfo(ctx, 'The sticky in this channel is **already enabled**.');
 
   await client.db.setStickyEnabled(guild.id, channel.id, true);
+  invalidateStickyCache(guild.id, channel.id);
   await sendSuccess(ctx, 'Sticky **enabled** — re-posting now.');
   await postStickyToChannel(client, channel, guild.id, channel.id, data.type as StickyType, data.payload);
 }
@@ -173,6 +174,7 @@ async function handleDisable(
   if (!data.enabled) return sendInfo(ctx, 'The sticky in this channel is **already disabled**.');
 
   await client.db.setStickyEnabled(guild.id, channel.id, false);
+  invalidateStickyCache(guild.id, channel.id);
 
   // Remove the live sticky message
   const key    = `${guild.id}-${channel.id}`;

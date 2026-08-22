@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/periodicTable.ts
 //
 // Popcat periodic-table API client and Components V2 response builder.
@@ -80,7 +81,7 @@ export function buildPeriodicTablePayload(element: PeriodicTableElement): any {
     `**Discovered by:** ${escapeFormatting(element.discovered_by)}`,
   ].join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${emojis.blackCards} Periodic Table — ${escapeFormatting(element.name)} (${escapeFormatting(element.symbol)})`,

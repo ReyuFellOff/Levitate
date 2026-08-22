@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/strip.ts
 //
 // CV2 payload for the strip command — success panel.
@@ -23,7 +24,7 @@ export function buildStripSuccessPayload(
     `**Moderator:** ${moderatorUsername}`,
   ].join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackCards} Roles Stripped`),
     )

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/settings/resetprefix.ts
 //
 // Resets this server's custom prefix back to the global default.
@@ -25,7 +26,7 @@ export const options = {
 function reply(content: string) {
   return {
     components: [
-      new ContainerBuilder().addTextDisplayComponents(
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
         new TextDisplayBuilder().setContent(content),
       ),
     ],

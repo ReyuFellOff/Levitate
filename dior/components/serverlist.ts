@@ -140,7 +140,7 @@ export function buildServerListPayload(
     ? '-# This session has timed out. Run `$serverlist` again.'
     : `-# ${guildIds.length} server${guildIds.length === 1 ? '' : 's'} total. Select one to view its details.`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blackflower} Bot Servers (${guildIds.length})`),
     )
@@ -198,7 +198,7 @@ export function buildServerDetailPayload(
 
   const iconUrl = guild.iconURL({ size: 512, extension: 'png' }) ?? null;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${guild.name}`),
     )

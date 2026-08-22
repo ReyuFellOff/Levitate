@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/utility/afk.ts
 //
 // Set your Away from Keyboard status.
@@ -86,7 +87,7 @@ async function parseAfkInput(
 // ─── Status payload builder (used after button interaction) ───────────────────
 
 function buildStatusPayload(icon: string, content: string) {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`${icon} ${content}`),
   );
   return {

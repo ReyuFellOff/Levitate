@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/gay.ts
 //
 // CV2 payload builder for the $gay command.
@@ -35,7 +36,7 @@ export async function buildGayPayload(opts: {
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://gay.png'));
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.gayHeart} **How gay is <@${user.id}>?**`,

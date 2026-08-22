@@ -3,6 +3,7 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { parseTime, TimeParseError, TIME_FORMAT_HELP } from '../../utils/parseTime.js';
 import { updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
+import { pickRetrySource, resolveAndInjectAlternate } from '../../helpers/playerRetry.js';
 
 export const options = {
   name: 'seek',
@@ -46,9 +47,13 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   }
 
   try {
-    await player.seekTo(ms);
+    await player.seek(ms);
   } catch {
-    return sendError(ctxObj, 'Failed to seek. The track may not support seeking at this time.');
+    const retrySource = pickRetrySource(track.sourceName);
+    const recovered = await resolveAndInjectAlternate(client as any, player, track, retrySource, ms);
+    if (!recovered) {
+      return sendError(ctxObj, 'Failed to seek. The track may not support seeking at this time.');
+    }
   }
 
   await updateNowPlayingMessage(client as any, player).catch((): null => null);

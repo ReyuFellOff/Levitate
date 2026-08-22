@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import {
   ContainerBuilder,
   MessageFlags,
@@ -59,7 +60,7 @@ export function buildMediaChannelsPayload(guild: any, channelIds: string[]): any
     ...lines,
   ].join('\n');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.aestheticCam} Media Channel(s)`),
     )

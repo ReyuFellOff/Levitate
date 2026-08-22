@@ -4,6 +4,7 @@
 //
 // Usage:
 //   $list roles    — list all roles
+//   $list <role>   — list members with a role
 //   $list members  — list all members (cache only)
 //   $list emojis   — list all emojis
 //   $list stickers — list all stickers
@@ -14,6 +15,7 @@
 
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
+import { resolveRole } from '../../helpers/roleResolver.js';
 import {
   buildListPayload,
   fetchListItems,
@@ -25,7 +27,7 @@ export const options = {
   name:        'list',
   aliases:     ['ls'] as string[],
   description: 'Paginated list of server roles, members, bots, boosters, emojis, stickers, channels, bans, or invites.',
-  usage:       'list <roles | members | bots | boosters | emojis | stickers | channels | bans | invites>',
+  usage:       'list <type | role mention, ID, or name>',
   category:    'utility',
   owner:       false,
   cooldown:    5,
@@ -65,14 +67,18 @@ export async function prefixExecute(
   if (!guild) return sendError(ctx, 'This command can only be used in a server.');
 
   const rawType = args[0]?.toLowerCase().trim();
-  if (!rawType || !VALID_TYPES[rawType]) {
+  const requestedRole = !rawType || VALID_TYPES[rawType]
+    ? null
+    : resolveRole(guild, args.join(' '));
+
+  if (!rawType || (!VALID_TYPES[rawType] && !requestedRole)) {
     return sendError(
       ctx,
-      `Specify what to list: **roles**, **members**, **bots**, **emojis**, **stickers**, **channels**, or **bans**.\n-# Usage: \`${client.config.prefix}${options.usage}\``,
+      `Specify a list type or provide a role mention, ID, or name.\n-# Usage: \`${client.config.prefix}${options.usage}\``,
     );
   }
 
-  const listType = VALID_TYPES[rawType];
+  const listType: ListType = requestedRole ? 'members' : VALID_TYPES[rawType];
 
   // Permission checks
   if (listType === 'bans') {
@@ -82,7 +88,12 @@ export async function prefixExecute(
 
   await message.channel.sendTyping?.().catch((): null => null);
 
-  const items = await fetchListItems(guild, listType);
+  if (requestedRole) await guild.members.fetch().catch((): null => null);
+  const items = requestedRole
+    ? [...requestedRole.members.values()].sort((a: any, b: any) =>
+        (a.displayName ?? a.user?.username ?? '').localeCompare(b.displayName ?? b.user?.username ?? ''),
+      )
+    : await fetchListItems(guild, listType);
 
   if (!items.length) {
     return sendError(ctx, `This server has no **${listType}** to display.`);
@@ -97,6 +108,7 @@ export async function prefixExecute(
     page:      0,
     detailId:  null as string | null,
     client,
+    heading:   requestedRole ? `Members with ${requestedRole}` : undefined,
   };
 
   const payload = buildListPayload(session);

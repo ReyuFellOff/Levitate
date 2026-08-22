@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/utility/host-image.ts
 //
 // Upload an image (attachment or direct URL) to imgbb and return its hosted
@@ -114,7 +115,7 @@ function buildResultPanel(params: {
 
   return {
     components: [
-      new ContainerBuilder()
+      new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(content))
         .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
         .addMediaGalleryComponents(

@@ -1,14 +1,14 @@
-// xoxo/commands/moderation/untimeout.ts
+// xoxo/commands/moderation/unmute.ts
 //
 // Remove a timeout (untimeout) from one or more members.
 //
-// Prefix:  $untimeout               — lists all timed-out members with a
+// Prefix:  $unmute                   — lists all timed-out members with a
 //                                     multi-select menu to pick who to untimeout
-//          $untimeout <@user|ID|username> [reason]
+//          $unmute <@user|ID|username> [reason]
 //                                   — untimeouts that specific member directly
 //
-// Slash:   /untimeout               — same no-arg list panel
-//          /untimeout user:<user> [reason]
+// Slash:   /unmute                   — same no-arg list panel
+//          /unmute user:<user> [reason]
 //                                   — direct untimeout
 //
 // Checks:
@@ -37,10 +37,10 @@ import { resolveUser } from '../../helpers/userResolver.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
 
 export const options = {
-  name:        'untimeout',
-  aliases:     ['removetimeout'] as string[],
+  name:        'unmute',
+  aliases:     ['untimeout', 'removetimeout'] as string[],
   description: 'Remove a timeout from one or more members.',
-  usage:       'untimeout [user] [reason]\n' +
+  usage:       'unmute [user] [reason]\n' +
                'No arguments — shows all timed-out members to pick from.\n' +
                'With user — removes timeout from that member directly.',
   category:    'moderation',

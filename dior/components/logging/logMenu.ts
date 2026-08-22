@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/logging/logMenu.ts
 //
 // CV2 payloads + interaction handling for the $log / $logs / $logging
@@ -178,15 +179,15 @@ export async function buildLogHomePayload(
   const statusIcon = (enabled: boolean | undefined) => (enabled === false ? `${emojis.redcross} Disabled` : `${emojis.greenTick} Enabled`);
 
   const statusLines = [
-    `${emojis.whiteArrow2} **All** — ${channelLabel(cfg?.all_channel_id ?? null)} · ${statusIcon(cfg?.all_enabled)}`,
+    `${emojis.glowyWhiteArrow} **All** — ${channelLabel(cfg?.all_channel_id ?? null)} · ${statusIcon(cfg?.all_enabled)}`,
     ...logCategories.map((cat) => {
       const catCfg = cfg?.[cat.key];
       const exCount = catCfg?.exceptions.length ?? 0;
-      return `${emojis.whiteArrow2} **${cat.label}** — ${channelLabel(catCfg?.channel_id ?? null)} · ${statusIcon(catCfg?.enabled)}${exCount ? ` (${exCount} exception${exCount === 1 ? '' : 's'})` : ''}`;
+      return `${emojis.glowyWhiteArrow} **${cat.label}** — ${channelLabel(catCfg?.channel_id ?? null)} · ${statusIcon(catCfg?.enabled)}${exCount ? ` (${exCount} exception${exCount === 1 ? '' : 's'})` : ''}`;
     }),
   ];
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.clock} Logging Configuration`),
     )
@@ -227,7 +228,7 @@ export async function buildLogAllPayload(
 
   const enabled = cfg?.all_enabled ?? true;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.clock} All Logs`),
     )
@@ -235,8 +236,8 @@ export async function buildLogAllPayload(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `Every single log event (channel, member, role, vc, message, server) will be sent to one channel. Exceptions do not apply here.\n\n` +
-        `${emojis.whiteArrow2} **Current channel:** ${channelLabel(cfg?.all_channel_id ?? null)}\n` +
-        `${emojis.whiteArrow2} **Status:** ${enabled ? `${emojis.greenTick} Enabled` : `${emojis.redcross} Disabled`}`,
+        `${emojis.glowyWhiteArrow} **Current channel:** ${channelLabel(cfg?.all_channel_id ?? null)}\n` +
+        `${emojis.glowyWhiteArrow} **Status:** ${enabled ? `${emojis.greenTick} Enabled` : `${emojis.redcross} Disabled`}`,
       ),
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
@@ -356,7 +357,7 @@ export async function buildLogCategoryPayload(
 
   const enabled = cfg?.[category]?.enabled ?? true;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.clock} ${info.label}`),
     )
@@ -364,9 +365,9 @@ export async function buildLogCategoryPayload(
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${info.description}\n\n` +
-        `${emojis.whiteArrow2} **Channel:** ${channelLabel(cfg?.[category]?.channel_id ?? null)}\n` +
-        `${emojis.whiteArrow2} **Status:** ${enabled ? `${emojis.greenTick} Enabled` : `${emojis.redcross} Disabled`}\n` +
-        `${emojis.whiteArrow2} **Exceptions:** ${describeExceptions(category, cfg)}`,
+        `${emojis.glowyWhiteArrow} **Channel:** ${channelLabel(cfg?.[category]?.channel_id ?? null)}\n` +
+        `${emojis.glowyWhiteArrow} **Status:** ${enabled ? `${emojis.greenTick} Enabled` : `${emojis.redcross} Disabled`}\n` +
+        `${emojis.glowyWhiteArrow} **Exceptions:** ${describeExceptions(category, cfg)}`,
       ),
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))

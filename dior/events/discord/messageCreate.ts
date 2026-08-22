@@ -12,14 +12,17 @@ import {
   blacklistedServer,
   sendInfo,
   sendError,
+  sendWarning,
   reservedForDeveloper,
 } from '../../components/statusMessages.js';
 import { updateSticky } from '../../helpers/stickyHelper.js';
 import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/afk.js';
 import { dispatchAutoresponders } from '../../helpers/autoresponderDispatch.js';
 import { dispatchCustomRole }     from '../../helpers/customRoleDispatch.js';
+import { withDeveloperPermissionBypass } from '../../helpers/developerPermissionBypass.js';
 import { enforceImageRestriction } from '../../helpers/memberRestrictions.js';
 import { enforceMediaChannel } from '../../helpers/mediaChannel.js';
+import { enforceHoneypot } from '../../helpers/honeypot.js';
 
 export const name = 'messageCreate';
 export const once = false;
@@ -41,6 +44,8 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     }
     return;
   }
+
+  if (await enforceHoneypot(message, client)) return;
 
   // Enforce member-targeted image mutes before commands, autoresponders, and
   // other message side effects can process prohibited content.
@@ -175,7 +180,9 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
         if (!mentionCmd) {
           const userAliased = client.userAliases.get(message.author.id)?.get(mentionCmdName);
           if (userAliased) {
-            mentionCmd = client.commands.get(userAliased);
+            mentionCmd =
+              client.commands.get(userAliased) ??
+              client.commands.get(client.aliases.get(userAliased) ?? '');
             mentionUserAlias = !!mentionCmd;
           }
         }
@@ -211,7 +218,11 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
         try {
           if (!mentionCmd.options?.noTyping) await message.channel.sendTyping().catch((): null => null);
-          await mentionCmd.prefixExecute(message, mentionArgs, client);
+          await mentionCmd.prefixExecute(
+            withDeveloperPermissionBypass(message, isDeveloper),
+            mentionArgs,
+            client,
+          );
           client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -266,7 +277,9 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     // commands/aliases have failed to resolve (global names always win).
     const userAliased = client.userAliases.get(message.author.id)?.get(commandName);
     if (userAliased) {
-      command = client.commands.get(userAliased);
+      command =
+        client.commands.get(userAliased) ??
+        client.commands.get(client.aliases.get(userAliased) ?? '');
       userAlias = !!command;
     }
   }
@@ -289,6 +302,13 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
     await reservedForDeveloper({ message }).catch((): null => null);
     return;
   }
+  if (client.db && !['disable-command', 'enable-command'].includes(command.options?.name?.toLowerCase())) {
+    const disabled = await client.db.getDisabledCommand(command.options?.name ?? commandName).catch((): null => null);
+    if (disabled) {
+      await sendWarning({ message }, `${command.options?.name ?? commandName} has been disabled by the developer. Reason: ${disabled.reason}`).catch((): null => null);
+      return;
+    }
+  }
   if (userAlias && !(await enforceUserAliasPermissions(message, command))) return;
 
   // ── Attach raw args to message for commands that need real newlines ────────
@@ -305,7 +325,11 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
   try {
     if (!command.options?.noTyping) await message.channel.sendTyping().catch((): null => null);
-    await command.prefixExecute(message, args, client);
+    await command.prefixExecute(
+      withDeveloperPermissionBypass(message, isDeveloper),
+      args,
+      client,
+    );
     client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -347,18 +371,18 @@ async function hasNoPrefixAccess(
   client: LevitateClient,
   isDeveloper: boolean,
 ): Promise<boolean> {
-  // Developers have no-prefix access unless they've self-disabled it via $mynop off
-  if (isDeveloper) {
-    const selfDisabled = await client.db?.isDevNoprefixSelfDisabled(message.author.id).catch((): boolean => false) ?? false;
-    return !selfDisabled;
-  }
-
-  // If DB isn't wired, no-prefix is unavailable for non-devs
+  // A global disable applies to every user, including developers.
   if (!client.db) return false;
 
   try {
     const globalEnabled = await client.db.getNoprefixGlobalEnabled().catch((): boolean => false);
     if (!globalEnabled) return false;
+
+    // Developers have no-prefix access unless they've self-disabled it via $mynop off.
+    if (isDeveloper) {
+      const selfDisabled = await client.db.isDevNoprefixSelfDisabled(message.author.id).catch((): boolean => false);
+      return !selfDisabled;
+    }
 
     if (message.guild?.id) {
       const guildDisabled = await client.db.isGuildNoPrefixDisabled(message.guild.id).catch((): boolean => false);

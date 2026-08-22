@@ -44,7 +44,7 @@ export async function prefixExecute(
     `**Uptime:** ${uptime}`,
   ].join('\n');
 
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   if (avatar) {
     container.addSectionComponents(

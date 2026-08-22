@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/developer/say-cv2.ts
 //
 // Send a raw Components V2 JSON payload as the bot. Developer-only.

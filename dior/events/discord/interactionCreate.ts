@@ -13,8 +13,9 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
+import { withDeveloperPermissionBypass } from '../../helpers/developerPermissionBypass.js';
 import webhookLogger from '../../utils/webhookLogger.js';
-import { sendError, reservedForDeveloper } from '../../components/statusMessages.js';
+import { sendError, sendWarning, reservedForDeveloper } from '../../components/statusMessages.js';
 import {
   debugSessions,
   resetDebugTimeout,
@@ -84,6 +85,7 @@ import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 import { buildPlayerStoppedPayload } from '../../components/music/nowPlaying.js';
 import { clearPlayerState, updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
 import { handleVoiceMasterInteraction } from '../../components/voiceMaster.js';
+import { handleHoneypotInteraction } from '../../components/features/honeypot.js';
 
 export const name = 'interactionCreate';
 export const once = false;
@@ -101,7 +103,7 @@ const REGISTERED_CUSTOM_ID_PREFIXES = [
   'debug', 'help', 'phhelp', 'viewdata', 'deldata', 'senddata',
   'serverlist', 'rolepick', 'list', 'untimeout', 'unban', 'queue', 'player',
   'customise',
-  'sb', 'rr', 'voicemaster',
+  'sb', 'rr', 'voicemaster', 'hp',
 ] as const;
 
 (function assertNoCustomIdPrefixCollisions(): void {
@@ -130,6 +132,12 @@ export async function execute(interaction: any, client: LevitateClient): Promise
         await interaction.reply(payload).catch((): null => null);
       }
     }
+    return;
+  }
+
+  // Honeypot configuration panel (channel/action/message selectors).
+  if (typeof interaction.customId === 'string' && interaction.customId.startsWith('hp:') && !interaction.isModalSubmit?.()) {
+    await handleHoneypotInteraction(interaction, client);
     return;
   }
 
@@ -223,6 +231,14 @@ export async function execute(interaction: any, client: LevitateClient): Promise
       return;
     }
 
+    if (client.db) {
+      const disabled = await client.db.getDisabledCommand(interaction.commandName).catch((): null => null);
+      if (disabled) {
+        await sendWarning({ interaction }, `${interaction.commandName} has been disabled by the developer. Reason: ${disabled.reason}`).catch((): null => null);
+        return;
+      }
+    }
+
     // Build a readable string of slash options for the webhook log
     const slashArgs: string[] = [];
     if (interaction.options && interaction.options.data) {
@@ -238,7 +254,13 @@ export async function execute(interaction: any, client: LevitateClient): Promise
     }, null, interaction.channelId);
 
     try {
-      await command.slashExecute(interaction, client);
+      await command.slashExecute(
+        withDeveloperPermissionBypass(
+          interaction,
+          developers.some(([, id]: [string, string]) => id === interaction.user.id),
+        ),
+        client,
+      );
       client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

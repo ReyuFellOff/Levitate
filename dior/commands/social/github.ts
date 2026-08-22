@@ -10,7 +10,7 @@ import { fetchGithubProfile, GithubError } from '../../helpers/github.js';
 
 export const options = {
   name: 'github',
-  aliases: ['gh'] as string[],
+  aliases: [] as string[],
   description: 'Show a GitHub profile and recent repositories.',
   usage: 'github <username>',
   category: 'socials',

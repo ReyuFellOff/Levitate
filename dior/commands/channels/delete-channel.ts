@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/moderation/delete-channel.ts
 //
 // Delete a channel with a confirmation prompt.
@@ -50,7 +51,7 @@ function resolveChannel(guild: any, arg: string): any | null {
 
 /** Send a plain status line directly to a channel object (no interaction/message context needed). */
 async function sendToChannel(channel: any, emoji: string, text: string): Promise<void> {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`${emoji} ${text}`),
   );
   await channel.send({

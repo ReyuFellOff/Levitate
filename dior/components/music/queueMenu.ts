@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/music/queueMenu.ts
 //
 // Components V2 renderer for the `queue` command. Renders the full session
@@ -155,7 +156,7 @@ export function buildQueuePayload(
 
   // ─── No player at all ────────────────────────────────────────────────
   if (!player || !player.queue) {
-    const container = new ContainerBuilder()
+    const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerTitle))
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
       .addTextDisplayComponents(
@@ -176,7 +177,7 @@ export function buildQueuePayload(
 
   // ─── Empty session ───────────────────────────────────────────────────
   if (!entries.length) {
-    const container = new ContainerBuilder()
+    const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerTitle))
       .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
       .addTextDisplayComponents(
@@ -223,7 +224,7 @@ export function buildQueuePayload(
   const totalDur = formatDuration(totalDurationMs(entries), true);
 
   // ─── Build container ─────────────────────────────────────────────────
-  const container = new ContainerBuilder();
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16));
 
   // Title
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(headerTitle));

@@ -43,7 +43,7 @@ export const KNOWN_SOURCE_PREFIXES = [
 /**
  * Plain-text fallback chain. Walked in order until one returns tracks.
  */
-const FALLBACK_SOURCES = ['scsearch', 'ytsearch', 'dzsearch'];
+const FALLBACK_SOURCES = ['ytmsearch', 'ytsearch', 'scsearch'];
 
 const URL_RE = /^https?:\/\//i;
 

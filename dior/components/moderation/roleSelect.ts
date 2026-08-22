@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/roleSelect.ts
 //
 // CV2 payloads and interaction handlers for the "no role given" multi-select
@@ -153,7 +154,7 @@ function buildPanel(
   ];
   if (session.eligibleRoleIds.length === 0) footerBits.push('No roles are eligible — everything is above me or above you.');
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.info} Manage Roles — ${session.targetUsername}`),
     )
@@ -191,7 +192,7 @@ export function buildRolePickerResultPayload(
 
   // Single separator after the header only — no trailing separator needed
   // for such a compact result message.
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greentick} Roles Updated — ${targetUsername}`),
     )
@@ -206,7 +207,7 @@ export function buildRolePickerResultPayload(
 }
 
 function buildCancelledPayload(targetUsername: string): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.redcross} Cancelled`),
     )

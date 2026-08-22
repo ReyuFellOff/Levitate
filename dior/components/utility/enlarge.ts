@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/enlarge.ts
 //
 // CV2 payload for the $enlarge command.
@@ -21,7 +22,7 @@ import {
  * @param imageUrl    - CDN URL of the emoji image (PNG or GIF, size=4096)
  */
 export function buildEnlargePayload(emojiLabel: string, imageUrl: string) {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`### Enlarged ${emojiLabel}`),
     )

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/info/uptime.ts
 //
 // $uptime — Shows how long the bot has been online. Short CV2 response.
@@ -24,7 +25,7 @@ function buildPayload(client: LevitateClient): object {
     ? Math.floor(client.readyTimestamp / 1000)
     : Math.floor((Date.now() - (client.uptime ?? 0)) / 1000);
 
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       `Online since <t:${ts}:R> · <t:${ts}:f>`,
     ),

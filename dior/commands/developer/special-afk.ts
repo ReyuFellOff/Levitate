@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/developer/special-afk.ts
 //
 // Developer-only AFK with a custom Since/Till time as the FIRST argument.
@@ -129,7 +130,7 @@ async function parseSpecialAfkInput(
 }
 
 function buildStatusPayload(icon: string, content: string) {
-  const container = new ContainerBuilder().addTextDisplayComponents(
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`${icon} ${content}`),
   );
   return {

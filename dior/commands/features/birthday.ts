@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/welcomer/birthday.ts
 //
 // $birthday — set your birthday, view everyone's birthday in this server, and

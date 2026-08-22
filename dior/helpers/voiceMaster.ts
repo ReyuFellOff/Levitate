@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 // xoxo/helpers/voiceMaster.ts
 //
 // Persistent join-to-create channel lifecycle. Configuration and temporary
@@ -250,7 +251,7 @@ export async function restoreVoiceMasterPanel(
     const warningContent = `${userTag} ${descriptions.voicemaster.deleteBlocked(prefix)}`;
     const warningMessage = await targetChannel.send({
       components: [
-        new ContainerBuilder().addTextDisplayComponents(
+        new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
           new TextDisplayBuilder().setContent(warningContent),
         ),
       ],

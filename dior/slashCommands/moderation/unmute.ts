@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('untimeout')
+  .setName('unmute')
   .setDescription('Remove a timeout from one or more members.')
   .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
   .addUserOption((o) =>

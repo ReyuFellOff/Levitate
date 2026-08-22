@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/music/nowPlaying.ts
 import {
   ActionRowBuilder,
@@ -99,7 +100,7 @@ export function buildNowPlayingPayload(
 
   const canvasBuffer = options?.canvasBuffer;
 
-  const mainContainer = new ContainerBuilder()
+  const mainContainer = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(headerText))
     .addSeparatorComponents(new SeparatorBuilder());
 
@@ -184,7 +185,7 @@ export function buildNowPlayingPayload(
 
 /** CV2 payload shown in place of the now-playing panel once `player:stop` is pressed. */
 export function buildPlayerStoppedPayload(trackTitle?: string): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `${emojis.stop} Playback stopped${trackTitle ? ` — **${trackTitle}**` : ''}.`,

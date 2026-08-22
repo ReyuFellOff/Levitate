@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/utility/vanityrole.ts
 //
 // Interactive panel handler for the vanity-role system.
@@ -127,11 +128,11 @@ export function buildStatusPayload(
   const isEnabled = enabled !== false;
 
   const info = [
-    `${emojis.whiteArrow2} **Status:** ${statusLine(enabled, hasConfig)}`,
-    `${emojis.whiteArrow2} **Keyword:** ${s?.status_keyword ? `\`${s.status_keyword}\`` : '*Not set*'}`,
-    `${emojis.whiteArrow2} **Role:** ${s?.status_role_id ? `<@&${s.status_role_id}>` : '*Not set*'}`,
-    `${emojis.whiteArrow2} **Channel:** ${s?.message_channel_id ? `<#${s.message_channel_id}>` : '*Not set — messages will not be sent*'}`,
-    `${emojis.whiteArrow2} **Message:** ${msgPreview(s?.status_message_text, s?.status_message_data)}`,
+    `${emojis.glowyWhiteArrow} **Status:** ${statusLine(enabled, hasConfig)}`,
+    `${emojis.glowyWhiteArrow} **Keyword:** ${s?.status_keyword ? `\`${s.status_keyword}\`` : '*Not set*'}`,
+    `${emojis.glowyWhiteArrow} **Role:** ${s?.status_role_id ? `<@&${s.status_role_id}>` : '*Not set*'}`,
+    `${emojis.glowyWhiteArrow} **Channel:** ${s?.message_channel_id ? `<#${s.message_channel_id}>` : '*Not set — messages will not be sent*'}`,
+    `${emojis.glowyWhiteArrow} **Message:** ${msgPreview(s?.status_message_text, s?.status_message_data)}`,
   ].join('\n');
 
   const btnRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -172,7 +173,7 @@ export function buildStatusPayload(
   if (s?.message_channel_id) chanSelect.setDefaultChannels(s.message_channel_id);
   const chanRow = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(chanSelect);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent('## Vanity Role — Status / Bio'))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(info))
@@ -205,10 +206,10 @@ export function buildTagPayload(
   const isEnabled = enabled !== false;
 
   const info = [
-    `${emojis.whiteArrow2} **Status:** ${statusLine(enabled, hasConfig)}`,
-    `${emojis.whiteArrow2} **Role:** ${s?.tag_role_id ? `<@&${s.tag_role_id}>` : '*Not set*'}`,
-    `${emojis.whiteArrow2} **Channel:** ${s?.message_channel_id ? `<#${s.message_channel_id}>` : '*Not set — messages will not be sent*'}`,
-    `${emojis.whiteArrow2} **Message:** ${msgPreview(s?.tag_message_text, s?.tag_message_data)}`,
+    `${emojis.glowyWhiteArrow} **Status:** ${statusLine(enabled, hasConfig)}`,
+    `${emojis.glowyWhiteArrow} **Role:** ${s?.tag_role_id ? `<@&${s.tag_role_id}>` : '*Not set*'}`,
+    `${emojis.glowyWhiteArrow} **Channel:** ${s?.message_channel_id ? `<#${s.message_channel_id}>` : '*Not set — messages will not be sent*'}`,
+    `${emojis.glowyWhiteArrow} **Message:** ${msgPreview(s?.tag_message_text, s?.tag_message_data)}`,
   ].join('\n');
 
   const btnRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -244,7 +245,7 @@ export function buildTagPayload(
   if (s?.message_channel_id) chanSelect.setDefaultChannels(s.message_channel_id);
   const chanRow = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(chanSelect);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent('## Vanity Role — Server Tag'))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(info))

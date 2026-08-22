@@ -57,7 +57,12 @@ async function handle(
   }
 
   if (!result?.tracks?.length) {
-    return sendError(errCtx, 'No results found for your query.');
+    return sendError(
+      errCtx,
+      result?.requestedSource
+        ? `No results found using the requested source (**${result.requestedSource}**). The source may be unavailable on the connected Lavalink node.`
+        : 'No results found for your query.',
+    );
   }
 
   let player: any;

@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/fun/tictactoe.ts
 //
 // CV2 payload builder + board logic for the $tictactoe game.
@@ -148,7 +149,7 @@ export function buildTicTacToePayload(opts: {
 
   const statusLine = status ?? `**${turnName}**'s turn.`;
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.blade ?? '🎮'} Tic Tac Toe`),
     )

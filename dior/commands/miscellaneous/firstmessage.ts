@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/commands/utility/firstmessage.ts
 //
 // Prefix: $firstmessage  |  $firstmsg
@@ -38,7 +39,7 @@ async function fetchFirstMessage(channel: any): Promise<any | null> {
 function buildPayload(msg: any): object {
   const unixSec = Math.floor(msg.createdTimestamp / 1000);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`## ${emojis.greenSparkles} First Message`),
     )

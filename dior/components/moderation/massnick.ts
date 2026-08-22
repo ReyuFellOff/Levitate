@@ -1,3 +1,4 @@
+import { config } from '../../config.js';
 // xoxo/components/moderation/massnick.ts
 //
 // CV2 payload builders for the $massnick command's target-type selection panel
@@ -65,7 +66,7 @@ export function buildMassNickTargetPanel(
   token: string,
   disabled = false,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Mass Nickname — ${modeLabel(mode, word)}\n` +
@@ -135,7 +136,7 @@ export function buildMassNickRoleSelectPage(
   token: string,
   disabled = false,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Mass Nickname — ${modeLabel(mode, word)}\n` +
@@ -169,7 +170,7 @@ export function buildMassNickMembersPromptPage(
   mode: MassNickMode,
   word: string | null,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Mass Nickname — ${modeLabel(mode, word)}\n` +
@@ -190,7 +191,7 @@ export function buildMassNickProgressPayload(
   word: string | null,
   targetLabel: string,
 ): any {
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Mass Nickname in Progress\n` +
@@ -215,7 +216,7 @@ export function buildMassNickResultPayload(
   if (skipped > 0) lines.push(`**${skipped}** skipped (already correct or word not found).`);
   if (failed  > 0) lines.push(`**${failed}** failed (role too high or unmanageable).`);
 
-  const container = new ContainerBuilder()
+  const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## Mass Nickname Complete\n-# Target: ${targetLabel} · operation: ${mode}${word ? ` "${word}"` : ''}`,
@@ -231,7 +232,7 @@ export function buildMassNickResultPayload(
 
 export function buildMassNickTimedOutPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Mass nickname panel timed out. No changes were made.'),
     ),
   );
@@ -239,7 +240,7 @@ export function buildMassNickTimedOutPayload(): any {
 
 export function buildMassNickCancelledPayload(): any {
   return wrap(
-    new ContainerBuilder().addTextDisplayComponents(
+    new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
       new TextDisplayBuilder().setContent('Mass nickname cancelled. No changes were made.'),
     ),
   );
