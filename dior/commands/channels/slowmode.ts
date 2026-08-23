@@ -91,19 +91,19 @@ type Result = { ok: boolean; line: string };
 async function applySlowmode(channel: any, guild: any, seconds: number): Promise<Result> {
   const botPerms = channel.permissionsFor?.(guild.members.me);
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return { ok: false, line: `<#${channel.id}> — I'm missing Manage Channels there.` };
+    return { ok: false, line: `<#${channel.id}> - I'm missing Manage Channels there.` };
 
   if (typeof channel.setRateLimitPerUser !== 'function')
-    return { ok: false, line: `<#${channel.id}> — slowmode not supported on this channel type.` };
+    return { ok: false, line: `<#${channel.id}> - slowmode not supported on this channel type.` };
 
   const ok = await channel.setRateLimitPerUser(seconds)
     .then(() => true).catch(() => false);
 
-  if (!ok) return { ok: false, line: `<#${channel.id}> — failed (Discord error).` };
+  if (!ok) return { ok: false, line: `<#${channel.id}> - failed (Discord error).` };
 
   return seconds === 0
-    ? { ok: true, line: `<#${channel.id}> — slowmode **disabled**.` }
-    : { ok: true, line: `<#${channel.id}> — slowmode set to **${fmt(seconds)}**.` };
+    ? { ok: true, line: `<#${channel.id}> - slowmode **disabled**.` }
+    : { ok: true, line: `<#${channel.id}> - slowmode set to **${fmt(seconds)}**.` };
 }
 
 async function sendResults(

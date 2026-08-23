@@ -150,6 +150,8 @@ export class PostgresDocumentStore {
       connectionString: normalizeConnectionString(options.connectionString),
       max: 10,
       idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
+      query_timeout: 15_000,
     });
   }
 

@@ -80,6 +80,15 @@ export interface SavedDataDoc {
   created_at: Date;
 }
 
+export interface ReminderDoc {
+  id:         string;
+  user_id:    string;
+  channel_id: string;
+  reason:     string;
+  remind_at:  number;
+  created_at: number;
+}
+
 export interface StickyDoc {
   guild_id:        string;
   channel_id:      string;
@@ -1236,6 +1245,35 @@ export class Database {
       .find({ guild_id: guildId })
       .sort({ created_at: 1 })
       .toArray();
+  }
+
+  // ── Reminders ─────────────────────────────────────────────────────────────
+
+  async listReminders(userId: string): Promise<ReminderDoc[]> {
+    await this.connect();
+    return this.col<ReminderDoc>('reminders').find({ user_id: userId }).sort({ created_at: 1 }).toArray();
+  }
+
+  async createReminder(reminder: ReminderDoc): Promise<void> {
+    await this.connect();
+    await this.col<ReminderDoc>('reminders').insertOne(reminder);
+  }
+
+  async deleteReminder(id: string): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<ReminderDoc>('reminders').deleteOne({ id });
+    return result.deletedCount > 0;
+  }
+
+  async deleteExpiredReminders(now: number): Promise<number> {
+    await this.connect();
+    const result = await this.col<ReminderDoc>('reminders').deleteMany({ remind_at: { $lte: now } } as any);
+    return result.deletedCount;
+  }
+
+  async listActiveReminders(): Promise<ReminderDoc[]> {
+    await this.connect();
+    return this.col<ReminderDoc>('reminders').find({ remind_at: { $gt: Date.now() } } as any).toArray();
   }
 
   // ── VoiceMaster ────────────────────────────────────────────────────────────

@@ -41,6 +41,7 @@ import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
 import { sendError } from '../statusMessages.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
+import { resolvePlaceholders, type PlaceholderContext } from '../../helpers/placeholders.js';
 
 const SAVE_NAME_MAX = 50;
 const MAX_FIELDS     = 25;
@@ -89,6 +90,7 @@ type BuilderMode = 'idle' | 'fields' | 'fieldEdit' | 'buttons' | 'send' | 'done'
 
 interface BuilderSession {
   authorId:   string;
+  placeholderContext: PlaceholderContext;
   embed:      EmbedState;
   mode:       BuilderMode;
   activeIdx:  number | null; // field being edited, if any
@@ -158,11 +160,17 @@ function isValidUrl(raw: string): boolean {
 // Build the live EmbedBuilder from state
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildEmbed(e: EmbedState): EmbedBuilder {
+function buildEmbed(e: EmbedState, placeholderContext?: PlaceholderContext): EmbedBuilder {
+  const resolve = (value: string): string => placeholderContext
+    ? resolvePlaceholders(value, placeholderContext)
+    : value;
   const eb = new EmbedBuilder();
-  if (e.title) eb.setTitle(e.title.slice(0, 256));
-  if (e.description) eb.setDescription(e.description.slice(0, 4096));
-  if (e.url && e.title) eb.setURL(e.url); // Discord requires a title for the URL to render as a link
+  const title = e.title ? resolve(e.title) : '';
+  const description = e.description ? resolve(e.description) : '';
+  const url = e.url ? resolve(e.url) : '';
+  if (title) eb.setTitle(title.slice(0, 256));
+  if (description) eb.setDescription(description.slice(0, 4096));
+  if (url && title && isValidUrl(url)) eb.setURL(url); // Discord requires a title for the URL to render as a link
   eb.setColor(e.color !== null ? e.color : DEFAULT_COLOR); // always colored — lavender by default
 
   // Discord rejects an embed that has color but nothing else (empty form
@@ -170,33 +178,68 @@ function buildEmbed(e: EmbedState): EmbedBuilder {
   // looking visually empty.
   if (isEmpty(e)) eb.setDescription('\u200b');
 
-  if (e.authorName) {
-    eb.setAuthor({
-      name: e.authorName.slice(0, 256),
-      iconURL: e.authorIcon ?? undefined,
-      url: e.authorUrl ?? undefined,
-    });
+  const authorName = e.authorName ? resolve(e.authorName) : '';
+  const authorIcon = e.authorIcon ? resolve(e.authorIcon) : '';
+  const authorUrl = e.authorUrl ? resolve(e.authorUrl) : '';
+  if (authorName) {
+    const author: { name: string; iconURL?: string; url?: string } = { name: authorName.slice(0, 256) };
+    if (authorIcon && isValidUrl(authorIcon)) author.iconURL = authorIcon;
+    if (authorUrl && isValidUrl(authorUrl)) author.url = authorUrl;
+    eb.setAuthor(author);
   }
 
-  if (e.footerText) {
-    eb.setFooter({
-      text: e.footerText.slice(0, 2048),
-      iconURL: e.footerIcon ?? undefined,
-    });
+  const footerText = e.footerText ? resolve(e.footerText) : '';
+  const footerIcon = e.footerIcon ? resolve(e.footerIcon) : '';
+  if (footerText) {
+    const footer: { text: string; iconURL?: string } = { text: footerText.slice(0, 2048) };
+    if (footerIcon && isValidUrl(footerIcon)) footer.iconURL = footerIcon;
+    eb.setFooter(footer);
   }
 
-  if (e.image) eb.setImage(e.image);
-  if (e.thumbnail) eb.setThumbnail(e.thumbnail);
+  const image = e.image ? resolve(e.image) : '';
+  const thumbnail = e.thumbnail ? resolve(e.thumbnail) : '';
+  if (image && isValidUrl(image)) eb.setImage(image);
+  if (thumbnail && isValidUrl(thumbnail)) eb.setThumbnail(thumbnail);
 
   if (e.fields.length > 0) {
     eb.addFields(e.fields.map(f => ({
-      name: f.name.slice(0, 256) || '\u200b',
-      value: f.value.slice(0, 1024) || '\u200b',
+      name: resolve(f.name).slice(0, 256) || '\u200b',
+      value: resolve(f.value).slice(0, 1024) || '\u200b',
       inline: f.inline,
     })));
   }
 
   return eb;
+}
+
+function buildRawEmbedJson(e: EmbedState): Record<string, any> {
+  const embed: Record<string, any> = {
+    color: e.color !== null ? e.color : DEFAULT_COLOR,
+  };
+
+  if (e.title) embed.title = e.title.slice(0, 256);
+  if (e.description) embed.description = e.description.slice(0, 4096);
+  if (e.url && e.title) embed.url = e.url;
+  if (e.authorName) {
+    embed.author = { name: e.authorName.slice(0, 256) };
+    if (e.authorIcon) embed.author.icon_url = e.authorIcon;
+    if (e.authorUrl) embed.author.url = e.authorUrl;
+  }
+  if (e.footerText) {
+    embed.footer = { text: e.footerText.slice(0, 2048) };
+    if (e.footerIcon) embed.footer.icon_url = e.footerIcon;
+  }
+  if (e.image) embed.image = { url: e.image };
+  if (e.thumbnail) embed.thumbnail = { url: e.thumbnail };
+  if (e.fields.length > 0) {
+    embed.fields = e.fields.map((field) => ({
+      name: field.name.slice(0, 256) || '\u200b',
+      value: field.value.slice(0, 1024) || '\u200b',
+      inline: field.inline,
+    }));
+  }
+
+  return embed;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -221,7 +264,6 @@ function fieldOptions(e: EmbedState): StringSelectMenuOptionBuilder[] {
 function ctrlIdle(s: BuilderSession): ActionRowBuilder<ButtonBuilder>[] {
   const e   = s.embed;
   const has = !isFullyEmpty(e);
-  const hasEmbedData = s.savedItems.length > 0;
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId('eb:basic').setLabel('Basic Info').setStyle(ButtonStyle.Primary),
@@ -230,11 +272,9 @@ function ctrlIdle(s: BuilderSession): ActionRowBuilder<ButtonBuilder>[] {
       new ButtonBuilder().setCustomId('eb:images').setLabel('Images').setStyle(ButtonStyle.Secondary),
     ),
     new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId('eb:fields').setLabel(`Fields (${e.fields.length}/${MAX_FIELDS})`).setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('eb:buttons').setLabel(`Buttons (${e.buttons.length}/${MAX_BUTTONS})`).setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('eb:send').setLabel('Send').setStyle(ButtonStyle.Success).setDisabled(!has),
       new ButtonBuilder().setCustomId('eb:savedata').setLabel('Save as Data').setStyle(ButtonStyle.Secondary).setDisabled(!has),
-      new ButtonBuilder().setCustomId('eb:loaddata').setLabel('Load Data').setStyle(ButtonStyle.Secondary).setDisabled(!hasEmbedData),
     ),
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId('eb:clear').setLabel('Clear All').setStyle(ButtonStyle.Danger).setDisabled(!has),
@@ -333,11 +373,17 @@ function ctrlButtons(e: EmbedState): ActionRowBuilder<any>[] {
 }
 
 /** Builds the live Link-button row shown under the embed preview, or null if there are none. */
-function buildButtonsRow(e: EmbedState): ActionRowBuilder<ButtonBuilder> | null {
+function buildButtonsRow(e: EmbedState, placeholderContext?: PlaceholderContext): ActionRowBuilder<ButtonBuilder> | null {
   if (e.buttons.length === 0) return null;
+  const resolve = (value: string): string => placeholderContext
+    ? resolvePlaceholders(value, placeholderContext)
+    : value;
   const row = new ActionRowBuilder<ButtonBuilder>();
   for (const b of e.buttons.slice(0, MAX_BUTTONS)) {
-    const btn = new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(b.url).setLabel(b.label.slice(0, 80) || 'Link');
+    const btn = new ButtonBuilder()
+      .setStyle(ButtonStyle.Link)
+      .setURL(resolve(b.url))
+      .setLabel(resolve(b.label).slice(0, 80) || 'Link');
     if (b.emoji) btn.setEmoji(b.emoji);
     row.addComponents(btn);
   }
@@ -422,7 +468,7 @@ function payload(s: BuilderSession, expired = false, doneWhere?: string): any {
     };
   }
 
-  const eb = buildEmbed(s.embed);
+  const eb = buildEmbed(s.embed, s.placeholderContext);
   const rows =
     s.mode === 'fields'   ? ctrlFields(s.embed) :
     s.mode === 'buttons'  ? ctrlButtons(s.embed) :
@@ -434,7 +480,7 @@ function payload(s: BuilderSession, expired = false, doneWhere?: string): any {
   // The live link-button preview rides along under whichever control rows
   // are showing, except while actively managing the button list itself
   // (ctrlButtons already surfaces them via the edit/remove select menus).
-  const buttonRow = s.mode === 'buttons' ? null : buildButtonsRow(s.embed);
+  const buttonRow = s.mode === 'buttons' ? null : buildButtonsRow(s.embed, s.placeholderContext);
   const allRows = buttonRow ? [...rows, buttonRow] : rows;
 
   const line = s.mode === 'done' && doneWhere
@@ -667,6 +713,14 @@ function tv(fields: any, id: string): string {
   catch { return ''; }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // awaitModal — identical pattern to container.ts / autoresponder.ts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -701,7 +755,7 @@ function awaitModal(
 
 async function emit(s: BuilderSession, target: any): Promise<boolean> {
   const eb = buildEmbed(s.embed);
-  const buttonRow = buildButtonsRow(s.embed);
+  const buttonRow = buildButtonsRow(s.embed, s.placeholderContext);
   try {
     await target.send({
       embeds: [eb],
@@ -753,13 +807,22 @@ async function doSaveAsData(
     return;
   }
 
-  await submit.deferReply({ flags: MessageFlags.Ephemeral }).catch((): null => null);
+  try {
+    await submit.deferReply({ flags: MessageFlags.Ephemeral });
+  } catch {
+    await submit.reply({
+      content: 'I could not acknowledge the save request. Please click **Save as Data** and try again.',
+      flags: MessageFlags.Ephemeral,
+    }).catch((): null => null);
+    return;
+  }
 
+  try {
   const guildId = message.guild.id;
 
   let exists: boolean;
   try {
-    exists = await client.db!.savedDataNameExists(guildId, name);
+    exists = await withTimeout(client.db!.savedDataNameExists(guildId, name), 15_000, 'Database check');
   } catch {
     await submit.editReply({ content: 'Database error while checking name availability. Please try again.' }).catch((): null => null);
     return;
@@ -773,7 +836,7 @@ async function doSaveAsData(
   const storageChannelId = config.savedDataChannelId?.trim();
   const storageChannel: any = storageChannelId
     ? (client.channels.cache.get(storageChannelId) ??
-       await client.channels.fetch(storageChannelId).catch((): null => null))
+      await withTimeout(client.channels.fetch(storageChannelId), 15_000, 'Storage channel lookup').catch((): null => null))
     : null;
 
   if (!storageChannel || typeof storageChannel.send !== 'function') {
@@ -781,10 +844,19 @@ async function doSaveAsData(
     return;
   }
 
-  const eb = buildEmbed(s.embed);
-  const buttonRow = buildButtonsRow(s.embed);
-  const savePayload: any = { embeds: [eb.toJSON()] };
-  if (buttonRow) savePayload.components = [buttonRow.toJSON()];
+  const savePayload: any = { embeds: [buildRawEmbedJson(s.embed)] };
+  if (s.embed.buttons.length > 0) {
+    savePayload.components = [{
+      type: 1,
+      components: s.embed.buttons.slice(0, MAX_BUTTONS).map((button) => ({
+        type: 2,
+        style: 5,
+        label: button.label.slice(0, 80) || 'Link',
+        url: button.url,
+        ...(button.emoji ? { emoji: { name: button.emoji } } : {}),
+      })),
+    }];
+  }
   const rawJson = JSON.stringify(savePayload, null, 2);
 
   const safeFileName = name
@@ -803,29 +875,37 @@ async function doSaveAsData(
     `**Type:** Embed\n` +
     `**Time:** <t:${unixSec}:F> (<t:${unixSec}:R>)`;
 
-  const storageMsg = await storageChannel.send({
+  const storageMsg: any = await withTimeout<any>(storageChannel.send({
     content: metaText,
     files: [attachment],
     allowedMentions: { parse: [] },
-  }).catch((): null => null);
+  }), 15_000, 'Storage message').catch((): null => null);
 
   if (!storageMsg) {
     await submit.editReply({ content: 'Failed to post the payload to the storage channel.' }).catch((): null => null);
     return;
   }
 
-  await storageChannel.send({
+  void withTimeout(storageChannel.send({
     content: config.dataDivider,
     allowedMentions: { parse: [] },
-  }).catch((): null => null);
+  }), 15_000, 'Storage divider').catch((): null => null);
 
-  const saveResult = await client.db!.createSavedData({
-    name,
-    guildId,
-    messageId: storageMsg.id,
-    type: 'embed',
-    createdBy: s.authorId,
-  });
+  let saveResult: true | 'duplicate' | false;
+  try {
+    saveResult = await withTimeout(client.db!.createSavedData({
+      name,
+      guildId,
+      messageId: storageMsg.id,
+      type: 'embed',
+      createdBy: s.authorId,
+    }), 15_000, 'Database write');
+  } catch {
+    await submit.editReply({
+      content: `The payload was posted (message ID \`${storageMsg.id}\`) but the database write failed.`,
+    }).catch((): null => null);
+    return;
+  }
 
   if (saveResult === 'duplicate') {
     await submit.editReply({ content: `A name conflict was detected while saving (message ID \`${storageMsg.id}\` was posted, but not recorded). Pick a different name and try again.` }).catch((): null => null);
@@ -838,6 +918,12 @@ async function doSaveAsData(
   }
 
   await submit.editReply({ content: `${emojis.blacktick} Saved as \`${name}\`. Use \`${client.config.prefix}send-data\` or \`${client.config.prefix}view-data\` to send it later.` }).catch((): null => null);
+  } catch (error: any) {
+    console.error(`[embed builder] Save as Data failed: ${error?.message ?? error}`);
+    await submit.editReply({
+      content: `The embed could not be saved: ${error?.message ?? 'unknown error'}`,
+    }).catch((): null => null);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -908,6 +994,7 @@ export async function startEmbedBuilderSession(
   message:  any,
   client:   LevitateClient,
   authorId: string,
+  initialMode: BuilderMode = 'idle',
 ): Promise<void> {
   // Pre-fetch saved embeds for this guild so the Load Data button state is
   // correct on first render without a round-trip after opening.
@@ -915,11 +1002,28 @@ export async function startEmbedBuilderSession(
     ? await client.db.listSavedData(message.guild.id).catch((): any[] => [])
     : [];
   const embedItems = allItems.filter((item: any) => item.type === 'embed');
+  if (initialMode === 'loaddata' && embedItems.length === 0) {
+    await sendError({ message }, 'No saved embeds were found in this server. Save an embed first, then use `embed edit`.');
+    return;
+  }
+  const birthday = client.db
+    ? await client.db.getBirthday(authorId).catch((): null => null)
+    : null;
 
   const s: BuilderSession = {
     authorId,
+    placeholderContext: {
+      user: message.author,
+      member: message.member ?? message.guild.members?.cache?.get(authorId) ?? null,
+      channel: message.channel,
+      guild: message.guild,
+      client,
+      birthdayDay: birthday?.day ?? null,
+      birthdayMonth: birthday?.month ?? null,
+      birthdayYear: birthday?.year ?? null,
+    },
     embed:      freshEmbed(),
-    mode:       'idle',
+    mode:       initialMode,
     activeIdx:  null,
     client,
     savedItems: embedItems,
@@ -1026,11 +1130,13 @@ export async function startEmbedBuilderSession(
 
         const authorIconRaw = tv(submit.fields, 'icon');
         const authorUrlRaw = tv(submit.fields, 'url');
-        if (authorIconRaw && !isValidUrl(authorIconRaw)) {
+        const resolvedAuthorIcon = resolvePlaceholders(authorIconRaw, s.placeholderContext);
+        const resolvedAuthorUrl = resolvePlaceholders(authorUrlRaw, s.placeholderContext);
+        if (authorIconRaw && !isValidUrl(resolvedAuthorIcon)) {
           await submit.reply({ content: 'Invalid author icon URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
-        if (authorUrlRaw && !isValidUrl(authorUrlRaw)) {
+        if (authorUrlRaw && !isValidUrl(resolvedAuthorUrl)) {
           await submit.reply({ content: 'Invalid author URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
@@ -1051,7 +1157,7 @@ export async function startEmbedBuilderSession(
         if (!submit) return;
 
         const footerIconRaw = tv(submit.fields, 'icon');
-        if (footerIconRaw && !isValidUrl(footerIconRaw)) {
+        if (footerIconRaw && !isValidUrl(resolvePlaceholders(footerIconRaw, s.placeholderContext))) {
           await submit.reply({ content: 'Invalid footer icon URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
@@ -1072,11 +1178,11 @@ export async function startEmbedBuilderSession(
 
         const imageRaw = tv(submit.fields, 'image');
         const thumbRaw = tv(submit.fields, 'thumbnail');
-        if (imageRaw && !isValidUrl(imageRaw)) {
+        if (imageRaw && !isValidUrl(resolvePlaceholders(imageRaw, s.placeholderContext))) {
           await submit.reply({ content: 'Invalid image URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
-        if (thumbRaw && !isValidUrl(thumbRaw)) {
+        if (thumbRaw && !isValidUrl(resolvePlaceholders(thumbRaw, s.placeholderContext))) {
           await submit.reply({ content: 'Invalid thumbnail URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
@@ -1162,7 +1268,7 @@ export async function startEmbedBuilderSession(
           await submit.reply({ content: 'Button label and URL cannot be empty.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
-        if (!isValidUrl(url)) {
+        if (!isValidUrl(resolvePlaceholders(url, s.placeholderContext))) {
           await submit.reply({ content: 'Invalid button URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
@@ -1192,7 +1298,7 @@ export async function startEmbedBuilderSession(
           await submit.reply({ content: 'Button label and URL cannot be empty.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }
-        if (!isValidUrl(url)) {
+        if (!isValidUrl(resolvePlaceholders(url, s.placeholderContext))) {
           await submit.reply({ content: 'Invalid button URL — it must start with `http://` or `https://`.', flags: MessageFlags.Ephemeral }).catch((): null => null);
           return;
         }

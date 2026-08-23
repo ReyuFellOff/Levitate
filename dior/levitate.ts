@@ -32,6 +32,7 @@ import config, { botName } from './config.js';
 import { StatusManager } from './structures/StatusManager.js';
 import { reapplyAllNameStyles } from './helpers/nameStyle.js';
 import { migrateVoiceMasterSetups } from './helpers/voiceMaster.js';
+import { initializeReminders } from './helpers/reminderStore.js';
 
 // ── Global unhandled-rejection safety net ──────────────────────────────────
 // Certain third-party libraries (Shoukaku/Kazagumo) fire off internal async
@@ -83,6 +84,8 @@ async function bootstrap(): Promise<void> {
 
   console.log(`[CLIENT] Logged in as ${client.user?.tag}`);
   console.log(`[CLIENT] Cluster ID: ${client.cluster.id}`);
+
+  await initializeReminders(client);
 
   // ── [HOST] ──────────────────────────────────────────────────────────────────
   await getHostingServiceIP();

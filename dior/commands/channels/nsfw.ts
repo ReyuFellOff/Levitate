@@ -39,19 +39,19 @@ type Result = { ok: boolean; line: string };
 
 async function applyNsfw(channel: any, guild: any): Promise<Result> {
   if (!channel.isTextBased?.() || channel.isThread?.())
-    return { ok: false, line: `<#${channel.id}> — NSFW can only be toggled on text channels.` };
+    return { ok: false, line: `<#${channel.id}> - NSFW can only be toggled on text channels.` };
 
   const botPerms = channel.permissionsFor?.(guild.members.me);
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return { ok: false, line: `<#${channel.id}> — I'm missing Manage Channels there.` };
+    return { ok: false, line: `<#${channel.id}> - I'm missing Manage Channels there.` };
 
   const newNsfw = !channel.nsfw;
   const ok = await channel.setNSFW(newNsfw, 'NSFW toggled.')
     .then(() => true).catch(() => false);
 
   return ok
-    ? { ok: true,  line: `<#${channel.id}> — now **${newNsfw ? 'NSFW' : 'SFW'}**.` }
-    : { ok: false, line: `<#${channel.id}> — failed (Discord error).` };
+    ? { ok: true,  line: `<#${channel.id}> - now **${newNsfw ? 'NSFW' : 'SFW'}**.` }
+    : { ok: false, line: `<#${channel.id}> - failed (Discord error).` };
 }
 
 async function sendResults(

@@ -103,6 +103,8 @@ export const emojis = {
   smallYellowStar: '<a:smallYellowStar:1537433842544148650>',
   silveryButterfly: '<:silveryButterfly:1537469815550378118>',
   youtubeEmojiForYoutubeCommand: '<:youtube:1538866982630465557>',
+  remindIcon:   '<:remindIcon:1541079180718899320>',
+  workingClock: '<a:workingClock:1541079620646871110>',
 
   // Honeypot
   honeypot:       '🍯',

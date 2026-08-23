@@ -3,17 +3,17 @@ import { config } from '../../config.js';
 //
 // Delete a channel with a confirmation prompt.
 //
-// Prefix:  $delete-channel [#channel | channelId]
+// Prefix:  $delete-channel [#channel | channelId] ...
 // Slash:   /delete-channel channel:[channel]
 //
 // If no channel is given, deletes the current channel.
 // Requires ManageChannels for both the invoker and the bot.
-// Shows a 30-second button confirmation before deleting.
+// Shows one 30-second button confirmation before deleting all targets.
 //
 // Result-message strategy after the channel is deleted:
-//   • Deleting the CURRENT channel — the whole channel disappears, so no
+//   • Deleting the CURRENT channel - the whole channel disappears, so no
 //     reply is sent (the confirmation message vanishes with it).
-//   • Deleting a DIFFERENT channel — we use channel.send() on the invoking
+//   • Deleting a DIFFERENT channel - we use channel.send() on the invoking
 //     channel directly, since the interaction reply / command message may
 //     already be deleted by the time we reach that point.
 
@@ -34,7 +34,7 @@ export const options = {
   aliases:     ['deletechannel', 'delchannel'] as string[],
   description: 'Delete a channel after confirmation.',
   usage: `delete-channel
-delete-channel [#channel | channelId]`,
+  delete-channel [#channel | channelId] [#channel2 | channelId2] ...`,
   category: 'channels',
   owner:    false,
   cooldown: 5,
@@ -48,6 +48,8 @@ function resolveChannel(guild: any, arg: string): any | null {
   if (!m) return null;
   return guild.channels.cache.get(m[1]) ?? null;
 }
+
+const CHANNEL_REF = /^(?:<#\d+>|\d{17,20})$/;
 
 /** Send a plain status line directly to a channel object (no interaction/message context needed). */
 async function sendToChannel(channel: any, emoji: string, text: string): Promise<void> {
@@ -65,13 +67,14 @@ async function sendToChannel(channel: any, emoji: string, text: string): Promise
 
 async function askConfirmation(
   message:        any,
-  target:         any,
+  targets:        any[],
   invokeChannel:  any,   // the channel the command was run in
 ): Promise<void> {
   const confirmId     = `delch:confirm:${message.id}`;
   const cancelId      = `delch:cancel:${message.id}`;
-  const isSameChannel = target.id === invokeChannel.id;
-  const description   = `Are you sure you want to **permanently delete** <#${target.id}> (\`${target.name}\`)?\n-# This action cannot be undone.`;
+  const description = targets.length === 1
+    ? `Are you sure you want to **permanently delete** <#${targets[0].id}> (\`${targets[0].name}\`)?\n-# This action cannot be undone.`
+    : `Are you sure you want to **permanently delete** these **${targets.length}** channels: ${targets.map((target) => `<#${target.id}>`).join(', ')}?\n-# This action cannot be undone.`;
 
   const confirmMsg = await invokeChannel.send(
     buildActionConfirmPayload(confirmId, cancelId, TITLE, description),
@@ -95,21 +98,21 @@ async function askConfirmation(
       await confirmMsg.delete().catch((): null => null);
       await message.delete().catch((): null => null);
 
-      const channelName = target.name as string;
-      const ok = await target.delete('Channel deleted by moderator.').then(() => true).catch((err: any) => {
-        console.error(`[delete-channel] failed to delete #${channelName} (${target.id}): ${err?.message ?? err}`);
-        return false;
-      });
-
-      // Only report result if we're still in a live channel.
-      if (!isSameChannel) {
-        if (ok) {
-          await sendToChannel(invokeChannel, emojis.blacktick, `Channel \`${channelName}\` has been **deleted**.`);
-        } else {
-          await sendToChannel(invokeChannel, emojis.redcross, `Failed to delete <#${target.id}>.`);
-        }
+      const results: string[] = [];
+      for (const target of targets) {
+        const channelName = target.name as string;
+        const ok = await target.delete('Channel deleted by moderator.').then(() => true).catch((err: any) => {
+          console.error(`[delete-channel] failed to delete #${channelName} (${target.id}): ${err?.message ?? err}`);
+          return false;
+        });
+        results.push(ok ? `${emojis.blacktick} \`${channelName}\` deleted.` : `${emojis.redcross} Failed to delete <#${target.id}>.`);
       }
-      // If isSameChannel, the whole channel is gone — no reply possible or needed.
+
+      // The invoking channel may have been one of the deleted targets.
+      if (!targets.some((target) => target.id === invokeChannel.id)) {
+        await sendToChannel(invokeChannel, emojis.blacktick, results.join('\n'));
+      }
+      // If isSameChannel, the whole channel is gone - no reply possible or needed.
     } else {
       await confirmMsg
         .edit(buildActionCancelledPayload(confirmId, cancelId, TITLE, description))
@@ -133,13 +136,14 @@ async function askConfirmation(
 
 async function askConfirmationSlash(
   interaction:   any,
-  target:        any,
+  targets:        any[],
   invokeChannel: any,
 ): Promise<void> {
   const confirmId     = `delch:confirm:${interaction.id}`;
   const cancelId      = `delch:cancel:${interaction.id}`;
-  const isSameChannel = target.id === invokeChannel?.id;
-  const description   = `Are you sure you want to **permanently delete** <#${target.id}> (\`${target.name}\`)?\n-# This action cannot be undone.`;
+  const description = targets.length === 1
+    ? `Are you sure you want to **permanently delete** <#${targets[0].id}> (\`${targets[0].name}\`)?\n-# This action cannot be undone.`
+    : `Are you sure you want to **permanently delete** these **${targets.length}** channels: ${targets.map((target) => `<#${target.id}>`).join(', ')}?\n-# This action cannot be undone.`;
 
   await interaction.editReply(
     buildActionConfirmPayload(confirmId, cancelId, TITLE, description),
@@ -164,18 +168,18 @@ async function askConfirmationSlash(
       // doesn't show a "message could not be found" ghost.
       await interaction.deleteReply().catch((): null => null);
 
-      const channelName = target.name as string;
-      const ok = await target.delete('Channel deleted by moderator.').then(() => true).catch((err: any) => {
-        console.error(`[delete-channel] failed to delete #${channelName} (${target.id}): ${err?.message ?? err}`);
-        return false;
-      });
+      const results: string[] = [];
+      for (const target of targets) {
+        const channelName = target.name as string;
+        const ok = await target.delete('Channel deleted by moderator.').then(() => true).catch((err: any) => {
+          console.error(`[delete-channel] failed to delete #${channelName} (${target.id}): ${err?.message ?? err}`);
+          return false;
+        });
+        results.push(ok ? `${emojis.blacktick} \`${channelName}\` deleted.` : `${emojis.redcross} Failed to delete <#${target.id}>.`);
+      }
 
-      if (!isSameChannel && invokeChannel) {
-        if (ok) {
-          await sendToChannel(invokeChannel, emojis.blacktick, `Channel \`${channelName}\` has been **deleted**.`);
-        } else {
-          await sendToChannel(invokeChannel, emojis.redcross, `Failed to delete <#${target.id}>.`);
-        }
+      if (invokeChannel && !targets.some((target) => target.id === invokeChannel.id)) {
+        await sendToChannel(invokeChannel, emojis.blacktick, results.join('\n'));
       }
     } else {
       await i
@@ -208,18 +212,32 @@ export async function prefixExecute(
   if (!invokerPerms?.has?.(PermissionFlagsBits.ManageChannels))
     return sendError(ctx, 'You need the **Manage Channels** permission to delete channels.');
 
-  let target = message.channel;
-  if (args[0]) {
-    const resolved = resolveChannel(guild, args[0]);
-    if (resolved) target = resolved;
+  const seen = new Set<string>();
+  const targets: any[] = [];
+  const badRefs: string[] = [];
+  for (const arg of args) {
+    if (!CHANNEL_REF.test(arg)) {
+      badRefs.push(arg);
+      continue;
+    }
+    const resolved = resolveChannel(guild, arg);
+    if (!resolved) badRefs.push(arg);
+    else if (!seen.has(resolved.id)) {
+      seen.add(resolved.id);
+      targets.push(resolved);
+    }
   }
 
-  const botMember = guild.members.me;
-  const botPerms  = target.permissionsFor?.(botMember);
-  if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return sendError(ctx, `I need the **Manage Channels** permission in <#${target.id}> to delete it.`);
+  if (badRefs.length > 0)
+    return sendError(ctx, `Channel${badRefs.length > 1 ? 's' : ''} not found: ${badRefs.join(', ')}`);
+  if (targets.length === 0) targets.push(message.channel);
 
-  return askConfirmation(message, target, message.channel);
+  const botMember = guild.members.me;
+  const missing = targets.find((target) => !target.permissionsFor?.(botMember)?.has?.(PermissionFlagsBits.ManageChannels));
+  if (missing)
+    return sendError(ctx, `I need the **Manage Channels** permission in <#${missing.id}> to delete it.`);
+
+  return askConfirmation(message, targets, message.channel);
 }
 
 export async function slashExecute(
@@ -235,12 +253,21 @@ export async function slashExecute(
   if (!invokerMember?.permissions?.has?.(PermissionFlagsBits.ManageChannels))
     return sendError(ctx, 'You need the **Manage Channels** permission to delete channels.');
 
-  const target = interaction.options.getChannel('channel') ?? interaction.channel;
+  const seen = new Set<string>();
+  const targets: any[] = [];
+  for (const name of ['channel', 'channel2', 'channel3', 'channel4', 'channel5']) {
+    const target = interaction.options.getChannel(name);
+    if (target && !seen.has(target.id)) {
+      seen.add(target.id);
+      targets.push(target);
+    }
+  }
+  if (targets.length === 0) targets.push(interaction.channel);
 
   const botMember = guild.members.me;
-  const botPerms  = target.permissionsFor?.(botMember);
-  if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return sendError(ctx, `I need the **Manage Channels** permission in <#${target.id}> to delete it.`);
+  const missing = targets.find((target) => !target.permissionsFor?.(botMember)?.has?.(PermissionFlagsBits.ManageChannels));
+  if (missing)
+    return sendError(ctx, `I need the **Manage Channels** permission in <#${missing.id}> to delete it.`);
 
-  return askConfirmationSlash(interaction, target, interaction.channel);
+  return askConfirmationSlash(interaction, targets, interaction.channel);
 }

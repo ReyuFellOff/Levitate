@@ -8,7 +8,7 @@ import { config } from '../../config.js';
 //
 // If no channels are given, hides the current channel.
 // Requires ManageChannels for both the invoker and the bot.
-// Threads are excluded — they inherit their parent's visibility.
+// Threads are excluded - they inherit their parent's visibility.
 
 import {
   PermissionFlagsBits,
@@ -41,23 +41,23 @@ type Result = { ok: boolean; line: string };
 
 async function applyHide(channel: any, guild: any): Promise<Result> {
   if (channel.isThread?.())
-    return { ok: false, line: `<#${channel.id}> — threads can't be hidden.` };
+    return { ok: false, line: `<#${channel.id}> - threads can't be hidden.` };
 
   const botPerms = channel.permissionsFor?.(guild.members.me);
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return { ok: false, line: `<#${channel.id}> — I'm missing Manage Channels there.` };
+    return { ok: false, line: `<#${channel.id}> - I'm missing Manage Channels there.` };
 
   const everyoneOverwrite = channel.permissionOverwrites?.cache?.get(guild.roles.everyone.id);
   if (everyoneOverwrite?.deny?.has?.(PermissionFlagsBits.ViewChannel))
-    return { ok: false, line: `<#${channel.id}> — already hidden.` };
+    return { ok: false, line: `<#${channel.id}> - already hidden.` };
 
   const ok = await channel.permissionOverwrites
     .edit(guild.roles.everyone, { ViewChannel: false }, { reason: 'Channel hidden.' })
     .then(() => true).catch(() => false);
 
   return ok
-    ? { ok: true,  line: `<#${channel.id}> — hidden from @everyone.` }
-    : { ok: false, line: `<#${channel.id}> — failed (Discord error).` };
+    ? { ok: true,  line: `<#${channel.id}> - hidden from @everyone.` }
+    : { ok: false, line: `<#${channel.id}> - failed (Discord error).` };
 }
 
 async function sendResults(

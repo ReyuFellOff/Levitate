@@ -58,7 +58,7 @@ async function nukeOne(
 ): Promise<NukeResult> {
   const botPerms = channel.permissionsFor?.(guild.members.me);
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return { ok: false, line: `#${channel.name} — I'm missing Manage Channels there.` };
+    return { ok: false, line: `#${channel.name} - I'm missing Manage Channels there.` };
 
   const snapshot = {
     name:     channel.name  as string,
@@ -82,7 +82,7 @@ async function nukeOne(
     .delete(`Channel nuked by ${invokerUsername}`)
     .then(() => true).catch(() => false);
   if (!deleted)
-    return { ok: false, line: `#${snapshot.name} — failed to delete.` };
+    return { ok: false, line: `#${snapshot.name} - failed to delete.` };
 
   const newChannel = await guild.channels
     .create({
@@ -99,7 +99,7 @@ async function nukeOne(
     .catch((): null => null);
 
   if (!newChannel)
-    return { ok: false, line: `#${snapshot.name} — deleted but failed to recreate.` };
+    return { ok: false, line: `#${snapshot.name} - deleted but failed to recreate.` };
 
   // Post the success notice inside the freshly created channel.
   await sendSuccess(
@@ -107,7 +107,7 @@ async function nukeOne(
     `This channel was nuked by **${invokerUsername}** and recreated fresh.`,
   );
 
-  return { ok: true, line: `#${snapshot.name} — nuked and recreated.` };
+  return { ok: true, line: `#${snapshot.name} - nuked and recreated.` };
 }
 
 export async function prefixExecute(
@@ -186,7 +186,7 @@ async function runNuke(message: any, guild: any, targets: any[]): Promise<void> 
   const invokeChannelId  = message.channel.id as string;
   const invokeChannel    = message.channel;
 
-  // Process sequentially — parallel channel deletes + recreates can race.
+  // Process sequentially - parallel channel deletes + recreates can race.
   const results: NukeResult[] = [];
   for (const ch of targets) {
     results.push(await nukeOne(ch, guild, message.author.username));
@@ -197,7 +197,7 @@ async function runNuke(message: any, guild: any, targets: any[]): Promise<void> 
   const failures = results.filter(r => !r.ok);
   if (failures.length === 0) return; // all success notices went to the new channels
 
-  // If the invoking channel was nuked successfully it's gone — can't report there.
+  // If the invoking channel was nuked successfully it's gone - can't report there.
   // Only send if the channel still exists (i.e. was not successfully nuked).
   const invokeWasNuked = targets.some(
     t => t.id === invokeChannelId && results[targets.indexOf(t)]?.ok,

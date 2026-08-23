@@ -349,7 +349,7 @@ export function buildListPayload(session: ListSession, disabled = false): any {
   const { items, listType, page, detailId } = session;
 
   if (detailId) {
-    const item = items.find((i: any) => i.id === detailId);
+    const item = items.find((i: any) => selectValue(listType, i) === detailId);
     if (item) return buildDetailPayload(session, item, disabled);
   }
 

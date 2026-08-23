@@ -17,4 +17,8 @@ export const data = new SlashCommandBuilder()
         ChannelType.GuildCategory,
       )
       .setRequired(false),
-  );
+  )
+  .addChannelOption((o) => o.setName('channel2').setDescription('Additional channel to delete.').setRequired(false))
+  .addChannelOption((o) => o.setName('channel3').setDescription('Additional channel to delete.').setRequired(false))
+  .addChannelOption((o) => o.setName('channel4').setDescription('Additional channel to delete.').setRequired(false))
+  .addChannelOption((o) => o.setName('channel5').setDescription('Additional channel to delete.').setRequired(false));

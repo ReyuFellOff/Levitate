@@ -19,6 +19,8 @@
 //   ${user_roles}          → comma-separated list of role names (excl. @everyone)
 //   ${user_highest_role}   → name of the highest non-@everyone role, else "No role"
 //   ${user_is_bot}         → "Yes" / "No"
+//   ${user_birthday}       → saved birthday date, or empty when unset
+//   ${user_age}             → current age if a birth year was provided
 //
 //   Server
 //   ─────────────────────────────────────────────────────
@@ -71,6 +73,13 @@ export interface PlaceholderContext {
   guild?: any | null;
   /** The bot client. */
   client: any;
+  /** Birthday date to expose through user birthday placeholders. */
+  birthdayDate?: string | null;
+  /** Current age when the saved birthday includes a birth year. */
+  userAge?: number | null;
+  birthdayDay?: number | null;
+  birthdayMonth?: number | null;
+  birthdayYear?: number | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -103,6 +112,22 @@ function avatarUrl(user: any, animated = false): string {
   } catch {
     return '';
   }
+}
+
+function calculateAge(
+  day: number | null | undefined,
+  month: number | null | undefined,
+  year: number | null | undefined,
+  now: Date,
+): string {
+  if (!day || !month || !year) return '';
+  const age = now.getUTCFullYear() - Number(year) - (
+    now.getUTCMonth() + 1 < Number(month) ||
+    (now.getUTCMonth() + 1 === Number(month) && now.getUTCDate() < Number(day))
+      ? 1
+      : 0
+  );
+  return age >= 0 ? String(age) : '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -202,6 +227,10 @@ function buildMap(ctx: PlaceholderContext): Record<string, string> {
     '${user_roles}':          userRoles,
     '${user_highest_role}':   userHighestRole,
     '${user_is_bot}':         userIsBot,
+    '${user_birthday}':       ctx.birthdayDate ?? '',
+    '${user_age}':             ctx.userAge === null || ctx.userAge === undefined
+      ? calculateAge(ctx.birthdayDay, ctx.birthdayMonth, ctx.birthdayYear, now)
+      : String(ctx.userAge),
 
     // Server
     '${server_name}':          serverName,
@@ -274,6 +303,8 @@ export function getPlaceholderList(): string {
     '`${user_roles}` — comma-separated role names',
     '`${user_highest_role}` — highest role name',
     '`${user_is_bot}` — Yes / No',
+    '`${user_birthday}` — saved birthday date',
+    '`${user_age}` — current age if a birth year was provided',
     '',
     '**Server**',
     '`${server_name}` — server name',

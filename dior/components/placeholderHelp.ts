@@ -30,64 +30,66 @@ const PAGES: Page[] = [
   {
     title: 'User',
     lines: [
-      '`${user_name}` — username (no discriminator)',
-      '`${user_display_name}` — guild nickname → display name → username',
-      '`${user_mention}` — @mention of the user',
-      '`${user_id}` — user ID',
-      '`${user_tag}` — same as `${user_name}` (modern Discord)',
-      '`${user_avatar}` — avatar URL (PNG, 256 px)',
-      '`${user_avatar_gif}` — animated avatar URL (GIF if animated, else PNG)',
-      '`${user_banner}` — banner URL, empty string if none',
-      '`${user_created_at}` — account creation date (YYYY-MM-DD)',
-      '`${user_joined_at}` — server join date (YYYY-MM-DD)',
-      '`${user_roles}` — comma-separated list of role names',
-      '`${user_highest_role}` — name of the highest non-@everyone role',
-      '`${user_is_bot}` — "Yes" or "No"',
+      '`${user_name}` - username (no discriminator)',
+      '`${user_display_name}` - guild nickname - display name - username',
+      '`${user_mention}` - @mention of the user',
+      '`${user_id}` - user ID',
+      '`${user_tag}` - same as `${user_name}` (modern Discord)',
+      '`${user_avatar}` - avatar URL (PNG, 256 px)',
+      '`${user_avatar_gif}` - animated avatar URL (GIF if animated, else PNG)',
+      '`${user_banner}` - banner URL, empty string if none',
+      '`${user_created_at}` - account creation date (YYYY-MM-DD)',
+      '`${user_joined_at}` - server join date (YYYY-MM-DD)',
+      '`${user_roles}` - comma-separated list of role names',
+      '`${user_highest_role}` - name of the highest non-@everyone role',
+      '`${user_is_bot}` - "Yes" or "No"',
+      '`${user_birthday}` - saved birthday date, or empty if unset',
+      '`${user_age}` - current age if a birth year was provided',
     ],
   },
   {
     title: 'Server',
     lines: [
-      '`${server_name}` — server name',
-      '`${server_id}` — server ID',
-      '`${server_icon}` — server icon URL (PNG, 256 px)',
-      '`${server_member_count}` — total member count',
-      '`${server_owner_id}` — owner\'s user ID',
-      '`${server_owner_mention}` — @mention of the server owner',
-      '`${server_created_at}` — server creation date (YYYY-MM-DD)',
-      '`${server_boost_count}` — number of active boosts',
-      '`${server_boost_tier}` — boost tier (0–3)',
+      '`${server_name}` - server name',
+      '`${server_id}` - server ID',
+      '`${server_icon}` - server icon URL (PNG, 256 px)',
+      '`${server_member_count}` - total member count',
+      '`${server_owner_id}` - owner\'s user ID',
+      '`${server_owner_mention}` - @mention of the server owner',
+      '`${server_created_at}` - server creation date (YYYY-MM-DD)',
+      '`${server_boost_count}` - number of active boosts',
+      '`${server_boost_tier}` - boost tier (0-3)',
     ],
   },
   {
     title: 'Channel & Time',
     lines: [
       '**Channel**',
-      '`${channel_name}` — channel name',
-      '`${channel_id}` — channel ID',
-      '`${channel_mention}` — #channel mention',
+      '`${channel_name}` - channel name',
+      '`${channel_id}` - channel ID',
+      '`${channel_mention}` - #channel mention',
       '',
       '**Time**',
-      '`${timestamp}` — Unix timestamp in seconds',
-      '`${date}` — YYYY-MM-DD',
+      '`${timestamp}` - Unix timestamp in seconds',
+      '`${date}` - YYYY-MM-DD',
       '`${time}` → HH:MM',
-      '`${datetime}` → YYYY-MM-DD HH:MM',
-      '`${discord_ts}` — Discord long date + time: <t:unix:F>',
-      '`${discord_ts_relative}` — Discord relative time: <t:unix:R>',
+      '`${datetime}` - YYYY-MM-DD HH:MM',
+      '`${discord_ts}` - Discord long date + time: <t:unix:F>',
+      '`${discord_ts_relative}` - Discord relative time: <t:unix:R>',
     ],
   },
   {
     title: 'Bot & Misc',
     lines: [
       '**Bot**',
-      '`${bot_name}` — bot username',
-      '`${bot_mention}` — @mention of the bot',
-      '`${bot_id}` — bot client/application ID',
-      '`${bot_avatar}` — bot avatar URL (PNG, 256 px)',
+      '`${bot_name}` - bot username',
+      '`${bot_mention}` - @mention of the bot',
+      '`${bot_id}` - bot client/application ID',
+      '`${bot_avatar}` - bot avatar URL (PNG, 256 px)',
       '',
       '**Misc**',
-      '`${newline}` — actual newline character',
-      '`${zero_width}` — zero-width space (useful for empty embed fields)',
+      '`${newline}` - actual newline character',
+      '`${zero_width}` - zero-width space (useful for empty embed fields)',
     ],
   },
 ];
@@ -133,7 +135,7 @@ export function buildPayload(page: number, timedOut = false): any {
   const total = TOTAL_PAGES;
 
   const contentLines = [
-    `# Placeholders — ${p.title}`,
+    `# Placeholders: ${p.title}`,
     '',
     ...p.lines,
     '',
@@ -160,7 +162,7 @@ export function buildPayload(page: number, timedOut = false): any {
           new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
               .setCustomId(prevId)
-              .setLabel('◀ Prev')
+              .setLabel('Prev')
               .setStyle(ButtonStyle.Secondary)
               .setDisabled(timedOut || page === 0),
             new ButtonBuilder()
@@ -170,7 +172,7 @@ export function buildPayload(page: number, timedOut = false): any {
               .setDisabled(true),
             new ButtonBuilder()
               .setCustomId(nextId)
-              .setLabel('Next ▶')
+              .setLabel('Next')
               .setStyle(ButtonStyle.Secondary)
               .setDisabled(timedOut || page === total - 1),
           ),

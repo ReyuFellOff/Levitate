@@ -12,6 +12,7 @@ import { config } from '../../config.js';
 import { MessageFlags } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { resolvePlaceholders, type PlaceholderContext } from '../../helpers/placeholders.js';
+import { formatBirthday } from '../../helpers/parseBirthdayDate.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 
 export const DEFAULT_BIRTHDAY_MESSAGE = 'Happy Birthday, ${user_mention}! Hope your day is amazing.';
@@ -29,6 +30,7 @@ export interface BirthdayResult {
 export async function sendBirthdayMessage(
   member: any,
   client: LevitateClient,
+  isTest = false,
 ): Promise<BirthdayResult> {
   if (!client.db) return { sent: false, reason: 'Database is unavailable.' };
 
@@ -54,6 +56,25 @@ export async function sendBirthdayMessage(
     guild,
     client,
   };
+
+  const savedBirthday = await client.db.getBirthday(member.user.id).catch((): null => null);
+  const now = new Date();
+  ctx.birthdayDate = savedBirthday
+    ? formatBirthday(savedBirthday.day, savedBirthday.month, savedBirthday.year)
+    : isTest
+      ? formatBirthday(now.getUTCDate(), now.getUTCMonth() + 1)
+      : null;
+  ctx.birthdayDay = savedBirthday?.day ?? (isTest ? now.getUTCDate() : null);
+  ctx.birthdayMonth = savedBirthday?.month ?? (isTest ? now.getUTCMonth() + 1 : null);
+  ctx.birthdayYear = savedBirthday?.year ?? null;
+  ctx.userAge = savedBirthday?.year
+    ? now.getUTCFullYear() - savedBirthday.year - (
+        now.getUTCMonth() + 1 < savedBirthday.month ||
+        (now.getUTCMonth() + 1 === savedBirthday.month && now.getUTCDate() < savedBirthday.day)
+          ? 1
+          : 0
+      )
+    : null;
 
   const messageText   = settings.message_text ?? DEFAULT_BIRTHDAY_MESSAGE;
   const resolvedText  = resolvePlaceholders(messageText, ctx);

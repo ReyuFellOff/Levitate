@@ -23,6 +23,7 @@ import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 import { parseBirthdayDate, formatBirthday } from '../../helpers/parseBirthdayDate.js';
+import { sendBirthdayMessage } from '../../components/birthday/birthdaySender.js';
 import {
   buildBirthdaySettingsContainer,
   buildBirthdayListContainer,
@@ -34,9 +35,10 @@ export const options = {
   aliases:     ['bday', 'bd'] as string[],
   description: 'Set your birthday, view server birthdays, and configure birthday announcements.',
   usage: `birthday
-birthday set <date>
+birthday set <date> [DD/MM | DD/MM/YYYY | Month DD | YYYY-MM-DD]
 birthday unset
 birthday list
+birthday test
 birthday channel set <#channel> | remove
 birthday message set <text> [data: <saved-data-name>] | remove`,
   category: 'features',
@@ -79,6 +81,16 @@ export async function prefixExecute(
   if (!client.db) return sendError(ctx, 'Database is unavailable.');
 
   const action = args[0]?.toLowerCase();
+
+  // ── $birthday test ──────────────────────────────────────────────────────
+  if (action === 'test') {
+    if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
+
+    const result = await sendBirthdayMessage(message.member, client, true);
+    if (!result.sent) return sendError(ctx, result.reason ?? 'Could not send the birthday test message.');
+
+    return sendSuccess(ctx, 'Test birthday message sent to the configured channel.');
+  }
 
   // ── $birthday set <date> ────────────────────────────────────────────────
   if (action === 'set') {
@@ -242,6 +254,6 @@ export async function prefixExecute(
 
   return sendError(
     ctx,
-    `**Usage:**\n\`${prefix}birthday set <date>\`\n\`${prefix}birthday unset\`\n\`${prefix}birthday list\`\n\`${prefix}birthday channel set|remove\`\n\`${prefix}birthday message set|remove\``,
+    `**Usage:**\n\`${prefix}birthday set <date>\`\n\`${prefix}birthday unset\`\n\`${prefix}birthday list\`\n\`${prefix}birthday test\`\n\`${prefix}birthday channel set|remove\`\n\`${prefix}birthday message set|remove\``,
   );
 }

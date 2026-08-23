@@ -17,7 +17,7 @@ export const options = {
   name:        'embed',
   aliases:     ['embedbuilder', 'eb'] as string[],
   description: 'Interactively build an embed with a live preview and send or save it.',
-  usage:       'embed',
+  usage:       'embed\nembed edit',
   category:    'features',
   owner:       false,
   cooldown:    5,
@@ -25,7 +25,7 @@ export const options = {
 
 export async function prefixExecute(
   message: any,
-  _args:   string[],
+  args:    string[],
   client:  LevitateClient,
 ): Promise<void> {
   if (!message.guild) {
@@ -45,5 +45,6 @@ export async function prefixExecute(
     return;
   }
 
-  await startEmbedBuilderSession(message, client, message.author.id);
+  const initialMode = args[0]?.toLowerCase() === 'edit' ? 'loaddata' : 'idle';
+  await startEmbedBuilderSession(message, client, message.author.id, initialMode);
 }

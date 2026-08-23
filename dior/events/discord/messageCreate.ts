@@ -313,9 +313,9 @@ export async function execute(message: any, client: LevitateClient): Promise<voi
 
   // ── Attach raw args to message for commands that need real newlines ────────
   // Strips the prefix + commandName token, preserving actual whitespace/newlines.
-  const prefixAndCmd = usedPrefix + (message.content.startsWith(usedPrefix)
+  const prefixAndCmd = message.content.startsWith(usedPrefix)
     ? message.content.slice(usedPrefix.length).trim().slice(commandName.length)
-    : message.content.trim().slice(commandName.length));
+    : message.content.trim().slice(commandName.length);
   message.commandRawArgs = prefixAndCmd.trimStart();
 
   webhookLogger.logCommand(commandName, message.author, message.guild, args, {

@@ -44,11 +44,11 @@ type Result = { ok: boolean; line: string };
 
 async function applyUnlock(channel: any, guild: any, reason: string): Promise<Result> {
   if (channel.isThread?.())
-    return { ok: false, line: `<#${channel.id}> — threads cannot be unlocked this way.` };
+    return { ok: false, line: `<#${channel.id}> - threads cannot be unlocked this way.` };
 
   const botPerms = channel.permissionsFor?.(guild.members.me);
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
-    return { ok: false, line: `<#${channel.id}> — I'm missing Manage Channels there.` };
+    return { ok: false, line: `<#${channel.id}> - I'm missing Manage Channels there.` };
 
   const ok = await channel.permissionOverwrites
     .edit(
@@ -65,8 +65,8 @@ async function applyUnlock(channel: any, guild: any, reason: string): Promise<Re
     .then(() => true).catch(() => false);
 
   return ok
-    ? { ok: true,  line: `<#${channel.id}> — unlocked.${reason ? ` *(${reason})*` : ''}` }
-    : { ok: false, line: `<#${channel.id}> — failed (Discord error).` };
+    ? { ok: true,  line: `<#${channel.id}> - unlocked.${reason ? ` *(${reason})*` : ''}` }
+    : { ok: false, line: `<#${channel.id}> - failed (Discord error).` };
 }
 
 async function sendResults(
