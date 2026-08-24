@@ -9,6 +9,7 @@ import {
 } from './memberRestrictions.js';
 import { buildModLogMemberRestriction } from '../components/moderation/modlog.js';
 import { sendModLog } from '../utils/modlogHelper.js';
+import { sendInvokeResponse } from './invoke.js';
 
 export async function executeRestrictionCommand(opts: {
   ctx: { message?: any; interaction?: any };
@@ -68,6 +69,11 @@ export async function executeRestrictionCommand(opts: {
     guild.id,
     buildModLogMemberRestriction(targetUser, kind, enabled, reason, invokerMember?.user?.username ?? invokerMember?.user?.tag ?? 'Unknown'),
   );
+  const invokeCommand = kind === 'image'
+    ? (enabled ? 'imagemute' : 'imageunmute')
+    : (enabled ? 'reactionmute' : 'reactionunmute');
+  const invoked = await sendInvokeResponse(ctx, client, invokeCommand as any, { targetUser, reason });
+  if (invoked) return;
   return sendSuccess(
     ctx,
     `**${targetUser.username}** has been **${action}**.${reason ? `\n-# Reason: ${reason}` : ''}${channelNote}`,

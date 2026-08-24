@@ -35,6 +35,7 @@ import { buildModLogUnTimeout } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { confirmSlashAction } from '../../components/moderation/actionConfirm.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'unmute',
@@ -168,6 +169,7 @@ export async function prefixExecute(
 
   if (payload && typeof payload === 'object' && 'components' in payload) {
     sendModLog(client, message.guild.id, buildModLogUnTimeout(targetUser, reason, message.author.username));
+    if (await sendInvokeResponse(ctx, client, 'unmute', { targetUser, reason })) return;
     return message.channel.send(payload);
   }
 }
@@ -227,6 +229,7 @@ export async function slashExecute(
 
       if (payload && typeof payload === 'object' && 'components' in payload) {
         sendModLog(client, interaction.guild.id, buildModLogUnTimeout(targetUser, reason, interaction.user.username));
+        if (await sendInvokeResponse(ctx, client, 'unmute', { targetUser, reason })) return;
         await interaction.editReply(payload);
       }
     },

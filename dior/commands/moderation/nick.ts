@@ -17,6 +17,7 @@ import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { buildModLogNick } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
 import { resolveUser } from '../../helpers/userResolver.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'nick',
@@ -154,6 +155,7 @@ export async function prefixExecute(
       return sendError(ctx, `Failed to change my nickname: ${err.message}`);
     }
     sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, newNick, message.author.username));
+    if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: `Changed nickname to ${newNick}` })) return;
     return sendSuccess(ctx, `Changed my server nickname to **${newNick}**.`);
   }
 
@@ -172,6 +174,7 @@ export async function prefixExecute(
   const oldNick = member.nickname as string | null;
   await member.setNickname(newNick, `Nickname change requested by ${message.author.username}`);
   sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, newNick, message.author.username));
+  if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: `Changed nickname to ${newNick}` })) return;
   return sendSuccess(ctx, `Set **${targetUser.username}**'s nickname to **${newNick}**.`);
 }
 
@@ -208,6 +211,7 @@ export async function slashExecute(
         return sendError(ctx, `Failed to reset my nickname: ${err.message}`);
       }
       sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, null, interaction.user.username));
+        if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: 'Reset nickname' })) return;
       return sendSuccess(ctx, 'Reset my server nickname.');
     }
 
@@ -221,6 +225,7 @@ export async function slashExecute(
       return sendError(ctx, `Failed to change my nickname: ${err.message}`);
     }
     sendModLog(client, guild.id, buildModLogNick(targetUser, oldNick, newNick, interaction.user.username));
+    if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: `Changed nickname to ${newNick}` })) return;
     return sendSuccess(ctx, `Changed my server nickname to **${newNick}**.`);
   }
 
@@ -240,6 +245,7 @@ export async function slashExecute(
     const oldNickReset = member.nickname as string | null;
     await member.setNickname(null, `Nickname reset by ${interaction.user.username}`);
     sendModLog(client, guild.id, buildModLogNick(targetUser, oldNickReset, null, interaction.user.username));
+    if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: 'Reset nickname' })) return;
     return sendSuccess(ctx, `Reset **${targetUser.username}**'s nickname.`);
   }
 
@@ -251,5 +257,6 @@ export async function slashExecute(
   const oldNickSet = member.nickname as string | null;
   await member.setNickname(newNick, `Nickname change by ${interaction.user.username}`);
   sendModLog(client, guild.id, buildModLogNick(targetUser, oldNickSet, newNick, interaction.user.username));
+  if (await sendInvokeResponse(ctx, client, 'nick', { targetUser, reason: `Changed nickname to ${newNick}` })) return;
   return sendSuccess(ctx, `Set **${targetUser.username}**'s nickname to **${newNick}**.`);
 }

@@ -14,8 +14,9 @@ const NO_MENTIONS = { parse: [] as any[] };
 export const MAX_INVOKE_MESSAGES = 2_000;
 
 const PLACEHOLDERS =
-  '`{user}` name · `{mention}` mention · `{id}` ID · `{reason}` reason\n' +
-  '`{invoker}` moderator · `{invokerMention}` moderator mention · `{command}` command';
+  '-# `{user}` name · `{mention}` mention · `{id}` ID\n' +
+  '-# `{reason}` reason · `{invoker}` moderator\n' +
+  '-# `{invokerMention}` moderator mention · `{command}` command';
 
 function wrap(container: ContainerBuilder): any {
   return {
@@ -68,9 +69,9 @@ export function buildInvokeListPayload(
       ),
     )
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# Supported placeholders: ${PLACEHOLDERS}`),
-    );
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(`-# Supported placeholders:\n${PLACEHOLDERS}`),
+      );
 
   return wrap(container);
 }

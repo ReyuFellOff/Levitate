@@ -12,7 +12,7 @@ import { sendSuccess, sendError, sendLoading } from '../../components/statusMess
 
 export const options = {
   name: 'setname',
-  aliases: [] as string[],
+  aliases: ['setnick'] as string[],
   description: "Change the bot's nickname in this server.",
   usage: `setname <nickname>
   setname reset`,

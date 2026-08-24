@@ -13,6 +13,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
+import { resolveRole } from '../../helpers/roleResolver.js';
 import { sendRolePickerPanel } from '../../components/moderation/roleSelect.js';
 
 export const options = {
@@ -24,13 +25,6 @@ export const options = {
   owner:       false,
   cooldown:    3,
 };
-
-function resolveRole(guild: any, arg: string): any | null {
-  const idMatch = arg.match(/^<@&(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
-  if (idMatch) return guild.roles.cache.get(idMatch[1]) ?? null;
-  const lower = arg.toLowerCase();
-  return guild.roles.cache.find((r: any) => r.name.toLowerCase() === lower) ?? null;
-}
 
 function validateRole(guild: any, role: any, invokerMember?: any): string | null {
   if (!role) return 'Role not found. Use a mention, role ID, or the exact role name.';
@@ -90,7 +84,7 @@ export async function prefixExecute(
   const action = args[0].toLowerCase();
   const hasAction = action === 'add' || action === 'remove';
   const targetArg = hasAction ? args[1] : args[0];
-  const roleArg = hasAction ? args[2] : undefined;
+  const roleArg = hasAction ? args.slice(2).join(' ') : undefined;
 
   if (!targetArg || (!hasAction && args.length > 1)) {
     return sendError(ctx, `Usage: \`${options.usage}\``);

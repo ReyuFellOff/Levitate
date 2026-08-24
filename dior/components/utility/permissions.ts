@@ -69,9 +69,16 @@ function permissionText(member: any, isOwner: boolean): string {
     : '> None.';
 }
 
-export function buildPermissionsPayload(user: any, member: any, isOwner: boolean): object {
-  const title = `## <@${user.id}>'s permissions`;
-  const body = permissionText(member, isOwner);
+export function buildPermissionsPayload(
+  user: any,
+  member: any,
+  isOwner: boolean,
+  isRole = false,
+): object {
+  const title = isRole ? `## <@&${user.id}>'s permissions` : `## <@${user.id}>'s permissions`;
+  const body = isRole
+    ? permissionText({ permissions: user.permissions }, false)
+    : permissionText(member, isOwner);
 
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
@@ -79,7 +86,11 @@ export function buildPermissionsPayload(user: any, member: any, isOwner: boolean
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(body))
-        .setThumbnailAccessory(new ThumbnailBuilder().setURL(bestAvatar(user, member))),
+        .setThumbnailAccessory(new ThumbnailBuilder().setURL(
+          isRole
+            ? user.iconURL?.({ size: 4096 }) ?? 'https://cdn.discordapp.com/embed/avatars/0.png'
+            : bestAvatar(user, member),
+        )),
     );
 
   return {

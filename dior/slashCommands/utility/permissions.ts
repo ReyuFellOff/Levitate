@@ -7,4 +7,9 @@ export const data = new SlashCommandBuilder()
     o.setName('user')
       .setDescription('The user to inspect. Defaults to yourself.')
       .setRequired(false),
+  )
+  .addStringOption((o) =>
+    o.setName('role')
+      .setDescription('A role mention, ID, or name to inspect instead.')
+      .setRequired(false),
   );

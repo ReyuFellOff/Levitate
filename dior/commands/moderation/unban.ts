@@ -30,6 +30,7 @@ import {
 } from '../../components/moderation/unban.js';
 import { buildModLogUnban } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 
 export const options = {
   name:        'unban',
@@ -158,6 +159,7 @@ export async function prefixExecute(
 
   if (payload && typeof payload === 'object' && 'components' in payload) {
     sendModLog(client, message.guild.id, buildModLogUnban(targetUser, reason, message.author.username));
+    if (await sendInvokeResponse(ctx, client, 'unban', { targetUser, reason })) return;
     return message.channel.send(payload);
   }
 }
@@ -208,6 +210,7 @@ export async function slashExecute(
 
   if (payload && typeof payload === 'object' && 'components' in payload) {
     sendModLog(client, interaction.guild.id, buildModLogUnban(targetUser, reason, interaction.user.username));
+    if (await sendInvokeResponse(ctx, client, 'unban', { targetUser, reason })) return;
     return interaction.editReply(payload);
   }
 }

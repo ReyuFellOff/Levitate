@@ -9,6 +9,7 @@ import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
+import { sendInvokeResponse } from '../../helpers/invoke.js';
 import {
   getConfiguredJailRole,
   getGuildBotMember,
@@ -90,6 +91,8 @@ async function runUnjail(
   });
   if (!removed) return sendError(ctx, `Failed to unjail **${targetUser.username}**.`);
 
+  const invoked = await sendInvokeResponse(ctx, client, 'unjail', { targetUser, reason });
+  if (invoked) return;
   return sendSuccess(ctx, `Unjailed **${targetUser.username}** and removed ${jailRoleMention(setup.role)}. Reason: ${reason}.`);
 }
 

@@ -1546,7 +1546,11 @@ export class Database {
    */
   async claimBirthdayAnnouncement(guildId: string, userId: string, year: number): Promise<boolean> {
     await this.connect();
-    await this.ensureBirthdayAnnouncementIndex().catch((): void => undefined);
+    try {
+      await this.ensureBirthdayAnnouncementIndex();
+    } catch {
+      return false;
+    }
     try {
       await this.col<BirthdayAnnouncementDoc>('birthday_announcements').insertOne({
         guild_id: guildId,

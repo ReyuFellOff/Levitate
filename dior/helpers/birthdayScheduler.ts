@@ -3,10 +3,10 @@
 // Daily birthday announcement scheduler. Loaded automatically by the helper
 // loader (default export factory) and runs on every cluster process.
 //
-// Every CHECK_INTERVAL_MS it looks up which users have a birthday matching
-// today (UTC month + day), then — for every guild this process has cached —
-// checks whether the birthday channel is configured and the member is present,
-// and sends the configured birthday message if so.
+// At 00:00 UTC each day it looks up which users have a birthday matching
+// that date, then — for every guild this process has cached — checks whether
+// the birthday channel is configured and the member is present, and sends the
+// configured birthday message if so.
 //
 // Duplicate-send protection: `birthday_announcements` records one document per
 // (guild, user, year) so a restart or overlapping check never re-announces the
@@ -15,8 +15,13 @@
 import type { LevitateClient } from '../structures/LevitateClient.js';
 import { sendBirthdayMessage } from '../components/birthday/birthdaySender.js';
 
-const CHECK_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-const INITIAL_DELAY_MS  = 30 * 1000;      // let member caches warm up first
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function millisecondsUntilNextUtcMidnight(now: Date): number {
+  const nextMidnight = new Date(now);
+  nextMidnight.setUTCHours(24, 0, 0, 0);
+  return nextMidnight.getTime() - now.getTime();
+}
 
 export interface BirthdaySchedulerHandle {
   runCheck: () => Promise<void>;
@@ -65,8 +70,10 @@ export default function birthdayScheduler(client: LevitateClient): BirthdaySched
     }
   }
 
-  setTimeout(() => { runCheck().catch((): null => null); }, INITIAL_DELAY_MS);
-  setInterval(() => { runCheck().catch((): null => null); }, CHECK_INTERVAL_MS);
+  setTimeout(() => {
+    runCheck().catch((): null => null);
+    setInterval(() => { runCheck().catch((): null => null); }, DAY_MS);
+  }, millisecondsUntilNextUtcMidnight(new Date()));
 
   return { runCheck };
 }

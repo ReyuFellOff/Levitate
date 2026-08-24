@@ -152,7 +152,7 @@ export async function prefixExecute(
     const invoked = await sendInvokeResponse(
       { message },
       client,
-      'timeout',
+      'mute',
       { targetUser, reason },
     );
     if (!invoked) {
@@ -184,7 +184,7 @@ export async function prefixExecute(
   const invoked = await sendInvokeResponse(
     { message },
     client,
-    'timeout',
+    'mute',
     { targetUser, reason, duration: durationRaw },
   );
   if (!invoked) {
@@ -255,7 +255,7 @@ export async function slashExecute(
          const invoked = await sendInvokeResponse(
            { interaction },
            client,
-           'timeout',
+           'mute',
            { targetUser, reason },
          );
          if (!invoked) {
@@ -298,7 +298,7 @@ export async function slashExecute(
        const invoked = await sendInvokeResponse(
          { interaction },
          client,
-         'timeout',
+        'mute',
          { targetUser, reason, duration: durationRaw },
        );
        if (!invoked) {
