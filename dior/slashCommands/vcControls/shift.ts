@@ -2,7 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, ChannelType } from 'discord.j
 
 export const data = new SlashCommandBuilder()
   .setName('shift')
-  .setDescription("Move a member to another voice channel. Defaults to yourself → bot's channel.")
+  .setDescription("Move a member to another voice channel. Defaults to the invoker's channel.")
   .setDefaultMemberPermissions(PermissionFlagsBits.MoveMembers)
   .addUserOption((o) =>
     o.setName('user')
@@ -11,7 +11,7 @@ export const data = new SlashCommandBuilder()
   )
   .addChannelOption((o) =>
     o.setName('channel')
-      .setDescription("Destination voice channel. Defaults to the bot's channel, then the first VC.")
+      .setDescription("Destination voice channel. Defaults to the invoker's current channel.")
       .addChannelTypes(ChannelType.GuildVoice, ChannelType.GuildStageVoice)
       .setRequired(false),
   );

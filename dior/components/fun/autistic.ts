@@ -15,6 +15,7 @@ import {
 import { emojis } from '../../emojis.js';
 import { generateRatingCanvas, tealTheme } from '../../structures/RatingCanvas.js';
 import { pickAutisticCaption } from '../../config/captions/captionPickers.js';
+import type { RatingContext } from '../../config/ratingBackgrounds.js';
 
 export async function buildAutisticPayload(opts: {
   user:        any;
@@ -31,7 +32,7 @@ export async function buildAutisticPayload(opts: {
     user.displayAvatarURL({ forceStatic: true, size: 64, extension: 'webp' }),
     user.defaultAvatarURL,
   ];
-  const imageBuffer = await generateRatingCanvas({ avatarURLs, displayName, pct, caption, theme: tealTheme });
+  const imageBuffer = await generateRatingCanvas({ avatarURLs, username: user.username, pct, caption, theme: tealTheme, context: 'autistic' satisfies RatingContext });
 
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://autistic.png'));

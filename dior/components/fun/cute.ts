@@ -15,6 +15,7 @@ import {
 import { emojis } from '../../emojis.js';
 import { generateRatingCanvas, pinkTheme } from '../../structures/RatingCanvas.js';
 import { pickCuteCaption } from '../../config/captions/captionPickers.js';
+import type { RatingContext } from '../../config/ratingBackgrounds.js';
 
 export async function buildCutePayload(opts: {
   user:        any;
@@ -33,7 +34,7 @@ export async function buildCutePayload(opts: {
     user.displayAvatarURL({ forceStatic: true, size: 64, extension: 'webp' }),
     user.defaultAvatarURL,
   ];
-  const imageBuffer = await generateRatingCanvas({ avatarURLs, displayName, pct, caption, theme: pinkTheme });
+  const imageBuffer = await generateRatingCanvas({ avatarURLs, username: user.username, pct, caption, theme: pinkTheme, context: 'cute' satisfies RatingContext });
 
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://cute.png'));

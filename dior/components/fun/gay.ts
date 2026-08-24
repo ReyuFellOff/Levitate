@@ -15,6 +15,7 @@ import {
 import { emojis } from '../../emojis.js';
 import { generateRatingCanvas, rainbowTheme } from '../../structures/RatingCanvas.js';
 import { pickGayCaption } from '../../config/captions/captionPickers.js';
+import type { RatingContext } from '../../config/ratingBackgrounds.js';
 
 export async function buildGayPayload(opts: {
   user:        any;
@@ -31,7 +32,7 @@ export async function buildGayPayload(opts: {
     user.displayAvatarURL({ forceStatic: true, size: 64, extension: 'webp' }),
     user.defaultAvatarURL,
   ];
-  const imageBuffer = await generateRatingCanvas({ avatarURLs, displayName, pct, caption, theme: rainbowTheme });
+  const imageBuffer = await generateRatingCanvas({ avatarURLs, username: user.username, pct, caption, theme: rainbowTheme, context: 'gay' satisfies RatingContext });
 
   const gallery = new MediaGalleryBuilder()
     .addItems(new MediaGalleryItemBuilder().setURL('attachment://gay.png'));

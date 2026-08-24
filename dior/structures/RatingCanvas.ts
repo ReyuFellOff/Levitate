@@ -4,21 +4,28 @@
 //   $howcute   (pink)  |  $gay      (rainbow)
 //   $intelligent (blue)|  $autistic (teal)
 //
-// Same file. One shared function. 600×200.
-// Each command gets a distinct aesthetic via its own theme + slightly different
-// decorative shapes so they don't look like clones.
-//
-// Key visual differences per theme:
-//   • Pink  – scattered small hearts, star sparkle, dreamy warm tones
-//   • Rainbow – angled prism stripe overlay, brighter saturation
-//   • Blue  – corner constellation dots, cool star, clinical crisp feel
-//   • Teal  – dashed line accent, circular ripple, calm earthy tones
+// Same file. One shared function. Each command keeps its own restrained accent
+// color while using the same realistic profile-card composition.
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { readFileSync } from 'node:fs';
+import type { RatingContext } from '../config/ratingBackgrounds.js';
+import { ratingBackgrounds } from '../config/ratingBackgrounds.js';
 
 // ── Font loading ───────────────────────────────────────────────────────────────
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts'); } catch { /* ignore */ }
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype'); } catch { /* ignore */ }
+for (const fontName of ['Poppins-Regular.ttf', 'Poppins-SemiBold.ttf', 'Poppins-Bold.ttf']) {
+  for (const fontPath of [
+    new URL(`../fonts/${fontName}`, import.meta.url),
+    new URL(`../../dior/fonts/${fontName}`, import.meta.url),
+  ]) {
+    try {
+      GlobalFonts.register(readFileSync(fontPath), 'Poppins');
+      break;
+    } catch { /* font may not exist yet */ }
+  }
+}
 
 // ── Theme types ───────────────────────────────────────────────────────────────
 
@@ -40,7 +47,7 @@ export interface RatingTheme {
   bgMid:     string;
   bgTo:      string;
   bokeh:     string;
-  // Each command gets a unique shape set so images don't look identical
+  // Kept for compatibility with the existing theme presets.
   decoStyle: 'pinkHearts' | 'prismStripe' | 'cornerStars' | 'tealDashes';
 }
 
@@ -279,115 +286,108 @@ function drawTealDashes(ctx: any, tier: RatingTierTheme, W: number, H: number) {
 
 export interface RatingCanvasOptions {
   avatarURLs:  string[];
-  displayName: string;
+  username:    string;
   pct:         number;
   caption:     string;
   theme:       RatingTheme;
+  context:     RatingContext;
 }
 
 export async function generateRatingCanvas(opts: RatingCanvasOptions): Promise<Buffer> {
-  const { avatarURLs, displayName, pct, caption, theme } = opts;
+  const { avatarURLs, username, pct, caption, context } = opts;
 
-  const W = 600, H = 200;
+  const W = 600, H = 540;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
 
   const isInfinite = !isFinite(pct);
   const isRare     = isFinite(pct) && pct > 100;
-  const tier       = pickTier(theme, isInfinite, isRare);
+  const avatarURL = avatarURLs.find(Boolean);
+  const backgroundURL = ratingBackgrounds[context];
+  const [img, background] = await Promise.all([
+    (async () => {
+      for (const url of avatarURLs) {
+        if (!url) continue;
+        const loaded = await loadImage(url).catch((): null => null);
+        if (loaded) return loaded;
+      }
+      return null;
+    })(),
+    backgroundURL ? loadImage(backgroundURL).catch((): null => null) : Promise.resolve(null),
+  ]);
 
-  // ── 1. Background ─────────────────────────────────────────────────────────────────────
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0,   theme.bgFrom);
-  bg.addColorStop(0.5, theme.bgMid);
-  bg.addColorStop(1,   theme.bgTo);
-  ctx.fillStyle = bg;
+  // ── 1. User-provided background ──────────────────────────────────────────
+  ctx.fillStyle = '#d8d8d5';
   ctx.fillRect(0, 0, W, H);
-
-  // ── 2. Soft aurora behind avatar ───────────────────────────────────────────────────────
-  const avX = 118, avY = H / 2;
-  const bloom = ctx.createRadialGradient(avX, avY, 0, avX, avY, 190);
-  bloom.addColorStop(0,    tier.bloom);
-  bloom.addColorStop(0.50, tier.bloom.replace(/[\d.]+%?\)/, '0.06)'));
-  bloom.addColorStop(1,    'rgba(0,0,0,0)');
-  ctx.fillStyle = bloom;
-  ctx.fillRect(0, 0, W, H);
-
-  // ── 3. Accent glow on right side ───────────────────────────────────────────────────────
-  const rBloom = ctx.createRadialGradient(W - 70, H / 2, 0, W - 70, H / 2, 110);
-  rBloom.addColorStop(0, tier.bloom.replace(/[\d.]+%?\)/, '0.10)'));
-  rBloom.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = rBloom;
-  ctx.fillRect(0, 0, W, H);
-
-  // ── 4. Vignette ──────────────────────────────────────────────────────────────────────────
-  const vig = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, H * 1.0);
-  vig.addColorStop(0, 'rgba(0,0,0,0)');
-  vig.addColorStop(1, 'rgba(0,0,0,0.55)');
-  ctx.fillStyle = vig;
-  ctx.fillRect(0, 0, W, H);
-
-  // ── 5. Bokeh dots ──────────────────────────────────────────────────────────────────────────
-  const bokehPts = [
-    { x: 24,  y: 20,  r: 1.8, blur: 5 },
-    { x: 576, y: 24,  r: 1.6, blur: 5 },
-    { x: 570, y: 172, r: 2.0, blur: 6 },
-    { x: 20,  y: 176, r: 1.5, blur: 4 },
-    { x: 296, y: 16,  r: 1.8, blur: 5 },
-    { x: 304, y: 182, r: 1.6, blur: 5 },
-    { x: 478, y: 32,  r: 1.4, blur: 4 },
-    { x: 470, y: 166, r: 1.4, blur: 4 },
-    { x: 54,  y: 164, r: 1.2, blur: 3 },
-  ];
-  for (const p of bokehPts) {
-    bokehDot(ctx, p.x, p.y, p.r, theme.bokeh, tier.shadow, p.blur);
+  if (background) {
+    ctx.save();
+    const scale = Math.max(W / background.width, H / background.height);
+    const drawW = background.width * scale;
+    const drawH = background.height * scale;
+    ctx.globalAlpha = 0.72;
+    ctx.drawImage(background, (W - drawW) / 2, (H - drawH) / 2, drawW, drawH);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(0,0,0,0.36)';
+    ctx.fillRect(0, 0, W, H);
   }
 
-  // ── 6. Theme-specific decorations (make each image look DIFFERENT) ───────────────────────
-  switch (theme.decoStyle) {
-    case 'pinkHearts':     drawPinkHearts(ctx, tier, W, H);     break;
-    case 'prismStripe':    drawPrismStripe(ctx, tier, W, H);    break;
-    case 'cornerStars':    drawCornerStars(ctx, tier, W, H);    break;
-    case 'tealDashes':     drawTealDashes(ctx, tier, W, H);     break;
+  // A soft light wash keeps white typography readable without hiding the image.
+  const wash = ctx.createLinearGradient(0, 0, 0, H);
+  wash.addColorStop(0, 'rgba(0,0,0,0.18)');
+  wash.addColorStop(0.46, 'rgba(0,0,0,0.04)');
+  wash.addColorStop(1, 'rgba(0,0,0,0.30)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── 2. Avatar and avatar-derived border colors ────────────────────────────
+  const avX = W / 2, avY = 246, avR = 106;
+  let avatarColors: [string, string] = ['#ffffff', '#9b9b9b'];
+  if (img) {
+    const sample = createCanvas(24, 24);
+    const sampleCtx = sample.getContext('2d');
+    sampleCtx.drawImage(img, 0, 0, 24, 24);
+    const pixels = sampleCtx.getImageData(0, 0, 24, 24).data;
+    let totalR = 0, totalG = 0, totalB = 0, count = 0;
+    let vivid: [number, number, number] = [255, 255, 255];
+    let vividScore = -1;
+    for (let i = 0; i < pixels.length; i += 4) {
+      const alpha = pixels[i + 3];
+      if (alpha < 180) continue;
+      const red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
+      totalR += red; totalG += green; totalB += blue; count++;
+      const max = Math.max(red, green, blue);
+      const min = Math.min(red, green, blue);
+      const score = max - min + max * 0.15;
+      if (score > vividScore) { vivid = [red, green, blue]; vividScore = score; }
+    }
+    if (count) {
+      const average: [number, number, number] = [totalR / count, totalG / count, totalB / count];
+      avatarColors = [
+        `rgb(${vivid[0]}, ${vivid[1]}, ${vivid[2]})`,
+        `rgb(${average[0]}, ${average[1]}, ${average[2]})`,
+      ];
+    }
   }
 
-  // ── 7. Avatar ──────────────────────────────────────────────────────────────────────
-  const avR = 70;
-
-  let img: any = null;
-  for (const url of avatarURLs) {
-    if (!url) continue;
-    img = await loadImage(url).catch((): null => null);
-    if (img) break;
-  }
-
-  // Outer ring (glow)
+  const ring = ctx.createLinearGradient(avX - avR, avY - avR, avX + avR, avY + avR);
+  ring.addColorStop(0, avatarColors[0]);
+  ring.addColorStop(0.5, '#ffffff');
+  ring.addColorStop(1, avatarColors[1]);
   ctx.save();
-  ctx.shadowColor = tier.shadow;
-  ctx.shadowBlur  = isInfinite ? 26 : isRare ? 20 : 14;
-  ctx.strokeStyle = tier.ring;
-  ctx.lineWidth   = 2.2;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur  = 12;
+  ctx.strokeStyle = ring;
+  ctx.lineWidth   = 5;
   ctx.beginPath();
   ctx.arc(avX, avY, avR + 5, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 
-  // Inner faint ring
-  ctx.save();
-  ctx.globalAlpha = 0.25;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth   = 0.6;
-  ctx.beginPath();
-  ctx.arc(avX, avY, avR + 2.5, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // Avatar image
   ctx.save();
   ctx.beginPath();
   ctx.arc(avX, avY, avR, 0, Math.PI * 2);
   if (!img) {
-    ctx.fillStyle = '#111122';
+    ctx.fillStyle = '#333333';
     ctx.fill();
   } else {
     ctx.clip();
@@ -395,79 +395,45 @@ export async function generateRatingCanvas(opts: RatingCanvasOptions): Promise<B
   }
   ctx.restore();
 
-  // ── 8. Vertical separator ─────────────────────────────────────────────────────────────────────────
-  const sepX = 220;
-  const sepGrad = ctx.createLinearGradient(sepX, 0, sepX, H);
-  sepGrad.addColorStop(0,   'rgba(255,255,255,0)');
-  sepGrad.addColorStop(0.3, 'rgba(255,255,255,0.14)');
-  sepGrad.addColorStop(0.7, 'rgba(255,255,255,0.14)');
-  sepGrad.addColorStop(1,   'rgba(255,255,255,0)');
+  // ── 3. White reference-style typography ──────────────────────────────────
+  const nameLabel = (username ?? '?').slice(0, 24);
+  const titleLine = context === 'rizz' ? 'How much rizz does' : `How ${context} is`;
+  const nameLine = context === 'rizz' ? `${nameLabel} have?` : `${nameLabel}?`;
   ctx.save();
-  ctx.strokeStyle = sepGrad;
-  ctx.lineWidth   = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(sepX, 0);
-  ctx.lineTo(sepX, H);
-  ctx.stroke();
-  ctx.restore();
-
-  // ── 9. Right panel text ──────────────────────────────────────────────────────────────
-  const panelCX = sepX + (W - sepX) / 2;
-
-  // Name
-  const nameLabel = (displayName ?? '?').slice(0, 22);
-  ctx.save();
-  ctx.font         = '600 13px sans-serif';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle    = 'rgba(240,240,250,0.82)';
-  ctx.fillText(nameLabel, panelCX, 26);
-  ctx.restore();
-
-  // Accent underline
-  const lineW = Math.min(ctx.measureText(nameLabel).width + 24, 150);
-  const lx1 = panelCX - lineW / 2;
-  const lx2 = panelCX + lineW / 2;
-  const ly  = 46;
-  const lg  = ctx.createLinearGradient(lx1, ly, lx2, ly);
-  lg.addColorStop(0,   'rgba(0,0,0,0)');
-  lg.addColorStop(0.3, tier.gradientFrom + 'dd');
-  lg.addColorStop(0.7, tier.gradientTo   + 'dd');
-  lg.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.save();
-  ctx.strokeStyle = lg;
-  ctx.lineWidth   = 1.0;
-  ctx.beginPath();
-  ctx.moveTo(lx1, ly);
-  ctx.lineTo(lx2, ly);
-  ctx.stroke();
-  ctx.restore();
-
-  // Percentage
-  const pctText   = isInfinite ? '\u221e%' : `${pct}%`;
-  const pctFontSz = pctText.length > 5 ? 48 : pctText.length > 3 ? 56 : 64;
-
-  ctx.save();
-  ctx.font         = `bold ${pctFontSz}px sans-serif`;
+  ctx.font         = '600 31px Poppins, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.shadowColor  = tier.shadow;
-  ctx.shadowBlur   = isInfinite ? 24 : isRare ? 20 : 16;
-  const pg = ctx.createLinearGradient(panelCX - 60, 0, panelCX + 60, 0);
-  pg.addColorStop(0, tier.gradientFrom);
-  pg.addColorStop(1, tier.gradientTo);
-  ctx.fillStyle = pg;
-  ctx.fillText(pctText, panelCX, 118);
+  ctx.fillStyle    = '#ffffff';
+  ctx.shadowColor  = 'rgba(0,0,0,0.65)';
+  ctx.shadowBlur   = 5;
+  ctx.fillText(titleLine, W / 2, 52);
+  ctx.fillText(nameLine, W / 2, 92);
   ctx.restore();
 
-  // Caption
+  const pctText   = isInfinite ? '\u221e%' : `${pct}%`;
   ctx.save();
-  ctx.font         = '11px sans-serif';
+  ctx.font         = '700 58px Poppins, sans-serif';
   ctx.textAlign    = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillStyle    = tier.captionColor;
-  ctx.globalAlpha  = 0.82;
-  ctx.fillText(caption.slice(0, 60), panelCX, H - 14);
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(255,255,255,0.9)';
+  ctx.shadowBlur = 18;
+  ctx.globalAlpha = 0.9;
+  ctx.fillText(pctText, W / 2, 407);
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
+  ctx.shadowBlur = 5;
+  ctx.globalAlpha = 1;
+  ctx.fillText(pctText, W / 2, 407);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font         = '600 27px Poppins, sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle    = '#ffffff';
+  ctx.shadowColor  = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur   = 5;
+  ctx.fillText(caption.slice(0, 64), W / 2, 482);
   ctx.restore();
 
   return canvas.toBuffer('image/png');

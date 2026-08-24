@@ -1,7 +1,7 @@
 // xoxo/commands/vcControls/shift.ts
 //
 // Move a member to another voice channel.
-// Defaults to moving the invoker to the bot's channel (or first VC).
+// Defaults to moving the member to the invoker's current channel.
 //
 // Prefix:  $shift [user] [channel]
 // Slash:   /shift [user] [channel]
@@ -14,7 +14,7 @@ import { resolveUser } from '../../helpers/userResolver.js';
 export const options = {
   name:        'shift',
   aliases:     [] as string[],
-  description: "Move a member to another voice channel. Defaults to yourself → bot's channel.",
+  description: "Move a member to another voice channel. Defaults to the invoker's channel.",
   usage:       'shift [user] [channel]',
   category:    'vcControls',
   owner:       false,
@@ -35,15 +35,9 @@ function resolveVoiceChannel(guild: any, arg: string): any | null {
   );
 }
 
-function defaultDestChannel(guild: any): any | null {
-  const botMember = guild.members.me;
-  if (botMember?.voice?.channel) return botMember.voice.channel;
-  return (
-    guild.channels.cache
-      .filter((c: any) => c.type === ChannelType.GuildVoice)
-      .sort((a: any, b: any) => a.rawPosition - b.rawPosition)
-      .first() ?? null
-  );
+async function defaultDestChannel(guild: any, commandUserId: string): Promise<any | null> {
+  const commandMember = await guild.members.fetch(commandUserId).catch((): null => null);
+  return commandMember?.voice?.channel ?? null;
 }
 
 async function handle(
@@ -66,7 +60,7 @@ async function handle(
   }
 
   const sourceChannel = targetMember.voice.channel;
-  const finalDest = destChannel ?? defaultDestChannel(guild);
+  const finalDest = destChannel ?? await defaultDestChannel(guild, commandUserId);
   if (!finalDest) return sendError(ctx, 'No voice channel found to move to.');
   if (!finalDest.isVoiceBased?.()) return sendError(ctx, 'That destination is not a voice channel.');
 
