@@ -21,10 +21,12 @@ import {
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
+import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
+import { resolveVoiceChannel } from '../../helpers/voiceChannelResolver.js';
 
 export const options = {
   name:        'slowmode',
-  aliases:     ['sm', 'ratelimit'] as string[],
+  aliases:     ['sm'] as string[],
   description: 'Set or clear the slowmode for one or more channels.',
   usage: `slowmode <duration> [#channel ...]\nslowmode 30s\nslowmode 5m #general #chat\nslowmode off`,
   category: 'channels',
@@ -33,12 +35,8 @@ export const options = {
 };
 
 const MAX_SECONDS = 21_600;
-const CHANNEL_REF = /^(?:<#\d+>|\d{17,20})$/;
-
 function resolveChannel(guild: any, arg: string): any | null {
-  const m = arg.match(/^<#(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
-  if (!m) return null;
-  return guild.channels.cache.get(m[1]) ?? null;
+  return resolveTextChannel(guild, arg) ?? resolveVoiceChannel(guild, arg);
 }
 
 function fmt(s: number): string {
@@ -149,10 +147,11 @@ export async function prefixExecute(
   const badRefs: string[]  = [];
 
   for (const arg of args) {
-    if (CHANNEL_REF.test(arg)) {
-      const ch = resolveChannel(guild, arg);
-      if (ch && !seen.has(ch.id)) { seen.add(ch.id); targets.push(ch); }
-      else if (!ch)                { badRefs.push(arg); }
+    const ch = resolveChannel(guild, arg);
+    if (ch) {
+      if (!seen.has(ch.id)) { seen.add(ch.id); targets.push(ch); }
+    } else if (/^(?:<#\d+>|\d{17,20})$/.test(arg)) {
+      badRefs.push(arg);
     } else {
       durParts.push(arg);
     }

@@ -28,6 +28,8 @@ import {
 } from '../../components/purgeConfirm.js';
 import { emojis } from '../../emojis.js';
 import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
+import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
+import { resolveVoiceChannel } from '../../helpers/voiceChannelResolver.js';
 
 export const options = {
   name:        'delete-channel',
@@ -44,12 +46,8 @@ const TITLE = 'Delete Channel';
 const NO_MENTIONS = { parse: [] as any[] };
 
 function resolveChannel(guild: any, arg: string): any | null {
-  const m = arg.match(/^<#(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
-  if (!m) return null;
-  return guild.channels.cache.get(m[1]) ?? null;
+  return resolveTextChannel(guild, arg) ?? resolveVoiceChannel(guild, arg);
 }
-
-const CHANNEL_REF = /^(?:<#\d+>|\d{17,20})$/;
 
 /** Send a plain status line directly to a channel object (no interaction/message context needed). */
 async function sendToChannel(channel: any, emoji: string, text: string): Promise<void> {
@@ -216,10 +214,6 @@ export async function prefixExecute(
   const targets: any[] = [];
   const badRefs: string[] = [];
   for (const arg of args) {
-    if (!CHANNEL_REF.test(arg)) {
-      badRefs.push(arg);
-      continue;
-    }
     const resolved = resolveChannel(guild, arg);
     if (!resolved) badRefs.push(arg);
     else if (!seen.has(resolved.id)) {

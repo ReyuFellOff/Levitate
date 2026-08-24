@@ -28,6 +28,8 @@ import {
   buildActionCancelledPayload,
 } from '../../components/purgeConfirm.js';
 import { emojis } from '../../emojis.js';
+import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
+import { resolveVoiceChannel } from '../../helpers/voiceChannelResolver.js';
 
 const TITLE = 'Confirm Nuke';
 
@@ -41,12 +43,8 @@ export const options = {
   cooldown:    10,
 };
 
-const CHANNEL_REF = /^(?:<#\d+>|\d{17,20})$/;
-
 function resolveChannel(guild: any, arg: string): any | null {
-  const m = arg.match(/^<#(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
-  if (!m) return null;
-  return guild.channels.cache.get(m[1]) ?? null;
+  return resolveTextChannel(guild, arg) ?? resolveVoiceChannel(guild, arg);
 }
 
 type NukeResult = { ok: boolean; line: string };
@@ -128,11 +126,9 @@ export async function prefixExecute(
   const badRefs: string[] = [];
 
   for (const arg of args) {
-    if (CHANNEL_REF.test(arg)) {
-      const ch = resolveChannel(guild, arg);
-      if (ch && !seen.has(ch.id)) { seen.add(ch.id); targets.push(ch); }
-      else if (!ch)                { badRefs.push(arg); }
-    }
+    const ch = resolveChannel(guild, arg);
+    if (ch && !seen.has(ch.id)) { seen.add(ch.id); targets.push(ch); }
+    else if (!ch)                { badRefs.push(arg); }
   }
 
   if (badRefs.length > 0)

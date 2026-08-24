@@ -19,6 +19,8 @@ import {
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
+import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
+import { resolveVoiceChannel } from '../../helpers/voiceChannelResolver.js';
 
 export const options = {
   name:        'unhide',
@@ -32,9 +34,7 @@ unhide [#channel | channelId] [#channel2 | channelId2] ...`,
 };
 
 function resolveChannel(guild: any, arg: string): any | null {
-  const m = arg.match(/^<#(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
-  if (!m) return null;
-  return guild.channels.cache.get(m[1]) ?? null;
+  return resolveTextChannel(guild, arg) ?? resolveVoiceChannel(guild, arg);
 }
 
 type Result = { ok: boolean; line: string };

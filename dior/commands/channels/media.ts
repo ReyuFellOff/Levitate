@@ -1,6 +1,7 @@
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import type { LevitateClient } from '../../structures/LevitateClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
+import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
 import {
   buildMediaChannelsPayload,
   getMediaChannelIds,
@@ -12,19 +13,12 @@ export const options = {
   aliases: [] as string[],
   description: 'Configure channels that only accept messages with media attachments.',
   usage: `media <channel>
-media set <channel>
 media remove <channel>
-media disable <channel>
-media list
-media config`,
+media list`,
   category: 'channels',
   owner: false,
   cooldown: 3,
 };
-
-function channelId(raw: string | undefined): string | null {
-  return raw?.match(/^<#(\d+)>$/)?.[1] ?? raw?.match(/^\d{17,20}$/)?.[0] ?? null;
-}
 
 function isTextChannel(channel: any): boolean {
   return channel && (
@@ -63,8 +57,7 @@ async function runMedia(
     return sendError(ctx, 'Use `media <channel>`, `media set <channel>`, `media remove <channel>`, `media list`, or `media config`.');
   }
 
-  const id = channelId(rawChannel);
-  const channel = id ? guild.channels.cache.get(id) : null;
+  const channel = rawChannel ? resolveTextChannel(guild, rawChannel) : null;
   if (!isTextChannel(channel)) {
     return sendError(ctx, 'Provide a valid text channel, for example `#media`.');
   }
@@ -75,20 +68,20 @@ async function runMedia(
   }
 
   if (normalizedAction === 'set') {
-    const result = await client.db.addMediaChannel(guild.id, id);
+    const result = await client.db.addMediaChannel(guild.id, channel.id);
     invalidateMediaChannelCache(guild.id);
     if (result === 'limit') {
       return sendError(ctx, 'This server already has the maximum number of media channels.');
     }
-    if (result === 'exists') return sendSuccess(ctx, `<#${id}> is already a media channel.`);
-    return sendSuccess(ctx, `<#${id}> is now a media channel.`);
+    if (result === 'exists') return sendSuccess(ctx, `<#${channel.id}> is already a media channel.`);
+    return sendSuccess(ctx, `<#${channel.id}> is now a media channel.`);
   }
 
-  const removed = await client.db.removeMediaChannel(guild.id, id);
+  const removed = await client.db.removeMediaChannel(guild.id, channel.id);
   invalidateMediaChannelCache(guild.id);
   return sendSuccess(
     ctx,
-    removed ? `<#${id}> is no longer a media channel.` : `<#${id}> was not a media channel.`,
+    removed ? `<#${channel.id}> is no longer a media channel.` : `<#${channel.id}> was not a media channel.`,
   );
 }
 

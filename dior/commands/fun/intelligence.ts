@@ -20,7 +20,7 @@ import { resolveRatingPct } from '../../helpers/ratingBias.js';
 
 export const options = {
   name:        'howintelligent',
-  aliases:     ['intelligent', 'iq', 'howsmart', 'intelligence'] as string[],
+  aliases:     ['intelligent', 'howsmart'] as string[],
   description: 'See how intelligent someone is.',
   usage:       'intelligent\nintelligent <@user|ID|username>',
   category:    'fun',
