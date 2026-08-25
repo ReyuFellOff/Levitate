@@ -7,7 +7,7 @@
 //   resetprofile
 
 import { REST, Routes, MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendSuccess, sendError, sendLoading } from '../../components/statusMessages.js';
 
 export const options = {
@@ -20,7 +20,7 @@ export const options = {
   cooldown: 10,
 };
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   if (!interaction.guild) {
     await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
     return;
@@ -50,7 +50,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   }
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
 
   const authorPerms = message.channel.permissionsFor?.(message.member);

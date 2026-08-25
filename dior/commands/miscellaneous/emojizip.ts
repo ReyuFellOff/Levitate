@@ -1,6 +1,6 @@
 import { ZipArchive } from 'archiver';
 import { AttachmentBuilder } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendLoading, sendSuccess } from '../../components/statusMessages.js';
 
 export const options = {
@@ -61,7 +61,7 @@ async function createEmojiZip(emojis: Iterable<any>): Promise<{ buffer: Buffer; 
 export async function prefixExecute(
   message: any,
   _args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const context = { message };
   if (!message.guild) return sendError(context, 'This command can only be used in a server.');

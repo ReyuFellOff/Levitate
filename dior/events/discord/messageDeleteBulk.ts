@@ -2,7 +2,7 @@
 //
 // Logging: fires when messages are bulk-deleted (e.g. via $purge).
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildMessageBulkDeletePayload } from '../../components/logging/logMessages.js';
 import {
@@ -14,7 +14,7 @@ import {
 export const name = 'messageDeleteBulk';
 export const once = false;
 
-export async function execute(messages: any, channel: any, client: LevitateClient): Promise<void> {
+export async function execute(messages: any, channel: any, client: CassieClient): Promise<void> {
   const targetChannel = channel ?? messages.first()?.channel;
   if (!targetChannel?.guild) return;
 

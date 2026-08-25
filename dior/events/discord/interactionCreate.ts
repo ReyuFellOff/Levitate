@@ -12,7 +12,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { withDeveloperPermissionBypass } from '../../helpers/developerPermissionBypass.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 import { sendError, sendWarning, reservedForDeveloper } from '../../components/statusMessages.js';
@@ -116,7 +116,7 @@ const REGISTERED_CUSTOM_ID_PREFIXES = [
   }
 })();
 
-export async function execute(interaction: any, client: LevitateClient): Promise<void> {
+export async function execute(interaction: any, client: CassieClient): Promise<void> {
 
   // ── VoiceMaster panel/buttons/modals ───────────────────────────────────────
   if (typeof interaction.customId === 'string' && interaction.customId.startsWith('voicemaster:')) {
@@ -430,7 +430,7 @@ export async function execute(interaction: any, client: LevitateClient): Promise
 
 // ── Queue button handler ───────────────────────────────────────────────────
 
-async function handleQueueButton(interaction: any, action: string, client: LevitateClient): Promise<void> {
+async function handleQueueButton(interaction: any, action: string, client: CassieClient): Promise<void> {
   const messageId = interaction.message?.id;
   const session = messageId ? queueSessions.get(messageId) : undefined;
 
@@ -480,7 +480,7 @@ async function handleQueueButton(interaction: any, action: string, client: Levit
 
 // ── Queue jump select-menu handler ─────────────────────────────────────────
 
-async function handleQueueJump(interaction: any, client: LevitateClient): Promise<void> {
+async function handleQueueJump(interaction: any, client: CassieClient): Promise<void> {
   const messageId = interaction.message?.id;
   const session = messageId ? queueSessions.get(messageId) : undefined;
 
@@ -525,7 +525,7 @@ async function handleQueueJump(interaction: any, client: LevitateClient): Promis
 
 // ── Queue goto-modal submit handler ───────────────────────────────────────
 
-async function handleQueueGotoModal(interaction: any, client: LevitateClient): Promise<void> {
+async function handleQueueGotoModal(interaction: any, client: CassieClient): Promise<void> {
   const messageId = (interaction.customId as string).slice('queue:goto-modal:'.length);
   const session = queueSessions.get(messageId);
 
@@ -578,7 +578,7 @@ async function handleQueueGotoModal(interaction: any, client: LevitateClient): P
 
 const LOOP_CYCLE: Record<string, string> = { none: 'track', track: 'queue', queue: 'none' };
 
-async function handlePlayerButton(interaction: any, action: string, client: LevitateClient): Promise<void> {
+async function handlePlayerButton(interaction: any, action: string, client: CassieClient): Promise<void> {
   const guildId = interaction.guildId as string;
   const player  = (client as any).kazagumo?.players?.get(guildId);
 
@@ -656,7 +656,7 @@ async function handlePlayerButton(interaction: any, action: string, client: Levi
 
 // ── Debug nav handler ──────────────────────────────────────────────────────
 
-async function handleDebugNav(interaction: any, action: string, client: LevitateClient): Promise<void> {
+async function handleDebugNav(interaction: any, action: string, client: CassieClient): Promise<void> {
   const messageId = interaction.message?.id;
   const session   = messageId ? debugSessions.get(messageId) : undefined;
 
@@ -694,7 +694,7 @@ async function handleDebugNav(interaction: any, action: string, client: Levitate
 
 // ── Help nav handler ───────────────────────────────────────────────────────
 
-async function handleHelpNav(interaction: any, action: string, client: LevitateClient): Promise<void> {
+async function handleHelpNav(interaction: any, action: string, client: CassieClient): Promise<void> {
   const messageId = interaction.message?.id;
   const session   = messageId ? helpSessions.get(messageId) : undefined;
 

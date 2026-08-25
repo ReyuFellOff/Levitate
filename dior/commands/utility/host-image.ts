@@ -20,7 +20,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import { isValidImageUrl } from '../../utils/imageUtils.js';
 import { uploadToImgbb } from '../../utils/imgbb.js';
@@ -169,7 +169,7 @@ async function performUpload(
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const attachment = message.attachments?.first?.() ?? null;
   const urlArg = args[0];
@@ -204,7 +204,7 @@ export async function prefixExecute(
   return (loadingMsg as any)?.edit(result.payload).catch((): null => null);
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   const attachment: any = interaction.options.getAttachment('image') ?? null;
   const urlOption: string | null = interaction.options.getString('url') ?? null;
 

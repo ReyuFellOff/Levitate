@@ -12,7 +12,7 @@
 //
 // Alias: $ls
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildListPayload,
@@ -58,7 +58,7 @@ const VALID_TYPES: Record<string, ListType> = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -103,7 +103,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const guild = interaction.guild;

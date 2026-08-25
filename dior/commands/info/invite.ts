@@ -9,7 +9,7 @@ import {
   SeparatorSpacingSize,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { config, getInviteUrl } from '../../config.js';
 import { emojis }              from '../../emojis.js';
 
@@ -23,7 +23,7 @@ export const options = {
   cooldown:    5,
 };
 
-function buildPayload(client: LevitateClient): object {
+function buildPayload(client: CassieClient): object {
   const inviteUrl  = getInviteUrl(client.config?.clientId ?? null);
   const supportUrl = client.config?.supportServer ?? 'https://discord.gg/YpCfcCTXdv';
   const botName    = client.user?.username ?? client.config?.botName ?? 'the bot';
@@ -63,14 +63,14 @@ function buildPayload(client: LevitateClient): object {
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   return message.channel.send(buildPayload(client));
 }
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   return interaction.reply(buildPayload(client));
 }

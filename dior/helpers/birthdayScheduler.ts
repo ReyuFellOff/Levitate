@@ -12,7 +12,7 @@
 // (guild, user, year) so a restart or overlapping check never re-announces the
 // same birthday twice in the same year.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { sendBirthdayMessage } from '../components/birthday/birthdaySender.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -27,7 +27,7 @@ export interface BirthdaySchedulerHandle {
   runCheck: () => Promise<void>;
 }
 
-export default function birthdayScheduler(client: LevitateClient): BirthdaySchedulerHandle {
+export default function birthdayScheduler(client: CassieClient): BirthdaySchedulerHandle {
   async function runCheck(): Promise<void> {
     if (!client.db) return;
 

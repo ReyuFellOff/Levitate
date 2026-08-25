@@ -3,7 +3,7 @@
 // Logging: fires when a guild channel is deleted.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildChannelDeletePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -12,7 +12,7 @@ import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 export const name = 'channelDelete';
 export const once = false;
 
-export async function execute(channel: any, client: LevitateClient): Promise<void> {
+export async function execute(channel: any, client: CassieClient): Promise<void> {
   if (!channel.guild) return;
 
   const executor = await fetchAuditLogExecutor(channel.guild, AuditLogEvent.ChannelDelete, channel.id);

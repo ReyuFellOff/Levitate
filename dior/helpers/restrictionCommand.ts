@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../components/statusMessages.js';
 import {
   getMemberRestrictions,
@@ -18,7 +18,7 @@ export async function executeRestrictionCommand(opts: {
   invokerMember: any;
   invokerId: string;
   botMember: any;
-  client: LevitateClient;
+  client: CassieClient;
   kind: RestrictionKind;
   enabled: boolean;
   reason: string;
@@ -83,7 +83,7 @@ export async function executeRestrictionCommand(opts: {
 export async function runPrefixRestriction(opts: {
   message: any;
   args: string[];
-  client: LevitateClient;
+  client: CassieClient;
   kind: RestrictionKind;
   enabled: boolean;
 }): Promise<any> {
@@ -125,7 +125,7 @@ export async function runPrefixRestriction(opts: {
 
 export async function runSlashRestriction(opts: {
   interaction: any;
-  client: LevitateClient;
+  client: CassieClient;
   kind: RestrictionKind;
   enabled: boolean;
 }): Promise<any> {

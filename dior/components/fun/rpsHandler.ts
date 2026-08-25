@@ -4,7 +4,7 @@
 // Imported by interactionCreate.ts.
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   RPS_CHOICES,
   type RpsChoice,
@@ -31,7 +31,7 @@ function resolveRps(user: RpsChoice, bot: RpsChoice): 'win' | 'lose' | 'tie' {
   return beats[user] === bot ? 'win' : 'lose';
 }
 
-export async function handleRpsInteraction(interaction: any, _client: LevitateClient): Promise<void> {
+export async function handleRpsInteraction(interaction: any, _client: CassieClient): Promise<void> {
   const parsed = parseRpsId(interaction.customId as string);
   if (!parsed) {
     await interaction.reply({ content: 'Unknown RPS action.', flags: MessageFlags.Ephemeral }).catch((): null => null);

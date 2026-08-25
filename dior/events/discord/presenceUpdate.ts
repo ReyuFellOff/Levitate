@@ -9,7 +9,7 @@
 //   keyword (case-insensitive), the bot gives them status_role_id. When the
 //   keyword is no longer present the role is removed.
 //
-// Requires the GuildPresences privileged intent (declared in LevitateClient.ts)
+// Requires the GuildPresences privileged intent (declared in CassieClient.ts)
 // and must be enabled in the Discord Developer Portal.
 //
 // Robustness notes:
@@ -17,7 +17,7 @@
 //   • DB is queried per event; high-volume servers may benefit from caching.
 
 import { ActivityType } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendVanityRoleMessage, sendVanityRoleLoseMessage } from '../../components/utility/vanityRoleSender.js';
 
 export const name = 'presenceUpdate';
@@ -26,7 +26,7 @@ export const once = false;
 export async function execute(
   _oldPresence: any,
   newPresence:  any,
-  client:       LevitateClient,
+  client:       CassieClient,
 ): Promise<void> {
   // Must be a guild presence
   if (!newPresence?.guild) return;

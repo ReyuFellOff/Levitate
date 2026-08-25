@@ -8,7 +8,7 @@
 //   $alias
 //   $alias list
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { MAX_PER_USER, runAliasList } from '../../components/utility/alias.js';
 
@@ -25,14 +25,14 @@ export const options = {
 const MAX_ALIAS_LEN = 14;
 const ALIAS_NAME_RE = /^[a-zA-Z0-9_-]{1,14}$/;
 
-function resolveCommandName(client: LevitateClient, raw: string): string | null {
+function resolveCommandName(client: CassieClient, raw: string): string | null {
   const lower = raw.toLowerCase();
   if (client.commands.has(lower)) return lower;
   return client.aliases.get(lower) ?? null;
 }
 
 function validateAliasName(
-  client: LevitateClient,
+  client: CassieClient,
   raw: string,
   existingAliases: { alias_lower: string }[],
 ): string | null {
@@ -57,7 +57,7 @@ function validateAliasName(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

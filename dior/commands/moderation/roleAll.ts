@@ -15,7 +15,7 @@
 // delay between batches so Discord's per-guild rate limit is never hit.
 
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildRoleAllTargetPanel,
@@ -124,7 +124,7 @@ async function runRoleAll(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;

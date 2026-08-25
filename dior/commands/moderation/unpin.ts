@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import {
   canManageMessages,
@@ -19,7 +19,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

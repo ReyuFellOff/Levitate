@@ -2,7 +2,7 @@
 //
 // Shared persistence and runtime helpers for reaction roles.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { ReactionRolePair } from '../database/database.js';
 import { resolveEmoji } from './emojiResolver.js';
 import { resolveRole } from './roleResolver.js';
@@ -36,7 +36,7 @@ export interface ReactionRolePairResult {
 }
 
 export async function buildReactionRolePair(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   rawEmoji: string,
   rawRole: string,
@@ -88,7 +88,7 @@ export async function buildReactionRolePair(
 export async function handleReactionRoleReaction(
   reaction: any,
   user: any,
-  client: LevitateClient,
+  client: CassieClient,
   adding: boolean,
 ): Promise<void> {
   if (!client.db || !user?.id) return;

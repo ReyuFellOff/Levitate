@@ -9,7 +9,7 @@
 // Up to 8 results are stored in a session; Prev / Next buttons let the user
 // browse through them. Session expires after 3 minutes of inactivity.
 
-import type { LevitateClient }  from '../../structures/LevitateClient.js';
+import type { CassieClient }  from '../../structures/CassieClient.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import {
   searchImages,
@@ -32,7 +32,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -92,7 +92,7 @@ export async function prefixExecute(
   return botMsg;
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const query = interaction.options.getString('query') as string;

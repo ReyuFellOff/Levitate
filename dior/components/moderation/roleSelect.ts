@@ -36,7 +36,7 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 
 const PAGE_SIZE = 25;
@@ -281,7 +281,7 @@ async function guardSession(interaction: any): Promise<RolePickerSession | null>
   return session;
 }
 
-export async function handleRolePickerSelect(interaction: any, _client: LevitateClient): Promise<void> {
+export async function handleRolePickerSelect(interaction: any, _client: CassieClient): Promise<void> {
   const session = await guardSession(interaction);
   if (!session) return;
   await interaction.deferUpdate().catch((): null => null);
@@ -301,7 +301,7 @@ export async function handleRolePickerSelect(interaction: any, _client: Levitate
   await interaction.editReply(buildPanel(guild, session)).catch((): null => null);
 }
 
-export async function handleRolePickerPage(interaction: any, direction: 'prev' | 'next', _client: LevitateClient): Promise<void> {
+export async function handleRolePickerPage(interaction: any, direction: 'prev' | 'next', _client: CassieClient): Promise<void> {
   const session = await guardSession(interaction);
   if (!session) return;
   await interaction.deferUpdate().catch((): null => null);
@@ -316,7 +316,7 @@ export async function handleRolePickerPage(interaction: any, direction: 'prev' |
   await interaction.editReply(buildPanel(guild, session)).catch((): null => null);
 }
 
-export async function handleRolePickerCancel(interaction: any, _client: LevitateClient): Promise<void> {
+export async function handleRolePickerCancel(interaction: any, _client: CassieClient): Promise<void> {
   const session = await guardSession(interaction);
   if (!session) return;
   await interaction.deferUpdate().catch((): null => null);
@@ -325,7 +325,7 @@ export async function handleRolePickerCancel(interaction: any, _client: Levitate
   await interaction.message.edit(buildCancelledPayload(session.targetUsername)).catch((): null => null);
 }
 
-export async function handleRolePickerApply(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleRolePickerApply(interaction: any, client: CassieClient): Promise<void> {
   const session = await guardSession(interaction);
   if (!session) return;
   await interaction.deferUpdate().catch((): null => null);

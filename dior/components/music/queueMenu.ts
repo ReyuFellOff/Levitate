@@ -150,7 +150,7 @@ export function buildQueuePayload(
   session: QueueMenuSession,
   disabled = false,
 ): object {
-  const botName: string = session.client?.config?.botName ?? 'Levitate';
+  const botName: string = session.client?.config?.botName ?? 'Cassie';
   const headerTitle = `# ${emojis.musicHeartNote} __${botName} Music Queue__`;
   const footerLine = `-# Thank you for using ${botName}!`;
 

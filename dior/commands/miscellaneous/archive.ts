@@ -7,7 +7,7 @@
 // Slash:   /archive count:[number]
 
 import { AttachmentBuilder, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 
 export const options = {
@@ -111,7 +111,7 @@ async function runArchive(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
@@ -133,7 +133,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

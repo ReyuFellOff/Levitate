@@ -7,7 +7,7 @@
 // in-memory "seen" set and attribute newcomers via the audit log.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
 
@@ -17,7 +17,7 @@ export const once = false;
 /** channelId -> Set of webhook IDs already accounted for. */
 const seenWebhooks = new Map<string, Set<string>>();
 
-export async function execute(channel: any, client: LevitateClient): Promise<void> {
+export async function execute(channel: any, client: CassieClient): Promise<void> {
   if (!channel.guild) return;
 
   const webhooks = await channel.fetchWebhooks().catch((): null => null);

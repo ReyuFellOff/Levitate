@@ -16,7 +16,7 @@
 // DM notification is attempted before the ban. Failure is noted but non-fatal.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildBanSuccessPayload, buildBanDmPayload } from '../../components/moderation/ban.js';
 import { buildModLogBan } from '../../components/moderation/modlog.js';
@@ -79,7 +79,7 @@ async function runChecks(opts: {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -146,7 +146,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

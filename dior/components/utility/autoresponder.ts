@@ -23,7 +23,7 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import { config } from '../../config.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type {
   AutoresponderDoc,
   AutoresponderMatchType,
@@ -469,7 +469,7 @@ function modalTrigger(token: string): ModalBuilder {
 // Local modal-submit awaiter (mirrors container.ts's self-contained pattern)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function awaitModal(client: LevitateClient, customId: string, userId: string, ms: number): Promise<any | null> {
+function awaitModal(client: CassieClient, customId: string, userId: string, ms: number): Promise<any | null> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
       client.removeListener('interactionCreate', handler);
@@ -494,7 +494,7 @@ function awaitModal(client: LevitateClient, customId: string, userId: string, ms
 
 export async function runAutoresponderManagePanel(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   triggerLower: string,
   opts?: { existingResponse?: any; backToHome?: boolean },
@@ -682,7 +682,7 @@ export async function runAutoresponderManagePanel(
 async function _runHomeCollectorOnExistingMessage(
   panelMsg: any,
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   initialPage = 0,
   statusNote?: string,
@@ -793,7 +793,7 @@ async function _runHomeCollectorOnExistingMessage(
 
 export async function runAutoresponderHomePanel(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   initialPage = 0,
   statusNote?: string,

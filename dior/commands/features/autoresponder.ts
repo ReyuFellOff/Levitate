@@ -11,7 +11,7 @@
 //         $autoresponder list                      — paginated list of every trigger
 //         $autoresponder help                      — command reference (same as home)
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import {
@@ -34,7 +34,7 @@ export const options = {
   cooldown: 3,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
 

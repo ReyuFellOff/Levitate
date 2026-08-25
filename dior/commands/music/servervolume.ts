@@ -1,6 +1,6 @@
 // xoxo/commands/music/servervolume.ts
 // Set the persistent server-wide playback volume.
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
@@ -21,7 +21,7 @@ export const options = {
   cooldown: 3,
 };
 
-async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean }, guildId: string, volumeArg: string, client: LevitateClient) {
+async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean }, guildId: string, volumeArg: string, client: CassieClient) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const player = client.kazagumo.players.get(guildId) as any;
 
@@ -49,11 +49,11 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   return sendSuccess(ctxObj, `Server volume set to **${vol}%**. This will persist for all future players.`);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!args.length) return sendWrongUsage({ message, client }, options.name, options.usage);
   await handle({ message, isSlash: false }, message.guild.id, args[0], client);
 }
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   const value = interaction.options.getString('value', true);
   await handle({ interaction, isSlash: true }, interaction.guild.id, value, client);

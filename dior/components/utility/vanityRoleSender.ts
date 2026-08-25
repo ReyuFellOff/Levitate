@@ -11,7 +11,7 @@ import { config } from '../../config.js';
 // Placeholders are resolved from the member's context just before sending.
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { VanityRoleSettingsDoc } from '../../database/database.js';
 import { resolvePlaceholders, type PlaceholderContext } from '../../helpers/placeholders.js';
 import webhookLogger from '../../utils/webhookLogger.js';
@@ -29,7 +29,7 @@ import { emojis } from '../../emojis.js';
  */
 export async function sendVanityRoleMessage(
   member:   any,
-  client:   LevitateClient,
+  client:   CassieClient,
   settings: VanityRoleSettingsDoc,
   trigger:  'status' | 'tag',
   event:    'gain' | 'lose' = 'gain',
@@ -86,7 +86,7 @@ export async function sendVanityRoleMessage(
  */
 export async function sendVanityRoleLoseMessage(
   member:   any,
-  client:   LevitateClient,
+  client:   CassieClient,
   settings: VanityRoleSettingsDoc,
   trigger:  'status' | 'tag',
 ): Promise<void> {
@@ -127,7 +127,7 @@ async function dispatchSavedData(
   guildId:     string,
   channel:     any,
   ctx:         PlaceholderContext,
-  client:      LevitateClient,
+  client:      CassieClient,
   prependText: string | null = null,
 ): Promise<void> {
   const entry = await client.db.getSavedData(guildId, dataName).catch((err: unknown): null => {

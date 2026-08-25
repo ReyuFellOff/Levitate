@@ -8,13 +8,13 @@ import {
   type Message,
   type ChatInputCommandInteraction,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 interface WrongUsageContext {
   interaction?: ChatInputCommandInteraction;
   message?: Message;
   existingMessage?: Message;
-  client?: LevitateClient;
+  client?: CassieClient;
 }
 
 export async function sendWrongUsage(

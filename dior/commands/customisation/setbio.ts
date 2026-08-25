@@ -6,7 +6,7 @@
 //   setbio <text>
 
 import { REST, Routes, MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendSuccess, sendError, sendLoading } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
@@ -25,7 +25,7 @@ export const options = {
 async function handle(
   message: any,
   text: string,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const statusCtx = { message };
   const successCtx = { channel: message.channel };
@@ -65,7 +65,7 @@ async function handle(
   }
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   if (!interaction.guild) {
     await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
     return;
@@ -105,7 +105,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   }
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
   if (!args.length) return sendWrongUsage({ message, client }, options.name, options.usage);
   return handle(message, args.join(' '), client);

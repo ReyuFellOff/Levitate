@@ -1,6 +1,6 @@
 // xoxo/commands/music/247.ts
 import { ChannelType } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { scheduleRejoin, clearRejoin } from '../../helpers/twentyFourSeven.js';
 
@@ -53,7 +53,7 @@ async function handleEnable(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guild: any,
   rawArg: string | null,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
 
@@ -130,7 +130,7 @@ async function handleEnable(
 async function handleDisable(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const current = await client.db?.get24Seven(guild.id).catch((): null => null);
@@ -148,7 +148,7 @@ async function handleDisable(
 async function handleView(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const current = await client.db?.get24Seven(guild.id).catch((): null => null);
@@ -164,7 +164,7 @@ async function handleView(
 // Exports
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const subcommand = args[0]?.toLowerCase();
   const ctx = { message, isSlash: false };
 
@@ -180,7 +180,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   }
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   const sub = interaction.options.getSubcommand();
   const ctx = { interaction, isSlash: true };

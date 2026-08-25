@@ -1,4 +1,4 @@
-# Moderation Command Ideas for Levitate
+# Moderation Command Ideas for Cassie
 
 > Commands to add to the moderation suite. Sorted by priority tier.
 > Each entry includes usage syntax, what permissions are required, key implementation notes,

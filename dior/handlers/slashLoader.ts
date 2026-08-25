@@ -13,20 +13,20 @@
 import { readdirSync } from 'fs';
 import { join }        from 'path';
 import { pathToFileURL } from 'url';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface SlashCommandModule {
   options:      { name: string; category: string; description: string; usage: string };
-  slashExecute: (interaction: any, client: LevitateClient) => Promise<void> | void;
+  slashExecute: (interaction: any, client: CassieClient) => Promise<void> | void;
 }
 
 interface LoadStats { loaded: number; devLoaded: number; skipped: number; }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function loadSlashCommands(client: LevitateClient): Promise<void> {
+export async function loadSlashCommands(client: CassieClient): Promise<void> {
   const dir   = join(process.cwd(), 'dist', 'dior', 'commands');
   const stats = { loaded: 0, devLoaded: 0, skipped: 0 } satisfies LoadStats;
 
@@ -42,7 +42,7 @@ export async function loadSlashCommands(client: LevitateClient): Promise<void> {
 
 // ── Internals ────────────────────────────────────────────────────────────────
 
-async function scanDir(client: LevitateClient, dir: string, stats: LoadStats): Promise<void> {
+async function scanDir(client: CassieClient, dir: string, stats: LoadStats): Promise<void> {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
 

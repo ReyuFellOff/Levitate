@@ -19,7 +19,7 @@
 //   /jail add user [reason]
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendLoading, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { sendInvokeResponse } from '../../helpers/invoke.js';
@@ -59,7 +59,7 @@ function resolveAllowedChannel(guild: any, message: any, arg?: string): any | nu
 
 async function runSetup(
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   allowedChannel: any | null,
 ): Promise<any> {
   const guild = context.message?.guild ?? context.interaction?.guild;
@@ -121,7 +121,7 @@ async function runSetup(
 
 async function runRemove(
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const guild = context.message?.guild ?? context.interaction?.guild;
   const member = context.message?.member ?? context.interaction?.member;
@@ -173,7 +173,7 @@ async function runRemove(
 
 async function runJail(
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   targetUser: any,
   reason: string,
 ): Promise<any> {
@@ -227,7 +227,7 @@ async function runJail(
 
 async function runJailInfo(
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   action: 'list' | 'status' | 'commands',
 ): Promise<any> {
   const guild = context.message?.guild ?? context.interaction?.guild;
@@ -293,7 +293,7 @@ async function runJailInfo(
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   if (args[0]?.toLowerCase() === 'setup') {
     if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
@@ -319,7 +319,7 @@ export async function prefixExecute(
   return runJail({ message }, client, targetUser, args.slice(1).join(' ').trim() || 'No reason provided.');
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const subcommand = interaction.options.getSubcommand();
 

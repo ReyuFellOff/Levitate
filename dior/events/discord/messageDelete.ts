@@ -3,7 +3,7 @@
 // Logging: fires when a single message is deleted. Ignores bot messages and
 // DMs. Partial messages (uncached) still log with whatever data is available.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildMessageDeletePayload } from '../../components/logging/logMessages.js';
 import { pushSnipe } from '../../components/moderation/snipeStore.js';
@@ -18,7 +18,7 @@ import {
 export const name = 'messageDelete';
 export const once = false;
 
-export async function execute(message: any, client: LevitateClient): Promise<void> {
+export async function execute(message: any, client: CassieClient): Promise<void> {
   if (!message.guild) return;
 
   const channelId = message.channelId ?? message.channel?.id;

@@ -13,7 +13,7 @@
 // @everyone permissions.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 export const JAIL_ROLE_NAME = 'Jailed';
 
@@ -46,7 +46,7 @@ export function getGuildBotMember(guild: any): any | null {
 
 export async function getConfiguredJailRole(
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<{ config: any; role: any } | null> {
   if (!client.db || !guild) return null;
 
@@ -110,7 +110,7 @@ async function fetchGuildChannels(guild: any): Promise<any[]> {
 
 async function findOrCreateJailRole(
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
   botMember: any,
   reason: string,
 ): Promise<any | { error: string }> {
@@ -166,7 +166,7 @@ async function findOrCreateJailRole(
 
 export async function configureJail(
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
   allowedChannelId: string | null,
   reason: string,
 ): Promise<
@@ -212,7 +212,7 @@ export async function configureJail(
 
 export async function removeJailSetup(
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
   reason: string,
 ): Promise<
   | { role: any | null; removedOverwrites: number; failedChannels: string[] }

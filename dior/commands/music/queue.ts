@@ -6,7 +6,7 @@ import { config } from '../../config.js';
 // for the renderer and `xoxo/helpers/sessionQueue.ts` for the data model.
 
 import { ContainerBuilder, MessageFlags, TextDisplayBuilder } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 import {
   buildQueuePayload,
@@ -33,7 +33,7 @@ export const options = {
 async function handle(
   ctx: { message?: any; interaction?: any; isSlash: boolean; channel: any; user: any; guildId: string },
   startPage: number | null,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const player = (client as any).kazagumo.players.get(ctx.guildId);
 
@@ -76,7 +76,7 @@ async function handle(
   if (sent?.id) registerQueueSession(sent.id, session);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const startPage = args[0] ? parseInt(args[0], 10) : null;
   await handle(
     {
@@ -91,7 +91,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   );
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   const startPage = interaction.options.getInteger('page');
   await handle(
     {

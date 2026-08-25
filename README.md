@@ -1,4 +1,4 @@
-<h1 align="center">Levitate</h1>
+<h1 align="center">Cassie</h1>
 
 <p align="center">
   <em>A powerful, multi-instance Discord bot built for moderation, antinuke, and utility — with a clean Components V2 interface throughout.</em>
@@ -15,7 +15,7 @@
 
 ## About
 
-**Levitate** is a feature-rich Discord bot focused on server management and safety. Every response uses Discord's **Components V2** format — no classic embeds for bot-generated UI. It supports multiple named instances (Main, Beta, etc.) running from the same codebase, process-level clustering via `discord-hybrid-sharding`, and a PostgreSQL data layer hosted on Neon.
+**Cassie** is a feature-rich Discord bot focused on server management and safety. Every response uses Discord's **Components V2** format — no classic embeds for bot-generated UI. It supports multiple named instances (Main, Beta, etc.) running from the same codebase, process-level clustering via `discord-hybrid-sharding`, and a PostgreSQL data layer hosted on Neon.
 
 Default prefix: `$` · Support server: [discord.gg/YpCfcCTXdv](https://discord.gg/YpCfcCTXdv)
 
@@ -130,8 +130,8 @@ Automatic protection against server nukes — no configuration required for base
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/your-username/levitate.git
-cd levitate
+git clone https://github.com/your-username/cassie.git
+cd cassie
 npm install
 ```
 
@@ -180,7 +180,7 @@ npm run dev
 ```
 index.ts                  ← ClusterManager entry point
 dior/
-  levitate.ts             ← Per-cluster bootstrap (login → ready)
+  cassie.ts             ← Per-cluster bootstrap (login → ready)
   config.ts               ← Central runtime configuration
   commands/               ← Prefix + slash execute logic (by category)
   slashCommands/          ← Slash command builder definitions only
@@ -190,7 +190,7 @@ dior/
   utils/                  ← Formatting, webhook logger, etc.
   database/               ← PostgreSQL interface and migration adapter
   config/                 ← Bot instances, categories, antinuke modules
-  structures/             ← LevitateClient, StatusManager
+  structures/             ← CassieClient, StatusManager
 ```
 
 All user-visible responses use Discord's **Components V2** format (`MessageFlags.IsComponentsV2`). CV2 builders live exclusively in `dior/components/` — never inline in command files.

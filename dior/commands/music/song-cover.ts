@@ -9,7 +9,7 @@ import {
 } from 'discord.js';
 import { config } from '../../config.js';
 import { sendError } from '../../components/statusMessages.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 
 export const options = {
   name: 'song-cover',
@@ -110,7 +110,7 @@ async function resolveSongCover(query: string): Promise<{ title: string; artist:
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const query = args.join(' ').trim();
   if (!query) {
@@ -125,7 +125,7 @@ export async function prefixExecute(
   }
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   const query = interaction.options.getString('query', true)?.trim();
   if (!query) {
     return sendError({ interaction }, 'Please provide a song name or a "Song Name - Artist Name" query.');

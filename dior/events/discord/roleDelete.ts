@@ -3,7 +3,7 @@
 // Logging: fires when a role is deleted.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildRoleDeletePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -11,7 +11,7 @@ import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
 export const name = 'roleDelete';
 export const once = false;
 
-export async function execute(role: any, client: LevitateClient): Promise<void> {
+export async function execute(role: any, client: CassieClient): Promise<void> {
   const executor = await fetchAuditLogExecutor(role.guild, AuditLogEvent.RoleDelete, role.id);
   const payload = buildRoleDeletePayload(role, executor);
   await dispatchLog(client, role.guild.id, 'role', [role.id], payload);

@@ -10,7 +10,7 @@
 // When no role is supplied, all three forms open the combined role picker.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { resolveRole } from '../../helpers/roleResolver.js';
@@ -43,7 +43,7 @@ function validateRole(guild: any, role: any, invokerMember?: any): string | null
 async function resolveTargetMember(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<{ targetUser: any; member: any } | null> {
   const targetUser = await resolveUser(client, message.guild, args[0]);
   if (!targetUser) {
@@ -66,7 +66,7 @@ async function resolveTargetMember(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;

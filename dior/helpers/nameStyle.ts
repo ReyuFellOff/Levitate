@@ -3,7 +3,7 @@
 // Utility helpers for applying and resetting Discord name styles.
 // Uses the client's built-in REST instance — no extra setup needed.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { NameStyleDoc }   from '../database/database.js';
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export function intToHex(n: number): string {
  * Returns true on success, false if the API call failed.
  */
 export async function applyNameStyle(
-  client:   LevitateClient,
+  client:   CassieClient,
   guildId:  string,
   fontId:   number,
   effectId: number,
@@ -111,7 +111,7 @@ export async function applyNameStyle(
  * Returns true on success.
  */
 export async function resetNameStyle(
-  client:  LevitateClient,
+  client:  CassieClient,
   guildId: string,
 ): Promise<boolean> {
   try {
@@ -134,7 +134,7 @@ export async function resetNameStyle(
  * For guilds with no stored style, the support server's style (if any) is used as a fallback.
  * Staggers requests by 1.5 s each to avoid rate-limit bursts on large bots.
  */
-export async function reapplyAllNameStyles(client: LevitateClient): Promise<void> {
+export async function reapplyAllNameStyles(client: CassieClient): Promise<void> {
   if (!client.db) return;
   try {
     const styles = await client.db.getAllNameStyles();
@@ -169,7 +169,7 @@ export async function reapplyAllNameStyles(client: LevitateClient): Promise<void
  * Returns true if a style was applied.
  */
 export async function applyDefaultNameStyle(
-  client:  LevitateClient,
+  client:  CassieClient,
   guildId: string,
 ): Promise<boolean> {
   if (!client.db) return false;

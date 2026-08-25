@@ -9,7 +9,7 @@
 // dead, nothing inside Discord can wake it back up. Restart has to come
 // from outside (PM2 / systemd / Docker / hosting panel).
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo } from '../../components/statusMessages.js';
 import {
   buildBotActionConfirmPayload,
@@ -38,7 +38,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   const confirmId = `stop-bot:confirm:${message.id}`;
   const cancelId  = `stop-bot:cancel:${message.id}`;
 

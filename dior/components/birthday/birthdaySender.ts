@@ -10,7 +10,7 @@ import { config } from '../../config.js';
 // don't set birthdays.
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { resolvePlaceholders, type PlaceholderContext } from '../../helpers/placeholders.js';
 import { formatBirthday } from '../../helpers/parseBirthdayDate.js';
 import webhookLogger from '../../utils/webhookLogger.js';
@@ -29,7 +29,7 @@ export interface BirthdayResult {
 /** Dispatch the configured birthday message for `member` to their server. */
 export async function sendBirthdayMessage(
   member: any,
-  client: LevitateClient,
+  client: CassieClient,
   isTest = false,
 ): Promise<BirthdayResult> {
   if (!client.db) return { sent: false, reason: 'Database is unavailable.' };
@@ -106,7 +106,7 @@ async function dispatchSavedData(
   guildId:     string,
   channel:     any,
   ctx:         PlaceholderContext,
-  client:      LevitateClient,
+  client:      CassieClient,
   prependText: string | null = null,
 ): Promise<boolean> {
   const entry = await client.db.getSavedData(guildId, dataName).catch((err: unknown): null => {

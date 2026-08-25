@@ -12,7 +12,7 @@ import {
   SeparatorSpacingSize,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
 
@@ -54,7 +54,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const text = args.join(' ').trim();
   if (!text) {
@@ -66,7 +66,7 @@ export async function prefixExecute(
 
   try {
     const response = await fetch(`${API_URL}?text=${encodeURIComponent(text)}`, {
-      headers: { 'User-Agent': 'Levitate Discord Bot/1.0' },
+      headers: { 'User-Agent': 'Cassie Discord Bot/1.0' },
       signal: controller.signal,
     });
 

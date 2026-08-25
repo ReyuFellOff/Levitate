@@ -5,7 +5,7 @@
 // percentage to show for a user: developer override → DB bias override →
 // random roll.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { RatingCommandName } from '../database/database.js';
 import { ratingDevValues } from '../config/ratingDevValues.js';
 
@@ -20,7 +20,7 @@ export const DEV_ID = '922491166149214218';
  *                   command. Pass an explicit number to override it.
  */
 export async function resolveRatingPct(
-  client:   LevitateClient,
+  client:   CassieClient,
   command:  RatingCommandName,
   userId:   string,
   roll:     () => number,

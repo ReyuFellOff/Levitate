@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { buildReminderListPayload } from '../../components/utility/reminder.js';
 import {
@@ -28,12 +28,12 @@ function findDuration(args: string[]): { delayMs: number; reason: string } | nul
   return null;
 }
 
-async function sendList(message: any, client: LevitateClient): Promise<void> {
+async function sendList(message: any, client: CassieClient): Promise<void> {
   const reminders = await listReminders(client, message.author.id);
   await message.channel.send(buildReminderListPayload(reminders, message.author.id));
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
 
   const action = args[0]?.toLowerCase();
@@ -63,7 +63,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   return sendSuccess({ message }, `Reminder set for **${formatDuration(parsed.delayMs)}**. ${reminder.reason}`);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const action = interaction.options.getSubcommand(false);
 

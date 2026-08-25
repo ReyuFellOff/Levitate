@@ -16,7 +16,7 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 import { buildModLogUnban } from './modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
@@ -180,7 +180,7 @@ export function buildUnbanDmPayload(
 
 export async function handleUnbanSelect(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<void> {
   const messageId = interaction.message?.id as string | undefined;
   const session    = messageId ? unbanSessions.get(messageId) : undefined;

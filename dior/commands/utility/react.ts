@@ -6,7 +6,7 @@
 // After reacting, deletes the command message (1 s delay) and sends a brief
 // success note that auto-deletes after 5 s.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 
@@ -21,7 +21,7 @@ export const options = {
   cooldown: 2,
 };
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const messageId: string = interaction.options.getString('message_id', true).trim();
@@ -50,7 +50,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   }
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!args.length) {
     return sendError({ message }, 'Please provide a Unicode emoji, custom emoji name, or emoji ID to react with.');
   }

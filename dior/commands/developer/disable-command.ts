@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 
@@ -14,7 +14,7 @@ export const options = {
 
 const MANAGEMENT_COMMANDS = new Set(['disable-command', 'enable-command']);
 
-function resolveCommand(client: LevitateClient, input: string): { name: string; command: any } | null {
+function resolveCommand(client: CassieClient, input: string): { name: string; command: any } | null {
   const name = input.toLowerCase();
   const canonical = client.commands.has(name) ? name : client.aliases.get(name);
   if (!canonical) return null;
@@ -22,7 +22,7 @@ function resolveCommand(client: LevitateClient, input: string): { name: string; 
   return command ? { name: canonical, command } : null;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!client.db) return sendError({ message }, 'Database is unavailable.');
 
   if (args[0]?.toLowerCase() === 'list') {

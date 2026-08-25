@@ -9,7 +9,7 @@
 // are guaranteed to be appended to the URL — discord.js's REST query option
 // can silently drop them in certain call paths.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }      from '../../components/statusMessages.js';
 import {
   buildCurrentGuildVanityPayload,
@@ -41,7 +41,7 @@ async function fetchInvite(
     res = await fetch(url, {
       headers: {
         Authorization: `Bot ${token}`,
-        'User-Agent':  'DiscordBot (Levitate, 1.0.0)',
+        'User-Agent':  'DiscordBot (Cassie, 1.0.0)',
       },
     });
   } catch {
@@ -65,7 +65,7 @@ async function fetchInvite(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -107,7 +107,7 @@ export async function prefixExecute(
   }));
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const input = interaction.options.getString('code');

@@ -12,7 +12,7 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { emojis } from '../emojis.js';
 import { categories, excludedCategories } from '../config/categories.js';
 import { descriptions } from '../config/descriptions.js';
@@ -29,7 +29,7 @@ export interface HelpSession {
   userId: string;
   guildId: string | null;
   channelId: string;
-  client: LevitateClient;
+  client: CassieClient;
 }
 
 export const helpSessions = new Map<string, HelpSession>();
@@ -48,7 +48,7 @@ export function registerHelpSession(messageId: string, session: HelpSession): vo
  * and a compact display-name form (`vccontrols`).
  */
 export function resolveHelpCategory(
-  client: LevitateClient,
+  client: CassieClient,
   input: string,
 ): string | undefined {
   const normalized = input.trim().toLowerCase();
@@ -144,7 +144,7 @@ export function buildDisabledHelpPayload(message: any) {
 
 // ─────────────────────────── Internal helpers ───────────────────────────
 
-function getCategoryMap(client: LevitateClient): Map<string, string[]> {
+function getCategoryMap(client: CassieClient): Map<string, string[]> {
   const map = new Map<string, string[]>();
   const seen = new Set<string>();
 
@@ -171,7 +171,7 @@ function getCategoryMap(client: LevitateClient): Map<string, string[]> {
   return map;
 }
 
-function buildHeaderSection(client: LevitateClient, compact = false, guildId?: string | null): SectionBuilder {
+function buildHeaderSection(client: CassieClient, compact = false, guildId?: string | null): SectionBuilder {
   // Prefer the bot's server-specific avatar when inside a guild
   const guild      = guildId ? client.guilds.cache.get(guildId) : null;
   const botMember  = guild?.members?.me;
@@ -193,7 +193,7 @@ function buildHeaderSection(client: LevitateClient, compact = false, guildId?: s
   return section;
 }
 
-function buildFooterLinks(client: LevitateClient): string | null {
+function buildFooterLinks(client: CassieClient): string | null {
   const clientId = client.config?.clientId ?? '';
   const supportServer: string = (client.config as any).supportServer ?? '';
   const inviteUrl = getInviteUrl(clientId);
@@ -225,7 +225,7 @@ function buildNavRow(page: string, disabled = false): ActionRowBuilder<ButtonBui
 }
 
 function buildNavDropdown(
-  client: LevitateClient,
+  client: CassieClient,
   disabled = false,
 ): ActionRowBuilder<StringSelectMenuBuilder> {
   const validCategories = getCategoryMap(client);
@@ -281,7 +281,7 @@ function buildAllCommandsTextBlocks(
 }
 
 async function resolvePrefix(
-  client: LevitateClient,
+  client: CassieClient,
   guildId?: string | null,
 ): Promise<{ prefix: string; isCustom: boolean }> {
   const defaultPrefix = client.config?.prefix ?? '$';
@@ -295,7 +295,7 @@ async function resolvePrefix(
 // ─────────────────────────── Public payload builders ───────────────────────────
 
 export async function buildHelpMenuPayload(
-  client: LevitateClient,
+  client: CassieClient,
   userId: string,
   guildId?: string | null,
   disabled = false,
@@ -354,7 +354,7 @@ export async function buildHelpMenuPayload(
 }
 
 export async function buildAllCommandsPayload(
-  client: LevitateClient,
+  client: CassieClient,
   _userId: string,
   _guildId?: string | null,
   disabled = false,
@@ -395,7 +395,7 @@ export async function buildAllCommandsPayload(
 }
 
 export async function buildCategoryPayload(
-  client: LevitateClient,
+  client: CassieClient,
   _userId: string,
   categoryName: string,
   _guildId?: string | null,
@@ -434,7 +434,7 @@ export async function buildCategoryPayload(
 }
 
 export async function buildCommandInfoPayload(
-  client: LevitateClient,
+  client: CassieClient,
   commandName: string,
   guildId?: string | null,
 ) {

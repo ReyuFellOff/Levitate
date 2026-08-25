@@ -6,7 +6,7 @@
 //     its clearRejoin() call is a no-op, and the rejoin survives).
 //   - All members: join/leave/move/mute/deafen logging.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { scheduleRejoin, clearRejoin } from '../../helpers/twentyFourSeven.js';
 import {
@@ -20,7 +20,7 @@ import { handleVoiceMasterVoiceState } from '../../helpers/voiceMaster.js';
 export const name = 'voiceStateUpdate';
 export const once = false;
 
-export async function execute(oldState: any, newState: any, client: LevitateClient): Promise<void> {
+export async function execute(oldState: any, newState: any, client: CassieClient): Promise<void> {
   const guild = newState.guild ?? oldState.guild;
   if (!guild) return;
   const member = newState.member ?? oldState.member;

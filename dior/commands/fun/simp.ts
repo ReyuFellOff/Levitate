@@ -12,7 +12,7 @@
 //   • VERY rarely (1 % chance) the percentage can exceed 100%.
 //   • Percentage is random every time (not deterministic).
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildSimpPayload } from '../../components/fun/simp.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -38,7 +38,7 @@ function rollSimp(): number {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -63,7 +63,7 @@ export async function prefixExecute(
   return message.channel.send(payload);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const rawUser = interaction.options.getUser('user') ?? interaction.user;

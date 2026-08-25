@@ -27,7 +27,7 @@
 //   [4] Add each item to each server, show per-guild results.
 
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
@@ -69,7 +69,7 @@ function isUrl(str: string): boolean {
   }
 }
 
-async function resolveSticker(client: LevitateClient, identifier: string): Promise<any | null> {
+async function resolveSticker(client: CassieClient, identifier: string): Promise<any | null> {
   const isId  = /^\d{17,20}$/.test(identifier);
   const lower = identifier.toLowerCase();
 
@@ -97,7 +97,7 @@ type ResolvedTarget =
 
 async function resolveTarget(
   input:  string,
-  client: LevitateClient,
+  client: CassieClient,
   guild?: any,
 ): Promise<ResolvedTarget | null> {
   if (isUrl(input)) return { kind: 'image', url: input };
@@ -130,7 +130,7 @@ async function resolveTarget(
 }
 
 async function getMutualGuilds(
-  client: LevitateClient,
+  client: CassieClient,
   userId: string,
 ): Promise<{ id: string; name: string }[]> {
   const mutual: { id: string; name: string; memberCount: number }[] = [];
@@ -172,7 +172,7 @@ async function cropToSquare(url: string): Promise<Buffer> {
 }
 
 function awaitModalSubmit(
-  client:    LevitateClient,
+  client:    CassieClient,
   customId:  string,
   userId:    string,
   timeoutMs: number,
@@ -249,7 +249,7 @@ async function runGuildSelect(opts: {
   imageUrl:         string;
   wasOriginallyImage: boolean;
   selectedGuildIds: string[];         // mutated in-place
-  client:           LevitateClient;
+  client:           CassieClient;
   authorId:         string;
 }): Promise<{ result: 'confirmed' | 'cancel' | 'timeout'; finalName?: string; shouldCrop?: boolean }> {
   const {
@@ -410,7 +410,7 @@ async function runBulkGuildSelect(opts: {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const input = args.join(' ').trim();

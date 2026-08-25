@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendImagePanel } from '../../helpers/imagePanel.js';
 
@@ -12,7 +12,7 @@ export const options = {
   cooldown: 3,
 };
 
-export async function prefixExecute(message: any, _args: string[], _client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, _args: string[], _client: CassieClient): Promise<any> {
   const guild = message.guild;
   if (!guild) return sendError({ message }, 'This command can only be used in a server.');
 
@@ -29,7 +29,7 @@ export async function prefixExecute(message: any, _args: string[], _client: Levi
   });
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const guild = interaction.guild;
   if (!guild) return sendError({ interaction }, 'This command can only be used in a server.');

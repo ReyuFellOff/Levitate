@@ -11,7 +11,7 @@
 // runs the command, until removed. Developer (Reyansh) always sees Infinite%
 // regardless of any bias set.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { RatingCommandName } from '../../database/database.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -29,7 +29,7 @@ export const options = {
 
 const VALID_COMMANDS: RatingCommandName[] = ['cute', 'gay', 'autistic', 'intelligent', 'simp', 'rizz'];
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
 
   if (args.length < 3) return sendWrongUsage({ message, client }, options.name, options.usage);

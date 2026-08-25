@@ -4,7 +4,7 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 
 export const options = {
@@ -20,7 +20,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const allCommands = new Map<string, any>();
   for (const command of [

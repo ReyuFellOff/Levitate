@@ -14,7 +14,7 @@
 // populate the entry — otherwise the executor shows as "Unknown".
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildRoleUpdatePayload, buildRolesReorderedPayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule, grantedDangerousPermissions } from '../../helpers/antinukeEngine.js';
@@ -54,7 +54,7 @@ function diffFields(oldRole: any, newRole: any): { field: string; before: string
   return changes;
 }
 
-export async function execute(oldRole: any, newRole: any, client: LevitateClient): Promise<void> {
+export async function execute(oldRole: any, newRole: any, client: CassieClient): Promise<void> {
   const changes = diffFields(oldRole, newRole);
   if (!changes.length) return;
 

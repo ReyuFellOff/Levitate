@@ -36,7 +36,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
 import { sendError } from '../statusMessages.js';
@@ -94,7 +94,7 @@ interface BuilderSession {
   embed:      EmbedState;
   mode:       BuilderMode;
   activeIdx:  number | null; // field being edited, if any
-  client:     LevitateClient;
+  client:     CassieClient;
   /** Guild saved-data entries of type 'embed', for the Load Data picker. */
   savedItems: any[];
   dataPage:   number;
@@ -726,7 +726,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 // ─────────────────────────────────────────────────────────────────────────────
 
 function awaitModal(
-  client:   LevitateClient,
+  client:   CassieClient,
   customId: string,
   userId:   string,
   ms:       number,
@@ -777,7 +777,7 @@ async function doSaveAsData(
   s:       BuilderSession,
   ix:      any,
   message: any,
-  client:  LevitateClient,
+  client:  CassieClient,
   token:   string,
 ): Promise<void> {
   const modalCid = `eb:modal:${token}:savename`;
@@ -992,7 +992,7 @@ function embedJsonToState(json: any): EmbedState {
 
 export async function startEmbedBuilderSession(
   message:  any,
-  client:   LevitateClient,
+  client:   CassieClient,
   authorId: string,
   initialMode: BuilderMode = 'idle',
 ): Promise<void> {

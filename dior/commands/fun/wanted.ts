@@ -7,7 +7,7 @@
 //   $wanted              — poster for the author
 //   $wanted <@user|ID>   — poster for the given user
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildWantedPayload } from '../../components/fun/wanted.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -25,7 +25,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -42,7 +42,7 @@ export async function prefixExecute(
   return message.channel.send(payload);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const rawUser = interaction.options.getUser('user') ?? interaction.user;

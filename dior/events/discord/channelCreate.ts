@@ -3,7 +3,7 @@
 // Logging: fires when a guild channel is created.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildChannelCreatePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -13,7 +13,7 @@ import { applyJailOverwrite, getConfiguredJailRole } from '../../helpers/jail.js
 export const name = 'channelCreate';
 export const once = false;
 
-export async function execute(channel: any, client: LevitateClient): Promise<void> {
+export async function execute(channel: any, client: CassieClient): Promise<void> {
   if (!channel.guild) return;
 
   await syncReactionRestrictionForChannel(channel, client);

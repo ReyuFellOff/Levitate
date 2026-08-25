@@ -11,7 +11,7 @@
 //   2. Author replies in-channel with numeric guesses (30s per guess).
 //   3. Bot replies "higher"/"lower" until the guess is correct or attempts run out.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 
 export const options = {
@@ -30,7 +30,7 @@ const GUESS_TIME    = 30_000; // 30s per guess
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
 

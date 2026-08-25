@@ -4,7 +4,7 @@
 // Regular users: gated to those with a valid, non-expired noprefix DB entry.
 // Developers: permanent access by default; self-disable stored separately so
 //             they don't appear in the $noprefix list.
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 
 export const options = {
@@ -25,7 +25,7 @@ function formatExpiry(expiresAt: Date | null): string {
   return `<t:${s}:R> (on <t:${s}:f>)`;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!client.db) return sendError({ message }, 'Database is not available right now.');
 
   const isDeveloper = client.config.developers.some(([, id]: [string, string]) => id === message.author.id);

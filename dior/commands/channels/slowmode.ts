@@ -18,7 +18,7 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
 import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
@@ -131,7 +131,7 @@ async function sendResults(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -177,7 +177,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx   = { interaction };

@@ -15,7 +15,7 @@
 // indices are coherent. (Switching mode at runtime isn't currently exposed
 // but the design accommodates it.)
 //
-// The "mobile" device hint is NOT applied here — see LevitateClient: the
+// The "mobile" device hint is NOT applied here — see CassieClient: the
 // IDENTIFY payload's browser/os/device must be set BEFORE the gateway
 // handshake, which is the only point at which the icon can be installed.
 

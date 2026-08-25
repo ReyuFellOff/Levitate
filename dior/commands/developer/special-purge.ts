@@ -10,7 +10,7 @@
 //
 // The command (invocation) message is itself excluded from the walk.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { deleteFetched, scheduleCleanup } from '../../helpers/purgeHelper.js';
 
@@ -43,7 +43,7 @@ async function fetchChannelMessages(channel: any, excludeId: string, needed: num
   return out;
 }
 
-export async function prefixExecute(message: any, args: string[], _client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], _client: CassieClient) {
   const ctx = { message };
 
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

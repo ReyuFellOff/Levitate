@@ -11,7 +11,7 @@
 import { readdirSync } from 'fs';
 import { join }        from 'path';
 import { pathToFileURL } from 'url';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,14 +31,14 @@ export interface CommandOptions {
 
 interface PrefixCommandModule {
   options:       CommandOptions;
-  prefixExecute: (message: any, args: string[], client: LevitateClient) => Promise<void> | void;
+  prefixExecute: (message: any, args: string[], client: CassieClient) => Promise<void> | void;
 }
 
 interface LoadStats { loaded: number; devLoaded: number; skipped: number; }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function loadPrefixCommands(client: LevitateClient): Promise<void> {
+export async function loadPrefixCommands(client: CassieClient): Promise<void> {
   const dir   = join(process.cwd(), 'dist', 'dior', 'commands');
   const stats = { loaded: 0, devLoaded: 0, skipped: 0 } satisfies LoadStats;
 
@@ -54,7 +54,7 @@ export async function loadPrefixCommands(client: LevitateClient): Promise<void> 
 
 // ── Internals ────────────────────────────────────────────────────────────────
 
-async function scanDir(client: LevitateClient, dir: string, stats: LoadStats): Promise<void> {
+async function scanDir(client: CassieClient, dir: string, stats: LoadStats): Promise<void> {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
 

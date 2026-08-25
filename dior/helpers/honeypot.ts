@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { emojis } from '../emojis.js';
 import { config } from '../config.js';
 import { ContainerBuilder, MessageFlags, TextDisplayBuilder } from 'discord.js';
@@ -12,7 +12,7 @@ export function invalidateHoneypotCache(guildId: string): void {
   settingsCache.delete(guildId);
 }
 
-export async function enforceHoneypot(message: any, client: LevitateClient): Promise<boolean> {
+export async function enforceHoneypot(message: any, client: CassieClient): Promise<boolean> {
   if (!message.guild || !client.db || message.author?.bot) return false;
 
   const guildId = message.guild.id;
@@ -77,7 +77,7 @@ export async function enforceHoneypot(message: any, client: LevitateClient): Pro
   return true;
 }
 
-async function getCachedSettings(client: LevitateClient, guildId: string) {
+async function getCachedSettings(client: CassieClient, guildId: string) {
   const cached = settingsCache.get(guildId);
   if (cached && cached.expiresAt > Date.now()) return cached;
 

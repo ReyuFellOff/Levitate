@@ -37,7 +37,7 @@ import {
   TextDisplayBuilder,
   AttachmentBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
@@ -168,7 +168,7 @@ function parseCv2Json(raw: string): any {
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ) {
   const ctx = { message };
 

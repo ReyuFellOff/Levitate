@@ -5,7 +5,7 @@
 // attachment permissions. The database record is the source of truth and the
 // message/reaction events enforce it at the point of use.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 export type RestrictionKind = 'image' | 'reaction';
 
@@ -16,7 +16,7 @@ function getDb(client: any): any | null {
 }
 
 export async function getMemberRestrictions(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   userId: string,
 ): Promise<any | null> {
@@ -31,7 +31,7 @@ export async function getMemberRestrictions(
 }
 
 export async function setMemberRestriction(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   userId: string,
   kind: RestrictionKind,
@@ -97,7 +97,7 @@ export async function syncReactionOverwrite(
 
 export async function syncReactionRestrictionForChannel(
   channel: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const guild = channel?.guild;
   if (!guild || channel.isThread?.() || !channel.permissionOverwrites?.edit) return;
@@ -149,7 +149,7 @@ export function isImageMessage(message: any): boolean {
 
 export async function enforceImageRestriction(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<boolean> {
   if (!message?.guild || message.author?.bot || !isImageMessage(message)) return false;
   const restriction = await getMemberRestrictions(client, message.guild.id, message.author.id);
@@ -178,7 +178,7 @@ export async function enforceImageRestriction(
 export async function enforceReactionRestriction(
   reaction: any,
   user: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<boolean> {
   if (user?.bot) return false;
 

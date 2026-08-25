@@ -18,7 +18,7 @@
 // No confirmation needed — unban is a reversible action.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildUnbanListPayload,
@@ -65,7 +65,7 @@ async function fetchBannedEntries(guild: any): Promise<BannedEntry[]> {
  * Username lookups fall back to the guild's own ban list since the user is
  * not a member and can't be searched via the guild member cache.
  */
-async function resolveBanTarget(client: LevitateClient, guild: any, arg: string): Promise<any | null> {
+async function resolveBanTarget(client: CassieClient, guild: any, arg: string): Promise<any | null> {
   const trimmed = arg.trim();
   if (!trimmed) return null;
 
@@ -119,7 +119,7 @@ async function directUnban(opts: {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -170,7 +170,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

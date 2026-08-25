@@ -1,4 +1,4 @@
-# Levitate — Code Review Findings (2026-07-11)
+# Cassie — Code Review Findings (2026-07-11)
 
 Full-project review against `grace.md`. All issues below are now marked
 **✅ FIXED** (or ✅ RESOLVED, for the one item that was informational and simply

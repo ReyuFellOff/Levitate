@@ -6,7 +6,7 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { sendError } from '../components/statusMessages.js';
 import { resolveUser } from './userResolver.js';
 import { emojis } from '../emojis.js';
@@ -58,7 +58,7 @@ async function getGif(api: string): Promise<string | null> {
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
       const response = await fetch(providerUrl(provider, api), {
-        headers: { 'User-Agent': 'Levitate Discord Bot/1.0' },
+        headers: { 'User-Agent': 'Cassie Discord Bot/1.0' },
         signal: controller.signal,
       });
       if (!response.ok) continue;
@@ -89,7 +89,7 @@ async function randomMember(guild: any, exclude: string[]): Promise<any | null> 
 }
 
 async function participants(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   author: any,
   args: string[],
@@ -134,7 +134,7 @@ function payload(action: RoleplayAction, user1: any, user2: any | null, gif: str
 export async function runRoleplay(
   action: RoleplayAction,
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   args: string[] = [],
 ): Promise<any> {
   const guild = context.message?.guild ?? context.interaction?.guild ?? null;

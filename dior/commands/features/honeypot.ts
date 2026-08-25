@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { startHoneypotSession } from '../../components/features/honeypot.js';
 
@@ -13,7 +13,7 @@ export const options = {
   cooldown: 3,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
   if (!message.member?.permissions?.has?.(PermissionFlagsBits.ManageGuild))

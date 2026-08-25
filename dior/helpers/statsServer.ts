@@ -1,7 +1,7 @@
 // xoxo/helpers/statsServer.ts
 //
 // Lightweight HTTP server that exposes live bot statistics as JSON.
-// The Levitate website polls GET /api/stats to display real-time data.
+// The Cassie website polls GET /api/stats to display real-time data.
 //
 // Only started on cluster 0 — other clusters would conflict on the same port.
 // If this cluster aggregates via broadcastEval the global numbers are correct.
@@ -17,11 +17,11 @@
 
 import { createServer } from 'http';
 import type { IncomingMessage, ServerResponse } from 'http';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Stat gatherer ────────────────────────────────────────────────────────────
 
-async function gatherStats(client: LevitateClient): Promise<Record<string, unknown>> {
+async function gatherStats(client: CassieClient): Promise<Record<string, unknown>> {
   const cluster = (client as any).cluster;
 
   // Per-cluster baseline (used as fallback if broadcastEval fails)
@@ -79,7 +79,7 @@ async function gatherStats(client: LevitateClient): Promise<Record<string, unkno
 
 // ── Server ───────────────────────────────────────────────────────────────────
 
-export function startStatsServer(client: LevitateClient): void {
+export function startStatsServer(client: CassieClient): void {
   const port   = parseInt(process.env['STATS_API_PORT'] ?? '3001', 10);
   const secret = process.env['STATS_API_SECRET'] ?? '';
 

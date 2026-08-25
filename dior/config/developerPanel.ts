@@ -18,7 +18,7 @@ export const developerPanelConfig = {
   bannerUrl:  'https://i.ibb.co/JbR67st/81eb1f7bada595956538d06a5026f094.jpg',
 
   // ── Bot project info ─────────────────────────────────────────────────────────
-  project: 'Levitate',
+  project: 'Cassie',
   year:    '2026',
   status:  'Active',
   reason:  'Developer was bored',

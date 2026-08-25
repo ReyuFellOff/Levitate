@@ -3,14 +3,14 @@
 // Logging: fires when a sticker is updated. Category: `server`,
 // exception key: `sticker`.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildStickerUpdatePayload } from '../../components/logging/logMessages.js';
 
 export const name = 'stickerUpdate';
 export const once = false;
 
-export async function execute(oldSticker: any, newSticker: any, client: LevitateClient): Promise<void> {
+export async function execute(oldSticker: any, newSticker: any, client: CassieClient): Promise<void> {
   if (!newSticker.guild) return;
   if (oldSticker.name === newSticker.name) return;
   const payload = buildStickerUpdatePayload(oldSticker, newSticker);

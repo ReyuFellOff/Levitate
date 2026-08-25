@@ -16,7 +16,7 @@ import {
 } from 'discord.js';
 import { config } from '../../config.js';
 import { honeypotConfig } from '../../config/honeypot.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { HoneypotSettingsDoc } from '../../database/database.js';
 import { emojis } from '../../emojis.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
@@ -26,7 +26,7 @@ interface HoneypotSession {
   authorId: string;
   channelId: string;
   messageId: string;
-  client: LevitateClient;
+  client: CassieClient;
 }
 
 const sessions = new Map<string, HoneypotSession>();
@@ -91,7 +91,7 @@ function buildHoneypotModal(customId: string, settings: HoneypotSettingsDoc | nu
     );
 }
 
-function awaitHoneypotModal(client: LevitateClient, customId: string, userId: string): Promise<any | null> {
+function awaitHoneypotModal(client: CassieClient, customId: string, userId: string): Promise<any | null> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => { client.removeListener('interactionCreate', handler); resolve(null); }, TIMEOUT_MS);
     function handler(interaction: any): void {
@@ -105,19 +105,19 @@ function awaitHoneypotModal(client: LevitateClient, customId: string, userId: st
   });
 }
 
-async function deleteWarningMessage(client: LevitateClient, settings: HoneypotSettingsDoc): Promise<void> {
+async function deleteWarningMessage(client: CassieClient, settings: HoneypotSettingsDoc): Promise<void> {
   if (!settings.channel_id || !settings.warning_message_id) return;
   const channel: any = await client.channels.fetch(settings.channel_id).catch((): null => null);
   await channel?.messages?.delete(settings.warning_message_id).catch((): null => null);
 }
 
-async function refreshHoneypotMessage(client: LevitateClient, session: HoneypotSession): Promise<void> {
+async function refreshHoneypotMessage(client: CassieClient, session: HoneypotSession): Promise<void> {
   const settings = await client.db?.getHoneypotSettings(session.guildId).catch((): null => null);
   const channel: any = await client.channels.fetch(session.channelId).catch((): null => null);
   await channel?.messages?.edit(session.messageId, buildHoneypotPanel(settings, session.messageId)).catch((): null => null);
 }
 
-export async function startHoneypotSession(message: any, client: LevitateClient): Promise<void> {
+export async function startHoneypotSession(message: any, client: CassieClient): Promise<void> {
   const settings = await client.db.getHoneypotSettings(message.guild.id).catch((): null => null);
   let channelId = settings?.channel_id ?? null;
   let currentSettings = settings;
@@ -154,7 +154,7 @@ async function expireSession(token: string): Promise<void> {
   await message?.edit(buildHoneypotPanel(null, token, true)).catch((): null => null);
 }
 
-export async function handleHoneypotInteraction(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleHoneypotInteraction(interaction: any, client: CassieClient): Promise<void> {
   const parts = String(interaction.customId).split(':');
   const token = parts[2];
   const session = sessions.get(token);
@@ -194,7 +194,7 @@ export async function handleHoneypotInteraction(interaction: any, client: Levita
 }
 
 export async function postWarningMessage(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   channelId: string,
   action: 'kick' | 'ban',
@@ -235,7 +235,7 @@ export async function postWarningMessage(
   }
 }
 
-export async function restoreHoneypotWarning(client: LevitateClient, guildId: string, messageId: string): Promise<void> {
+export async function restoreHoneypotWarning(client: CassieClient, guildId: string, messageId: string): Promise<void> {
   const settings = await client.db?.getHoneypotSettings(guildId).catch((): null => null);
   if (!settings?.enabled || settings.warning_message_id !== messageId || !settings.channel_id) return;
   const replacementId = await postWarningMessage(client, guildId, settings.channel_id, settings.action, null, settings.moderated_count ?? 0);

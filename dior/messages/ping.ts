@@ -1,7 +1,7 @@
 // xoxo/messages/ping.ts
 //
 // Builds the Components V2 payload for the ping command response.
-// Lavalink latency is omitted — it's not applicable to Levitate.
+// Lavalink latency is omitted — it's not applicable to Cassie.
 
 import {
   ContainerBuilder,

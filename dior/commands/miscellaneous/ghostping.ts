@@ -14,7 +14,7 @@
 //   • Cooldown: 30 seconds
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { resolveRole } from '../../helpers/roleResolver.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -38,7 +38,7 @@ type GhostPingTarget =
 
 async function extractUserIds(
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
 ): Promise<string[]> {
   const ids: string[] = [];
@@ -87,7 +87,7 @@ async function sendGhostPing(channel: any, target: GhostPingTarget): Promise<voi
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -143,7 +143,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   await interaction.deferReply({ ephemeral: true });
 

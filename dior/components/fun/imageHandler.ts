@@ -4,7 +4,7 @@
 // Imported by interactionCreate.ts.
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   getImageSession,
   resetImageTimeout,
@@ -12,7 +12,7 @@ import {
   buildImagePayload,
 } from './image.js';
 
-export async function handleImageInteraction(interaction: any, _client: LevitateClient): Promise<void> {
+export async function handleImageInteraction(interaction: any, _client: CassieClient): Promise<void> {
   const parsed = parseImageId(interaction.customId as string);
   if (!parsed) {
     await interaction.reply({ content: 'Unknown image action.', flags: MessageFlags.Ephemeral }).catch((): null => null);

@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 export const INVOKE_COMMANDS = [
   'ban',
@@ -70,7 +70,7 @@ function renderInvokeMessage(
  */
 export async function sendInvokeResponse(
   context: InvokeContext,
-  client: LevitateClient,
+  client: CassieClient,
   command: InvokeCommand,
   values: InvokeValues = {},
 ): Promise<boolean> {

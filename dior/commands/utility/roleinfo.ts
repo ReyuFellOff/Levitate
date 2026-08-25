@@ -2,7 +2,7 @@
 //
 // $roleinfo — show details for one role without interactive controls.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildRoleInfoPayload } from '../../components/utility/list.js';
 import { resolveRole } from '../../helpers/roleResolver.js';
@@ -20,7 +20,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   const guild = message.guild;
@@ -37,7 +37,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const guild = interaction.guild;

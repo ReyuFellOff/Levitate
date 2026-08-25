@@ -7,7 +7,7 @@
 // Slash:   /hackban user_id:<string> [reason]
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildHackbanSuccessPayload } from '../../components/moderation/hackban.js';
 import { buildModLogHackban } from '../../components/moderation/modlog.js';
@@ -30,7 +30,7 @@ const SNOWFLAKE_RE = /^\d{17,20}$/;
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -85,7 +85,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

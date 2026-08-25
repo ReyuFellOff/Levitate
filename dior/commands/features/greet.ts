@@ -20,7 +20,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { sendGreetMessage } from '../../components/welcomer/greetSender.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
@@ -69,7 +69,7 @@ function parseMessageInput(raw: string): { text: string | null; dataName: string
   return { text: raw.trim() || null, dataName: null };
 }
 
-async function buildSettingsContainer(guild: any, client: LevitateClient, prefix: string): Promise<ContainerBuilder> {
+async function buildSettingsContainer(guild: any, client: CassieClient, prefix: string): Promise<ContainerBuilder> {
   const s = await client.db.getGreetSettings(guild.id).catch((): null => null);
 
   const channelLine = s?.channel_id ? `**Channel:** <#${s.channel_id}>` : `**Channel:** Not set`;
@@ -111,7 +111,7 @@ async function buildSettingsContainer(guild: any, client: LevitateClient, prefix
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx    = { message };
   const prefix = client.config.prefix;
@@ -271,7 +271,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

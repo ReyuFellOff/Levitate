@@ -9,7 +9,7 @@
 // All builder logic and payload construction lives in:
 //   xoxo/components/utility/embed.ts
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }           from '../../components/statusMessages.js';
 import { startEmbedBuilderSession } from '../../components/utility/embed.js';
 
@@ -26,7 +26,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!message.guild) {
     await sendError({ message }, 'This command can only be used in a server.');

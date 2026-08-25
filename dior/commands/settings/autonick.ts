@@ -3,7 +3,7 @@
 // Configure nickname text applied automatically to new human members and bots.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { buildAutonickStatusPayload } from '../../components/utility/autonickStatus.js';
 
@@ -28,7 +28,7 @@ type Target = 'member' | 'bot';
 async function run(
   ctx: { message?: any; interaction?: any },
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const guild = ctx.message?.guild ?? ctx.interaction?.guild;
   if (!guild) return sendError(ctx, 'This command can only be used in a server.');
@@ -80,11 +80,11 @@ async function run(
   return sendSuccess(ctx, `Autonick ${mode} for **${target}s** set to **${text}**.`);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   return run({ message }, args, client);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   const action = interaction.options.getSubcommand();
   const text = interaction.options.getString('text');
   const target = interaction.options.getString('target');

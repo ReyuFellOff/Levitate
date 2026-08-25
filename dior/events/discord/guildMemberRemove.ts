@@ -5,7 +5,7 @@
 // the log instead, to avoid double-logging the same departure.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildMemberLeavePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -13,7 +13,7 @@ import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
 export const name = 'guildMemberRemove';
 export const once = false;
 
-export async function execute(member: any, client: LevitateClient): Promise<void> {
+export async function execute(member: any, client: CassieClient): Promise<void> {
   if (!member.guild) return;
 
   const banExecutor = await fetchAuditLogExecutor(member.guild, AuditLogEvent.MemberBanAdd, member.id, 4000);

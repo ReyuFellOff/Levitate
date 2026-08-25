@@ -6,7 +6,7 @@
 // Prefix:  $placeholders
 // Slash:   /placeholders
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildPayload,
@@ -26,7 +26,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   if (!message.guild) {
     return sendError({ message }, 'This command can only be used in a server.');
@@ -41,7 +41,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
 

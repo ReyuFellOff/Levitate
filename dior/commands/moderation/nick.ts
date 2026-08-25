@@ -12,7 +12,7 @@
 // so the bot can always change its own nickname regardless of role hierarchy.
 
 import { PermissionFlagsBits, REST, Routes } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { buildModLogNick } from '../../components/moderation/modlog.js';
 import { sendModLog } from '../../utils/modlogHelper.js';
@@ -45,7 +45,7 @@ async function setBotSelfNick(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -180,7 +180,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx   = { interaction };

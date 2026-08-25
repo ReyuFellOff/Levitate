@@ -1,5 +1,5 @@
 // xoxo/commands/music/nowplaying.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
 import { buildTrackInfo } from '../../helpers/nowPlayingManager.js';
@@ -26,7 +26,7 @@ async function handle(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guildId: string,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
 
@@ -121,9 +121,9 @@ async function handle(
   await sendNowPlaying(ctxObj as any, player, trackInfo, { prefix, canvasBuffer: canvasBuffer ?? undefined });
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   await handle({ message, isSlash: false }, message.guild.id, _args, client);
 }
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await handle({ interaction, isSlash: true }, interaction.guild.id, [], client);
 }

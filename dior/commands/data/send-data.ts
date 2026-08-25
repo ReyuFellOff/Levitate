@@ -8,7 +8,7 @@
 // Interaction routing in interactionCreate.ts (customId prefix: 'senddata').
 // Session tracking + payload builders in xoxo/components/sendDataMenu.ts.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildSendDataPayload,
@@ -28,7 +28,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   if (!message.guild) {
     return sendError({ message }, 'This command can only be used in a server.');

@@ -5,7 +5,7 @@
 // Prefix:  $clearwarnings <@user|ID|username>
 // Slash:   /clearwarnings user:<user>
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildClearWarningsResultPayload } from '../../components/moderation/warn.js';
 import { buildModLogClearWarnings } from '../../components/moderation/modlog.js';
@@ -33,7 +33,7 @@ const CONFIRM_TITLE = 'Confirm Clear Warnings';
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -89,7 +89,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

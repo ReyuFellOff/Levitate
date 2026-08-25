@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 
@@ -30,7 +30,7 @@ function toMarkdown(emoji: any): string {
     : `<:${emoji.name}:${emoji.id}>`;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const input = args.join(' ').trim();
   if (!input) {
     return sendError({ message }, 'Please provide emoji identifiers.');

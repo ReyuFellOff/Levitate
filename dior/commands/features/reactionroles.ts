@@ -9,7 +9,7 @@
 //   reset
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { ReactionRoleMessageDoc, ReactionRolePair } from '../../database/database.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -116,7 +116,7 @@ function targetNotFoundMessage(
   return 'I couldn’t find that message. Use a message ID from this channel or a full Discord message link.';
 }
 
-function sendReactionRoleUsage(context: any, client: LevitateClient): Promise<any> {
+function sendReactionRoleUsage(context: any, client: CassieClient): Promise<any> {
   return sendWrongUsage(
     { message: context, client },
     options.name,
@@ -138,7 +138,7 @@ function pairLines(guild: any, record: ReactionRoleMessageDoc): string {
   }).join(', ');
 }
 
-async function listReactionRoles(message: any, client: LevitateClient): Promise<void> {
+async function listReactionRoles(message: any, client: CassieClient): Promise<void> {
   const records = await client.db!.getReactionRoleMessages(message.guild.id);
   if (!records.length) {
     await sendInfo(statusContext(message), 'No reaction roles are configured in this server.');
@@ -156,7 +156,7 @@ async function listReactionRoles(message: any, client: LevitateClient): Promise<
 
 async function addReactionRole(
   context: any,
-  client: LevitateClient,
+  client: CassieClient,
   args: string[],
 ): Promise<void> {
   const rawMessage = args[1];
@@ -270,7 +270,7 @@ async function addReactionRole(
 
 async function setReactionRoleMode(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   args: string[],
 ): Promise<void> {
   const mode = args[1]?.toLowerCase();
@@ -337,7 +337,7 @@ async function setReactionRoleMode(
 
 async function getTargetAndRecord(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   input: string,
 ): Promise<{ target: any | null; record: ReactionRoleMessageDoc | null }> {
   const parsed = parseMessageReference(input);
@@ -355,7 +355,7 @@ async function getTargetAndRecord(
 
 async function removeReactionRole(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   args: string[],
 ): Promise<void> {
   const { target, record: storedRecord } = await getTargetAndRecord(message, client, args[1]);
@@ -403,7 +403,7 @@ async function removeReactionRole(
   await sendSuccess(statusContext(message), `Removed ${pair.emoji} - <@&${pair.role_id}> from \`${target.id}\`.`);
 }
 
-async function removeAllReactionRoles(message: any, client: LevitateClient, args: string[]): Promise<void> {
+async function removeAllReactionRoles(message: any, client: CassieClient, args: string[]): Promise<void> {
   const { target, record: storedRecord } = await getTargetAndRecord(message, client, args[1]);
   if (!target) {
     await sendError(statusContext(message), targetNotFoundMessage(
@@ -433,7 +433,7 @@ async function resolveStoredReactionRoleMessage(
   return resolveTargetMessage(guild, record.message_id, undefined, record.channel_id);
 }
 
-async function resetReactionRoles(message: any, client: LevitateClient): Promise<void> {
+async function resetReactionRoles(message: any, client: CassieClient): Promise<void> {
   const records = await client.db!.getReactionRoleMessages(message.guild.id);
   if (!records.length) {
     await sendInfo(statusContext(message), 'No reaction roles are configured in this server.');
@@ -494,7 +494,7 @@ async function resetReactionRoles(message: any, client: LevitateClient): Promise
   });
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<void> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<void> {
   if (!message.guild) {
     await sendError({ message }, 'This command can only be used in a server.');
     return;

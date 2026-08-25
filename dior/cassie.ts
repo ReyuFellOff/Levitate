@@ -1,4 +1,4 @@
-// xoxo/levitate.ts — per-cluster bootstrap
+// xoxo/cassie.ts — per-cluster bootstrap
 //
 // Boot order:
 //   1.  Login + await clientReady
@@ -12,7 +12,7 @@
 //   9.  [YAY!] ready
 
 import 'dotenv/config';
-import { LevitateClient }         from './structures/LevitateClient.js';
+import { CassieClient }         from './structures/CassieClient.js';
 import { loadAllEvents }         from './handlers/eventLoader.js';
 import { loadHelpers }           from './handlers/helperLoader.js';
 import { loadPrefixCommands }    from './handlers/commandLoader.js';
@@ -53,7 +53,7 @@ async function bootstrap(): Promise<void> {
   // spurious "possible memory leak" warnings — this is not an actual leak.
   process.setMaxListeners(25);
 
-  const client = new LevitateClient();
+  const client = new CassieClient();
 
   // Attach the ready listener BEFORE login so we never miss the event.
   const readyPromise = new Promise<void>((resolve) => {
@@ -170,7 +170,7 @@ async function bootstrap(): Promise<void> {
 // Boot-block: cached data
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function loadCachedDataBlock(client: LevitateClient): Promise<void> {
+async function loadCachedDataBlock(client: CassieClient): Promise<void> {
   const db = client.db;
 
   // Noprefix global state
@@ -219,7 +219,7 @@ async function loadCachedDataBlock(client: LevitateClient): Promise<void> {
 // Side-effects (fire-and-forget at end of boot)
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function enforceBlacklistedServers(client: LevitateClient): Promise<void> {
+async function enforceBlacklistedServers(client: CassieClient): Promise<void> {
   if (!client.db) return;
   const enabled = await client.db.getBlacklistServerGlobalEnabled().catch((): boolean => false);
   if (!enabled) return;
@@ -238,7 +238,7 @@ async function enforceBlacklistedServers(client: LevitateClient): Promise<void> 
   }
 }
 
-async function sendPendingRestartNotification(client: LevitateClient): Promise<void> {
+async function sendPendingRestartNotification(client: CassieClient): Promise<void> {
   if (!client.db) return;
   try {
     const pending = await client.db.getPendingRestartChannel();

@@ -13,7 +13,7 @@
 //   • Target is not a bot developer
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildWarnSuccessPayload, buildWarnDmPayload } from '../../components/moderation/warn.js';
 import { buildModLogWarn } from '../../components/moderation/modlog.js';
@@ -43,7 +43,7 @@ function checkTarget(guild: any, targetUser: any, invokerId: string, developers:
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -86,7 +86,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

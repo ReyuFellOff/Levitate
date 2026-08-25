@@ -11,7 +11,7 @@
 // If `n` is omitted  → deletes the target + ALL messages after it.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { deleteFetched, scheduleCleanup } from '../../helpers/purgeHelper.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
@@ -191,7 +191,7 @@ async function askConfirmationSlash(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -266,7 +266,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

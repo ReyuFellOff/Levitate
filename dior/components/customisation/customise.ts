@@ -31,7 +31,7 @@ import {
 import { emojis }          from '../../emojis.js';
 import { descriptions } from '../../config/descriptions.js';
 import { imageUrlToBase64 } from '../../utils/imageUtils.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   buildFormPage as buildNsFormPage,
   registerNsSession,
@@ -51,7 +51,7 @@ export interface CustomiseSession {
   authorId:  string;
   channelId: string;
   botMsgId:  string;
-  client:    LevitateClient;
+  client:    CassieClient;
   step:      'home' | 'reset-confirm';
 }
 
@@ -99,18 +99,18 @@ function wrap(container: ContainerBuilder): any {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-export async function resolveBotDisplayName(client: LevitateClient, guildId: string): Promise<string> {
+export async function resolveBotDisplayName(client: CassieClient, guildId: string): Promise<string> {
   try {
     const guild     = client.guilds.cache.get(guildId) ?? await client.guilds.fetch(guildId);
     const botMember = guild.members.cache.get(client.user!.id)
       ?? await guild.members.fetch(client.user!.id).catch((): null => null);
-    return botMember?.nickname ?? client.user?.displayName ?? client.user?.username ?? 'Levitate';
+    return botMember?.nickname ?? client.user?.displayName ?? client.user?.username ?? 'Cassie';
   } catch {
-    return client.user?.displayName ?? client.user?.username ?? 'Levitate';
+    return client.user?.displayName ?? client.user?.username ?? 'Cassie';
   }
 }
 
-export async function resolveBotAvatarUrl(client: LevitateClient, guildId: string): Promise<string | null> {
+export async function resolveBotAvatarUrl(client: CassieClient, guildId: string): Promise<string | null> {
   try {
     const guild     = client.guilds.cache.get(guildId) ?? await client.guilds.fetch(guildId);
     const botMember = guild.members.cache.get(client.user!.id)
@@ -325,7 +325,7 @@ function makeProfileModal(scopeId: string, currentNick?: string | null): ModalBu
 // ── Modal awaiter ─────────────────────────────────────────────────────────────
 
 function awaitModal(
-  client:    LevitateClient,
+  client:    CassieClient,
   customId:  string,
   userId:    string,
   timeoutMs: number,
@@ -368,7 +368,7 @@ async function applyProfileChanges(
 
 export async function handleCustomiseInteraction(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<void> {
   const parts   = (interaction.customId as string).split(':');
   const scopeId = parts[1];

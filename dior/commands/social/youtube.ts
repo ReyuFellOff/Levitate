@@ -2,7 +2,7 @@
 //
 // $youtube <channel-name-or-id> — show a YouTube channel's details.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildYoutubePayload } from '../../components/social/youtube.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -98,7 +98,7 @@ async function fetchChannelData(identifier: string): Promise<YouTubeChannelRespo
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   if (!args.length) return sendWrongUsage({ message }, options.name, options.usage);
 
@@ -125,7 +125,7 @@ export async function prefixExecute(
   }
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   const identifier = interaction.options.getString('channel', true).trim();
   await interaction.deferReply();
 

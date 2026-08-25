@@ -3,7 +3,7 @@
 // Show the last deleted message in a channel.
 // Usage: $snipe [#channel | channel id]
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }            from '../../components/statusMessages.js';
 import { getSnipes }            from '../../components/moderation/snipeStore.js';
 import { buildSnipePayload }    from '../../components/moderation/snipe.js';
@@ -21,7 +21,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

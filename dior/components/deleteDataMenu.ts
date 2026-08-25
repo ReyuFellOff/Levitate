@@ -23,7 +23,7 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { SavedDataDoc } from '../database/database.js';
 import { emojis } from '../emojis.js';
 import { config } from '../config.js';
@@ -47,7 +47,7 @@ export interface DeleteDataSession {
   page:      number;
   /** Name of the item currently awaiting confirmation, if any. */
   pending?:  string;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 export const deleteDataSessions = new Map<string, DeleteDataSession>();
@@ -269,7 +269,7 @@ async function resolveDeleteSession(
 export async function handleDeleteDataPage(
   interaction: any,
   direction: -1 | 1,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveDeleteSession(interaction);
   if (!resolved) return;
@@ -287,7 +287,7 @@ export async function handleDeleteDataPage(
 /** User selected an item from the dropdown → show confirmation. */
 export async function handleDeleteDataSelect(
   interaction: any,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveDeleteSession(interaction);
   if (!resolved) return;
@@ -308,7 +308,7 @@ export async function handleDeleteDataSelect(
 /** User clicked Confirm — delete from DB, remove storage message, post to log channel. */
 export async function handleDeleteDataConfirm(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveDeleteSession(interaction);
   if (!resolved) return;
@@ -457,7 +457,7 @@ export async function handleDeleteDataConfirm(
 /** User clicked Cancel — return to the dropdown panel. */
 export async function handleDeleteDataCancel(
   interaction: any,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveDeleteSession(interaction);
   if (!resolved) return;

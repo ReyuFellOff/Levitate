@@ -2,7 +2,7 @@ import { config } from '../../config.js';
 // xoxo/commands/developer/fixbotroles.ts
 //
 // Developer-only command. Renames the bot's own managed integration role in
-// every guild to the current `client.config.botName` (e.g. "Levitate"). Useful
+// every guild to the current `client.config.botName` (e.g. "Cassie"). Useful
 // after a rebrand when old servers still have the role under the previous name
 // (e.g. "Roxanne").
 //
@@ -12,7 +12,7 @@ import { config } from '../../config.js';
 // sequentially with a short delay to avoid tripping global rate limits.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   ContainerBuilder,
@@ -78,7 +78,7 @@ function buildResultPayload(
 export async function prefixExecute(
   message: any,
   _args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   if (!client.config.developers.some(([, id]) => id === message.author.id)) {
     return sendError({ message }, 'This command is for bot developers only.');

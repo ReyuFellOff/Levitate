@@ -5,14 +5,14 @@
 // `modlog` category, so it can be configured with `$log modlog <#channel>`.
 // Always fire-and-forget — never throws, never blocks a moderation action.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 /**
  * Send a CV2 payload to the guild's modlog channel.
  * Safe to call without `await` — errors are silently swallowed.
  */
 export async function sendModLog(
-  client:  LevitateClient,
+  client:  CassieClient,
   guildId: string,
   payload: any,
 ): Promise<void> {

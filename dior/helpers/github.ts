@@ -7,7 +7,7 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 const GITHUB_API = 'https://api.github.com';
 const REQUEST_HEADERS = {
   Accept: 'application/vnd.github+json',
-  'User-Agent': 'Levitate Discord Bot',
+  'User-Agent': 'Cassie Discord Bot',
   'X-GitHub-Api-Version': '2022-11-28',
 };
 const FALLBACK_ACCENT = 0x5865f2;

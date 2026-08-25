@@ -1,6 +1,6 @@
 // xoxo/commands/utility/permissions.ts
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildPermissionsPayload } from '../../components/utility/permissions.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -16,7 +16,7 @@ export const options = {
   cooldown: 5,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
 
@@ -36,7 +36,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   );
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const user = interaction.options.getUser('user');
   if (user) {

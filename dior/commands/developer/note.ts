@@ -10,7 +10,7 @@
 // Image support: attach an image to the command message OR put a single
 // `https://…` URL as the very last token of the body. Same UX as `say`.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess, sendNote } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
@@ -39,7 +39,7 @@ function stripLeadingToken(raw: string): string {
   return m ? s.slice(m[0].length) : '';
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const ctx = { message };
 
   if (args.length === 0) {

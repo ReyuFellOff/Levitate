@@ -6,20 +6,20 @@
 // stored on `client.helpers[helperName]`.
 //
 // Helper file contract:
-//   export default function(client: LevitateClient): SomeHelperType { ... }
+//   export default function(client: CassieClient): SomeHelperType { ... }
 //   // or async:
-//   export default async function(client: LevitateClient): Promise<SomeHelperType> { ... }
+//   export default async function(client: CassieClient): Promise<SomeHelperType> { ... }
 //
 // Access helpers as: client.helpers.purgeHelper, client.helpers.userResolver, etc.
 
 import { readdirSync } from 'fs';
 import { join, basename } from 'path';
 import { pathToFileURL }  from 'url';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function loadHelpers(client: LevitateClient): Promise<Record<string, any>> {
+export async function loadHelpers(client: CassieClient): Promise<Record<string, any>> {
   const dir     = join(process.cwd(), 'dist', 'dior', 'helpers');
   const helpers: Record<string, any> = {};
   let loaded = 0;

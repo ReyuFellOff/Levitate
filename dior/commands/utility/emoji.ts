@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
@@ -28,14 +28,14 @@ function canManageExpressions(member: any): boolean {
 async function resolveGuildEmoji(
   message: any,
   identifier: string,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any | null> {
   const emoji = await resolveEmoji(client, identifier, message.guild);
   if (!emoji || typeof emoji !== 'object' || !emoji.id) return null;
   return emoji.guild?.id === message.guild.id ? emoji : null;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
 
   if (!canManageExpressions(message.member)) {

@@ -6,7 +6,7 @@
 //   $whowouldwin <@user>                 — author vs user
 //   $whowouldwin <@user1> <@user2>       — user1 vs user2
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildWhoWouldWinPayload } from '../../components/fun/whowouldwin.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -25,7 +25,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -57,7 +57,7 @@ export async function prefixExecute(
   return message.channel.send(payload);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const rawTarget  = interaction.options.getUser('user') as any;

@@ -3,7 +3,7 @@
 // The single owner of Lavalink node lifecycle.
 //
 // Shoukaku is deliberately configured with finite reconnect attempts in
-// LevitateClient.ts. This manager owns the retry/failover policy instead:
+// CassieClient.ts. This manager owns the retry/failover policy instead:
 //
 //   - exactly one node may exist in Shoukaku's pool at a time
 //   - one connection attempt may be pending at a time

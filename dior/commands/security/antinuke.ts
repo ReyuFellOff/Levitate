@@ -23,7 +23,7 @@ import { config } from '../../config.js';
 //         $antinuke help                                      — full command reference
 
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import {
   buildAntinukeHomePayload,
@@ -85,7 +85,7 @@ function parseRoleId(raw: string): string | null {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

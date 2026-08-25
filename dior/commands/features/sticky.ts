@@ -12,7 +12,7 @@
 //   sticky view                         — show current sticky config
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { setStickyAndPost, postStickyToChannel, invalidateStickyCache, type StickyType } from '../../helpers/stickyHelper.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
@@ -45,7 +45,7 @@ function describeType(t: string): string {
  * Returns null with an error string if anything fails.
  */
 async function resolveFromSavedData(
-  client:  LevitateClient,
+  client:  CassieClient,
   guildId: string,
   name:    string,
 ): Promise<{ payload: string; type: StickyType } | { error: string }> {
@@ -98,7 +98,7 @@ async function handleSetData(
   channel:   any,
   guild:     any,
   name:      string,
-  client:    LevitateClient,
+  client:    CassieClient,
 ): Promise<any> {
   if (!name.trim()) {
     return sendError(ctx, 'Provide a saved-data name. Example: `sticky set data welcome card`');
@@ -121,7 +121,7 @@ async function handleSetText(
   channel: any,
   guild:   any,
   text:    string,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!text.trim()) {
     return sendError(ctx, 'Provide some text after `sticky set text`.');
@@ -149,7 +149,7 @@ async function handleEnable(
   ctx:     { message?: any; interaction?: any },
   channel: any,
   guild:   any,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!client.db) return sendError(ctx, 'Database is unavailable.');
   const data = await client.db.getSticky(guild.id, channel.id).catch((): null => null);
@@ -166,7 +166,7 @@ async function handleDisable(
   ctx:     { message?: any; interaction?: any },
   channel: any,
   guild:   any,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!client.db) return sendError(ctx, 'Database is unavailable.');
   const data = await client.db.getSticky(guild.id, channel.id).catch((): null => null);
@@ -192,7 +192,7 @@ async function handleView(
   ctx:     { message?: any; interaction?: any },
   channel: any,
   guild:   any,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!client.db) return sendError(ctx, 'Database is unavailable.');
   const data = await client.db.getSticky(guild.id, channel.id).catch((): null => null);
@@ -222,7 +222,7 @@ async function handleView(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -269,7 +269,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

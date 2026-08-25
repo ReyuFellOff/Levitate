@@ -13,7 +13,7 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 import { buildTimeoutRemoveDmPayload } from './timeout.js';
 import { buildModLogUnTimeout } from './modlog.js';
@@ -128,7 +128,7 @@ export function buildUnTimeoutResultPayload(
 
 export async function handleUnTimeoutSelect(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<void> {
   const messageId = interaction.message?.id as string | undefined;
   const session   = messageId ? untimeoutSessions.get(messageId) : undefined;

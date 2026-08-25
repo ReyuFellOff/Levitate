@@ -36,7 +36,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import type { LevitateClient }       from '../../structures/LevitateClient.js';
+import type { CassieClient }       from '../../structures/CassieClient.js';
 import type { VanityRoleSettingsDoc } from '../../database/database.js';
 import { emojis }                    from '../../emojis.js';
 import { parseSayText }              from '../../helpers/emojiParser.js';
@@ -53,7 +53,7 @@ interface VrSession {
   guildId:   string;
   channelId: string;
   botMsgId:  string;           // bot's panel message; stored for modal-submit edits
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 const sessions = new Map<string, VrSession>();
@@ -318,7 +318,7 @@ function buildMessageModal(trigger: 'status' | 'tag', scopeId: string): ModalBui
 
 export async function handleVanityRoleInteraction(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<void> {
   if (!interaction.guild || !client.db) return;
 
@@ -526,7 +526,7 @@ export async function handleVanityRoleInteraction(
 
 async function refreshPanel(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
   session:     VrSession,
   scopeId:     string,
 ): Promise<void> {

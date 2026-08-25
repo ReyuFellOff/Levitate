@@ -9,7 +9,7 @@ import { config } from '../../config.js';
 // Slash execute:   /setprefix new_prefix:<prefix>
 //                  /resetprefix
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   ContainerBuilder,
   TextDisplayBuilder,
@@ -46,7 +46,7 @@ function reply(content: string) {
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const input = args[0]?.toLowerCase();
 
@@ -91,7 +91,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!interaction.member?.permissions?.has('ManageGuild')) {
     await interaction.reply({ ...reply(`${emojis.redcross} You need the **Manage Server** permission to change the prefix.`), flags: MessageFlags.Ephemeral });

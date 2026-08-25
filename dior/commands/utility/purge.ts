@@ -8,7 +8,7 @@
 //   2. Send the success/info reply
 //   3. After 3 seconds, delete the command message AND the reply together.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
@@ -131,7 +131,7 @@ async function runFilteredDelete(
 
 async function runLinkDelete(
   ctx: any,
-  client: LevitateClient,
+  client: CassieClient,
   links: string[],
   cleanupTarget: any | null,
 ): Promise<any> {
@@ -216,7 +216,7 @@ async function askConfirmationSlash(
   });
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   // Fetch the deferred-reply message ID so we can exclude it from any delete
@@ -371,7 +371,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   }
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const statusCtx = { message, reply: false };
 
   if (!message.guild) return sendError(statusCtx, 'This command can only be used in a server.');

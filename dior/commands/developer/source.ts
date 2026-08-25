@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildDeveloperOutput } from '../../components/developer/devToolkit.js';
 import { rawCommandInput, readSource } from '../../helpers/devToolkit.js';
 
@@ -12,6 +12,6 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, args: string[], _client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], _client: CassieClient) {
   return message.channel.send(buildDeveloperOutput('Source', readSource(rawCommandInput(message, args))));
 }

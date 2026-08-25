@@ -1,6 +1,6 @@
 // xoxo/commands/music/peek.ts
 // Preview any queued track by position number without affecting playback.
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
@@ -26,7 +26,7 @@ async function handle(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guildId: string,
   position: number,
-  client: LevitateClient,
+  client: CassieClient,
 ) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const player  = (client as any).kazagumo.players.get(guildId) as any;
@@ -77,7 +77,7 @@ async function handle(
   });
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!args.length) return sendWrongUsage({ message, client }, options.name, options.usage);
   const position = parseInt(args[0]!, 10);
   if (isNaN(position) || position < 1) {
@@ -86,7 +86,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   await handle({ message, isSlash: false }, message.guild.id, position, client);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   const position = interaction.options.getInteger('position', true);
   await handle({ interaction, isSlash: true }, interaction.guild.id, position, client);

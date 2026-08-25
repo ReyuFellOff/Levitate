@@ -6,7 +6,7 @@
 // Interaction routing lives in interactionCreate.ts (customId prefix: 'viewdata').
 // Session tracking + payload builders live in xoxo/components/viewDataMenu.ts.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildViewDataPayload,
@@ -26,7 +26,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   if (!message.guild) {
     return sendError({ message }, 'This command can only be used in a server.');

@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildRandomStarPayload } from '../../helpers/starboard.js';
 
@@ -12,7 +12,7 @@ export const options = {
   cooldown: 5,
 };
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
   return message.channel.send(await buildRandomStarPayload(client, message.guild.id));
 }

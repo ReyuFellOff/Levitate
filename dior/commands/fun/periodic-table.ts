@@ -2,7 +2,7 @@
 //
 // $periodic-table <element name, symbol, or atomic number>
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import {
   buildPeriodicTablePayload,
@@ -22,7 +22,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const query = args.join(' ').trim();
   if (!query) {

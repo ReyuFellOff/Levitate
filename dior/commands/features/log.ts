@@ -14,7 +14,7 @@
 //
 // Requires: Manage Server permission.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import {
   buildLogHomePayload,
@@ -44,7 +44,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   ...Object.fromEntries(logCategories.map((c) => [c.key, c.label])),
 };
 
-async function resolvePayload(client: LevitateClient, guildId: string, arg?: string) {
+async function resolvePayload(client: CassieClient, guildId: string, arg?: string) {
   const key = arg?.toLowerCase();
   if (!key) return { page: 'home' as const, payload: await buildLogHomePayload(client, guildId, false) };
   if (!VALID_KEYS.includes(key)) return null;
@@ -62,7 +62,7 @@ async function resolvePayload(client: LevitateClient, guildId: string, arg?: str
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
@@ -144,7 +144,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctx = { interaction };
   if (!interaction.guild) return sendError(ctx, 'This command can only be used in a server.');

@@ -3,9 +3,9 @@
 > **Bot name:** TorqueSecurity (internally "Karen")  
 > **Source:** `reference1/`  
 > **Language:** JavaScript (discord.js v14, CV2-native)  
-> **Already implemented in Levitate and therefore skipped:** ban, kick, timeout/mute, unban, nick, purge, role add/remove, lock/unlock, setprefix, blacklist (user + server), noprefix, antinuke core, whitelist, quarantine-role config.
+> **Already implemented in Cassie and therefore skipped:** ban, kick, timeout/mute, unban, nick, purge, role add/remove, lock/unlock, setprefix, blacklist (user + server), noprefix, antinuke core, whitelist, quarantine-role config.
 
-Everything below is **not currently in Levitate** or is a meaningful upgrade over what Levitate has.
+Everything below is **not currently in Cassie** or is a meaningful upgrade over what Cassie has.
 
 ---
 
@@ -88,7 +88,7 @@ autorole collection:
 ### Implementation notes
 - Rejected roles get an ephemeral warning listing exactly which dangerous permissions caused the rejection.
 - Only Administrator-permissioned members (or Extra Owners) can configure autorole.
-- `guildMemberAdd` already exists in Levitate (for welcomer) — autorole logic goes in the same event handler.
+- `guildMemberAdd` already exists in Cassie (for welcomer) — autorole logic goes in the same event handler.
 
 ---
 
@@ -132,7 +132,7 @@ CREATE TABLE snipes (
 `messageDelete` event → insert row → trim to 50 per guild. Skips bots. Handles partials (attempts fetch before giving up).
 
 ### Implementation notes
-- Requires `better-sqlite3` (synchronous SQLite). Levitate currently uses MongoDB only — this would be a new dependency.
+- Requires `better-sqlite3` (synchronous SQLite). Cassie currently uses MongoDB only — this would be a new dependency.
 - Alternatively: store snipes in MongoDB with a TTL index (e.g. 24h) instead of SQLite, keeping the stack homogeneous.
 - Permission gate: **Manage Messages** required.
 
@@ -191,7 +191,7 @@ Mass-unbans all banned users from the server. Confirmation prompt before executi
 **Ban Members** for invoker + bot. Invoker must be server owner or have a higher role than the bot.
 
 ### Implementation notes
-- No rate-limit protection in the reference implementation — on large ban lists this can 429. For Levitate, add `await sleep(500)` between each unban.
+- No rate-limit protection in the reference implementation — on large ban lists this can 429. For Cassie, add `await sleep(500)` between each unban.
 - Reason string includes invoker tag + ID for audit log.
 
 ---
@@ -211,7 +211,7 @@ Removes all active timeouts from every timed-out member. Confirmation required. 
 **Moderate Members** for both invoker and bot. Invoker's highest role must be above bot's highest role.
 
 ### Implementation notes
-- Levitate already has `$untimeout` (remove one, or multi-select panel). This is the mass version.
+- Cassie already has `$untimeout` (remove one, or multi-select panel). This is the mass version.
 - The guard flag (`message.guild.unmuteallRunning`) is in-memory only — resets on restart. Acceptable.
 
 ---
@@ -224,13 +224,13 @@ Scans the last N messages in a channel (default 100, max 1000) and bulk-deletes 
 `$purgebot [amount]`
 
 ### Implementation notes
-- Levitate already has `$purge bot` which does the same thing. This is **redundant** — skip unless you want the standalone alias `$purgebot` / `$pb` / `$clearbots`.
+- Cassie already has `$purge bot` which does the same thing. This is **redundant** — skip unless you want the standalone alias `$purgebot` / `$pb` / `$clearbots`.
 
 ---
 
 ## 9. Extended `$list` Subcommands
 
-Reference1's `$list` supports many more subcommands than Levitate's current implementation (roles, members, emojis, stickers, channels, bans). These can be added as new list types to Levitate's existing paginated system.
+Reference1's `$list` supports many more subcommands than Cassie's current implementation (roles, members, emojis, stickers, channels, bans). These can be added as new list types to Cassie's existing paginated system.
 
 | Subcommand | What it lists | Notes |
 |---|---|---|
@@ -275,7 +275,7 @@ Stored in the `antinuke` MongoDB document under `protectedRoles: String[]`. Also
 ### Implementation notes
 - Requires antinuke to be enabled.
 - Role recreation after deletion requires storing enough data to recreate it (name, permissions, color, hoist, mentionable, position). The reference implementation stores just the ID and relies on the `roleDelete` audit log for the original data.
-- In Levitate this integrates cleanly into the existing antinuke system — add `protectedRoles` field to the antinuke DB doc, add the restore logic to the `roleDelete` and `roleUpdate` events.
+- In Cassie this integrates cleanly into the existing antinuke system — add `protectedRoles` field to the antinuke DB doc, add the restore logic to the `roleDelete` and `roleUpdate` events.
 
 ---
 
@@ -311,8 +311,8 @@ A secondary owner tier that sits between "server owner" and "whitelisted users" 
 | `list` | Shows all current Extra Owners |
 | `reset` | Removes all Extra Owners |
 
-### Distinction from Levitate's whitelist
-Levitate already has a **whitelist** on the antinuke (per-action bypass for trusted admins). Extra Owner is a *higher* tier — not just "bypass antinuke actions" but "can configure antinuke itself." In reference1:
+### Distinction from Cassie's whitelist
+Cassie already has a **whitelist** on the antinuke (per-action bypass for trusted admins). Extra Owner is a *higher* tier — not just "bypass antinuke actions" but "can configure antinuke itself." In reference1:
 - Whitelist = bypass specific punishment modules (e.g. "this user can delete channels without being punished")
 - Extra Owner = full owner-equivalent trust, can run `$antinuke`, `$roleprotect`, `$autorole`, etc.
 
@@ -345,7 +345,7 @@ The same "dangerous permissions" set that antinuke normally watches: Administrat
 Panic mode also activates automatically when sentinel detects a threshold breach (too many violations in the 10-second window).
 
 ### Implementation notes
-- Levitate already has antinuke punishments (ban/kick/quarantine per violator). Panic mode is different — it's a **server-wide hardening** action, not a per-user punishment.
+- Cassie already has antinuke punishments (ban/kick/quarantine per violator). Panic mode is different — it's a **server-wide hardening** action, not a per-user punishment.
 - The backup/restore cycle is the critical part. Permissions are stored as permission bitfield strings to survive restarts.
 
 ---
@@ -368,9 +368,9 @@ Stored in the antinuke document as `securityBackup: { createdAt, createdBy, role
 
 ---
 
-## 15. Antinuke Extra Modules (reference1 has, Levitate may be missing)
+## 15. Antinuke Extra Modules (reference1 has, Cassie may be missing)
 
-Reference1's antinuke has 14 explicitly defined modules. Compare against whatever Levitate's current module list is and add any that are missing:
+Reference1's antinuke has 14 explicitly defined modules. Compare against whatever Cassie's current module list is and add any that are missing:
 
 | Module key | Label | Trigger |
 |---|---|---|
@@ -411,7 +411,7 @@ noprefix_users: {
 ### Implementation notes
 - The service is a class (`NoPrefixExpiryService`) started at boot alongside other loaders.
 - If `expiresAt` is absent, the entry is treated as permanent (existing behaviour unchanged).
-- Levitate already has in-memory noprefix caching — the expiry check just needs to also clear the in-memory set when it removes an entry.
+- Cassie already has in-memory noprefix caching — the expiry check just needs to also clear the in-memory set when it removes an entry.
 
 ---
 
@@ -424,7 +424,7 @@ Users who spam commands (5+ commands within the cooldown window) are automatical
 - On threshold breach: `db.addUserToBlacklist(userId)` + set an expiry timestamp → after 24h the entry is removed (requires a similar expiry service to the noprefix one, or a TTL check on each blacklist lookup).
 
 ### Implementation notes
-- Levitate's `messageCreate` already has a blacklist check at the top. The auto-blacklist just needs to write to the same collection.
+- Cassie's `messageCreate` already has a blacklist check at the top. The auto-blacklist just needs to write to the same collection.
 - The 24-hour auto-expiry can use the same expiry pattern as noprefix (a periodic cleanup job, or a `expiresAt` field checked on each blacklist lookup).
 
 ---
@@ -444,7 +444,7 @@ Manual tools to put members into or release them from quarantine without waiting
 Original roles stored per-user in the antinuke document: `quarantine: { [userId]: { roles: String[], reason: String, at: Date } }`.
 
 ### Implementation notes
-- Levitate already has quarantine as part of antinuke punishment — this just exposes it as manual commands for moderators.
+- Cassie already has quarantine as part of antinuke punishment — this just exposes it as manual commands for moderators.
 - Release logic: read stored roles, re-add them (skip if role deleted or above bot), remove quarantine role.
 
 ---
@@ -463,13 +463,13 @@ Quick read-only status dump of the current guild's antinuke configuration. No in
 - Quarantine role
 
 ### Implementation notes
-- Trivially implemented as a simpler alias for `$antinuke status` in Levitate. Low priority unless you want the faster read path.
+- Trivially implemented as a simpler alias for `$antinuke status` in Cassie. Low priority unless you want the faster read path.
 
 ---
 
 ## 20. Additional Antinuke Subcommands
 
-Three subcommands in reference1's `$antinuke` that are not in the panic/backup sections above and may be worth adding to Levitate's own `$antinuke`.
+Three subcommands in reference1's `$antinuke` that are not in the panic/backup sections above and may be worth adding to Cassie's own `$antinuke`.
 
 ### `$antinuke audit @user`
 Shows a per-user security audit from the antinuke's perspective:
@@ -495,7 +495,7 @@ Useful after a server restructure that may have deleted managed roles created by
 
 ## 21. Role Info (`$roleinfo`)
 
-A standalone role information command. Levitate shows role details inside the `$list` detail panel, but there is no dedicated `$roleinfo @role` shortcut.
+A standalone role information command. Cassie shows role details inside the `$list` detail panel, but there is no dedicated `$roleinfo @role` shortcut.
 
 ### What it shows
 - Role name, ID, hex color, raw position
@@ -508,58 +508,58 @@ A standalone role information command. Levitate shows role details inside the `$
 `$ri`
 
 ### Implementation notes
-- Requires **no special permissions** (Levitate's existing pattern: anyone can use info commands).
+- Requires **no special permissions** (Cassie's existing pattern: anyone can use info commands).
 - The data is a subset of what `$list roles` detail panel already shows. This is purely a convenience command to look up a single role directly.
 
 ---
 
-## Skipped — Already in Levitate or Irrelevant
+## Skipped — Already in Cassie or Irrelevant
 
-The following reference1 commands and systems are **not** worth copying because Levitate already covers them or they are tightly coupled to reference1's specific infrastructure:
+The following reference1 commands and systems are **not** worth copying because Cassie already covers them or they are tightly coupled to reference1's specific infrastructure:
 
 | File | Reason |
 |---|---|
-| `commands/utility/ping.js` | Levitate has `$ping` |
-| `commands/utility/uptime.js` | Levitate has `$uptime` |
-| `commands/moderation/ban.js` | Levitate has `$ban` |
-| `commands/moderation/kick.js` | Levitate has `$kick` |
-| `commands/moderation/mute.js` | Levitate has `$timeout` |
-| `commands/moderation/unmute.js` | Levitate has `$untimeout` |
-| `commands/moderation/unban.js` | Levitate has `$unban` |
-| `commands/moderation/nick.js` | Levitate has `$nick` |
-| `commands/moderation/purge.js` | Levitate has `$purge` |
-| `commands/moderation/role.js` | Levitate has `$roleadd` / `$roleremove` |
-| `commands/moderation/lock.js` | Levitate has `$lock` |
-| `commands/moderation/unlock.js` | Levitate has `$unlock` |
-| `commands/moderation/prefix.js` | Levitate has `$setprefix` |
-| `commands/moderation/pb.js` (purgebot) | Levitate has `$purge bot` |
-| `commands/security/antinuke.js` (core) | Levitate has `$antinuke` — only the *extra subcommands* (audit, logs, repair, panic, backup/restore) are worth adding |
+| `commands/utility/ping.js` | Cassie has `$ping` |
+| `commands/utility/uptime.js` | Cassie has `$uptime` |
+| `commands/moderation/ban.js` | Cassie has `$ban` |
+| `commands/moderation/kick.js` | Cassie has `$kick` |
+| `commands/moderation/mute.js` | Cassie has `$timeout` |
+| `commands/moderation/unmute.js` | Cassie has `$untimeout` |
+| `commands/moderation/unban.js` | Cassie has `$unban` |
+| `commands/moderation/nick.js` | Cassie has `$nick` |
+| `commands/moderation/purge.js` | Cassie has `$purge` |
+| `commands/moderation/role.js` | Cassie has `$roleadd` / `$roleremove` |
+| `commands/moderation/lock.js` | Cassie has `$lock` |
+| `commands/moderation/unlock.js` | Cassie has `$unlock` |
+| `commands/moderation/prefix.js` | Cassie has `$setprefix` |
+| `commands/moderation/pb.js` (purgebot) | Cassie has `$purge bot` |
+| `commands/security/antinuke.js` (core) | Cassie has `$antinuke` — only the *extra subcommands* (audit, logs, repair, panic, backup/restore) are worth adding |
 | `commands/security/checkantinuke.js` | Duplicate of `$antinuke status` |
-| `commands/security/whitelist.js` | Levitate has `$whitelist` |
-| `commands/security/quarantine.js` + `quarantineadd.js` | Levitate has quarantine inside antinuke — manual commands (section 18 above) are the *extension* |
+| `commands/security/whitelist.js` | Cassie has `$whitelist` |
+| `commands/security/quarantine.js` + `quarantineadd.js` | Cassie has quarantine inside antinuke — manual commands (section 18 above) are the *extension* |
 | `commands/security/extraowner.js` | Covered in section 12 above |
-| `commands/system/blacklist.js` | Levitate has `$blacklist` |
-| `commands/system/blacklistserver.js` | Levitate has `$blacklistserver` |
-| `commands/system/eval.js` | Levitate has `$eval` |
-| `commands/system/noprefix.js` | Levitate has `$noprefix` (expiry extension is section 16) |
-| `commands/system/serverlist.js` | Levitate has `$serverlist` |
-| `commands/system/maintancemode.js` | Levitate has `$maintenance` |
-| `commands/system/reloadcache.js` | Levitate has equivalent cache reload logic |
-| `commands/system/leaveserver.js` | Levitate has `$leaveserver` |
-| `commands/system/globalban.js` | Uses `client.cluster.broadcastEval` — reference1 runs a shard cluster manager that Levitate does not. Not directly portable. |
-| `core/sentinel.js` | The security enforcement engine — Levitate has its own equivalent in `xoxo/core/antinuke/sentinel.ts`. Relevant logic is captured in the feature descriptions above. |
-| `core/antinukeMemory.js` | Levitate has `xoxo/core/antinuke/memory.ts` |
-| `core/resolveAuditAdvanced.js` | Levitate has audit log resolution in the antinuke event handlers |
-| `core/buildGuildCache.js` | Levitate has equivalent startup cache hydration |
-| `events/clientReady.js` | Levitate has `ready.ts` |
-| `events/botadd.js` / `botleave.js` | Levitate has `guildCreate.ts` / `guildDelete.ts` |
-| `events/antinukeCleanup.js` | Levitate cleans up stale antinuke references inside its own event handlers |
-| `events/memberadd.js` | Levitate has `guildMemberAdd.ts` (autorole from section 2 hooks here) |
+| `commands/system/blacklist.js` | Cassie has `$blacklist` |
+| `commands/system/blacklistserver.js` | Cassie has `$blacklistserver` |
+| `commands/system/eval.js` | Cassie has `$eval` |
+| `commands/system/noprefix.js` | Cassie has `$noprefix` (expiry extension is section 16) |
+| `commands/system/serverlist.js` | Cassie has `$serverlist` |
+| `commands/system/maintancemode.js` | Cassie has `$maintenance` |
+| `commands/system/reloadcache.js` | Cassie has equivalent cache reload logic |
+| `commands/system/leaveserver.js` | Cassie has `$leaveserver` |
+| `commands/system/globalban.js` | Uses `client.cluster.broadcastEval` — reference1 runs a shard cluster manager that Cassie does not. Not directly portable. |
+| `core/sentinel.js` | The security enforcement engine — Cassie has its own equivalent in `xoxo/core/antinuke/sentinel.ts`. Relevant logic is captured in the feature descriptions above. |
+| `core/antinukeMemory.js` | Cassie has `xoxo/core/antinuke/memory.ts` |
+| `core/resolveAuditAdvanced.js` | Cassie has audit log resolution in the antinuke event handlers |
+| `core/buildGuildCache.js` | Cassie has equivalent startup cache hydration |
+| `events/clientReady.js` | Cassie has `ready.ts` |
+| `events/botadd.js` / `botleave.js` | Cassie has `guildCreate.ts` / `guildDelete.ts` |
+| `events/antinukeCleanup.js` | Cassie cleans up stale antinuke references inside its own event handlers |
+| `events/memberadd.js` | Cassie has `guildMemberAdd.ts` (autorole from section 2 hooks here) |
 | `events/snipeHandler.js` | Internal to the snipe feature — covered in section 3 |
 | `events/autorole.js` | Internal to the autorole feature — covered in section 2 |
 | All remaining events (antiban, antibotadd, antikick, etc.) | These are antinuke module event handlers — covered by the module list in section 15 |
 | `handlers/commandExecution.js` | Rate-limit auto-blacklist covered in section 17; rest is infrastructure |
-| `handlers/cooldownManager.js` | Levitate has its own cooldown system |
+| `handlers/cooldownManager.js` | Cassie has its own cooldown system |
 | `handlers/noprefixExpiry.js` | Covered in section 16 |
 | `models/antinuke.js`, `automod.js`, `autorole.js`, `Premium.js` | DB schemas — covered inside the relevant feature sections above |
 

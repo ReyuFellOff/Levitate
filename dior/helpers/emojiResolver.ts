@@ -1,5 +1,5 @@
 // xoxo/helpers/emojiResolver.ts
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 /**
  * Resolve a Discord emoji by name or ID.
@@ -11,7 +11,7 @@ import type { LevitateClient } from '../structures/LevitateClient.js';
  * 4. Name string                  → current guild → client cache → fetch every guild
  */
 export async function resolveEmoji(
-  client: LevitateClient,
+  client: CassieClient,
   identifier: string,
   guild?: any,
 ): Promise<any | null> {
@@ -46,7 +46,7 @@ function isUnicodeEmoji(value: string): boolean {
   return zwjSequence.test(value) || keycap.test(value);
 }
 
-async function resolveById(client: LevitateClient, id: string): Promise<any | null> {
+async function resolveById(client: CassieClient, id: string): Promise<any | null> {
   const cached = client.emojis.cache.get(id);
   if (cached) return cached;
 
@@ -58,7 +58,7 @@ async function resolveById(client: LevitateClient, id: string): Promise<any | nu
 }
 
 async function resolveByName(
-  client: LevitateClient,
+  client: CassieClient,
   nameLower: string,
   guild?: any,
 ): Promise<any | null> {

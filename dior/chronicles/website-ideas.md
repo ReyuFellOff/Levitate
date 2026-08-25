@@ -1,6 +1,6 @@
-# Levitate Website — Ideas & Enhancements
+# Cassie Website — Ideas & Enhancements
 
-A running checklist of design, UX, and feature ideas for the Levitate landing page.  
+A running checklist of design, UX, and feature ideas for the Cassie landing page.
 Check off items as they are implemented.
 
 ---

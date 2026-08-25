@@ -5,7 +5,7 @@ import { config } from '../../config.js';
 // Available to everyone — useful for users to inspect bot health.
 
 import { ContainerBuilder, MessageFlags, TextDisplayBuilder } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 import { gatherDebugStats } from '../../helpers/debugStats.js';
 import {
@@ -26,7 +26,7 @@ export const options = {
 
 // ── Prefix ───────────────────────────────────────────────────────────────────
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<void> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<void> {
   const loadingContainer = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16)).addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`${emojis.loading} Gathering stats…`),
   );
@@ -58,7 +58,7 @@ export async function prefixExecute(message: any, _args: string[], client: Levit
 
 // ── Slash ────────────────────────────────────────────────────────────────────
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<void> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<void> {
   const before = Date.now();
 
   await interaction.reply({

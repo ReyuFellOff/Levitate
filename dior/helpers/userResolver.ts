@@ -9,10 +9,10 @@
 //
 // Returns the discord.js User object, or null if nothing was found.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 export async function resolveUser(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   arg: string,
 ): Promise<any | null> {

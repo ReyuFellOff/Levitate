@@ -25,7 +25,7 @@ import {
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
 import { FONTS, EFFECTS, intToHex, hexToInt, applyNameStyle, resetNameStyle } from '../../helpers/nameStyle.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ export interface NsSession {
   authorId:  string;
   channelId: string;
   botMsgId:  string;
-  client:    LevitateClient;
+  client:    CassieClient;
   fontId?:   number;
   effectId?: number;
   color1?:   number;  // int color value (from preset OR custom hex)
@@ -386,7 +386,7 @@ function makeCustomHexModal(
 // ── Modal awaiter ─────────────────────────────────────────────────────────────
 
 function awaitModal(
-  client:    LevitateClient,
+  client:    CassieClient,
   customId:  string,
   userId:    string,
   timeoutMs: number,
@@ -410,7 +410,7 @@ function awaitModal(
 
 // ── Main interaction handler ──────────────────────────────────────────────────
 
-export async function handleNsInteraction(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleNsInteraction(interaction: any, client: CassieClient): Promise<void> {
   // customId shapes:
   //   ns:<scopeId>:<action>
   //   ns:<scopeId>:<action>:<param>

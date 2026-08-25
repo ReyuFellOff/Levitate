@@ -9,7 +9,7 @@
 // No special permissions required — any user can set their own prefix.
 // The self prefix works alongside the server prefix; both always work.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   sendSuccess,
   sendError,
@@ -31,7 +31,7 @@ const MAX_PREFIX_LEN = 10;
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 

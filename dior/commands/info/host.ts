@@ -10,7 +10,7 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient }       from '../../structures/LevitateClient.js';
+import type { CassieClient }       from '../../structures/CassieClient.js';
 import { getHostingProviderName }    from '../../helpers/getHostingServiceIP.js';
 import { config }                    from '../../config.js';
 import { emojis }                    from '../../emojis.js';
@@ -28,7 +28,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const provider = getHostingProviderName();
   const avatar   = client.user?.displayAvatarURL({ size: 256 }) ?? null;

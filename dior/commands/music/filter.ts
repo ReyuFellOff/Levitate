@@ -19,7 +19,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import type { FilterOptions } from 'shoukaku';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
 
@@ -261,7 +261,7 @@ function visibleSeparator(): SeparatorBuilder {
     .setDivider(true);
 }
 
-export function buildFilterHelpPayload(client: LevitateClient): any {
+export function buildFilterHelpPayload(client: CassieClient): any {
   const container = new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
@@ -306,7 +306,7 @@ async function handle(
   ctx: { message?: any; interaction?: any; isSlash: boolean },
   guildId: string,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const action = args[0]?.toLowerCase();
@@ -392,6 +392,6 @@ async function handle(
   );
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   await handle({ message, isSlash: false }, message.guild.id, args, client);
 }

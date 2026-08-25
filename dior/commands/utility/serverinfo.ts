@@ -6,7 +6,7 @@
 // This file contains ONLY command metadata, data fetching, and collector logic.
 // All CV2 payload construction lives in xoxo/components/utility/serverinfo.ts.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }           from '../../components/statusMessages.js';
 import {
   buildServerPayload,
@@ -31,7 +31,7 @@ export const options = {
 // Data fetching
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function fetchServerData(client: LevitateClient, guild: any): Promise<ServerData> {
+async function fetchServerData(client: CassieClient, guild: any): Promise<ServerData> {
   // Fetch guild owner tag
   let ownerTag: string | null = null;
   try {
@@ -133,7 +133,7 @@ async function runServerInfo(
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -156,7 +156,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx   = { interaction };

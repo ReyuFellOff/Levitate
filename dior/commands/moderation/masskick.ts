@@ -10,7 +10,7 @@
 // Requires KickMembers for both the invoker and the bot.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import {
@@ -129,7 +129,7 @@ async function runMassKick(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -194,7 +194,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx   = { interaction };

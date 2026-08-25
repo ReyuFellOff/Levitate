@@ -1,5 +1,5 @@
 // xoxo/commands/music/play.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   sendLoadingMessage,
@@ -29,7 +29,7 @@ export const options = {
 async function handle(
   ctx: { guild: any; user: any; voiceChannel: any; textChannelId: string; message?: any; interaction?: any; isSlash: boolean },
   query: string,
-  client: LevitateClient,
+  client: CassieClient,
 ) {
   const { guild, user, voiceChannel, textChannelId, message, interaction, isSlash } = ctx;
 
@@ -133,7 +133,7 @@ async function handle(
   }
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const query        = args.join(' ');
   const voiceChannel = message.member?.voice?.channel;
   if (!voiceChannel) return sendError({ message }, 'You must be in a voice channel.');
@@ -145,7 +145,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   );
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   const query        = interaction.options.getString('song', true);
   const voiceChannel = interaction.member?.voice?.channel;
   if (!voiceChannel) return sendError({ interaction }, 'You must be in a voice channel.');

@@ -3,7 +3,7 @@ import {
   MessageFlags,
   PermissionFlagsBits,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import {
   buildConfigPanel,
@@ -58,7 +58,7 @@ function parseColor(raw: string | undefined): number | null {
   return parseInt(raw.replace('#', ''), 16);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
   if (!hasManageGuild(message)) return sendError({ message }, 'You need the Manage Server permission to configure starboard.');
   if (!client.db) return sendError({ message }, 'Database is unavailable right now.');

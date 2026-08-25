@@ -18,7 +18,7 @@
 //   • Random mode never picks a bot, and never repeats an already-picked user.
 //   • The percentage is deterministic (same pair = same result every time).
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildShipPayload } from '../../components/fun/ship.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -100,7 +100,7 @@ async function pickRandomMember(guild: any, excludeIds: string[]): Promise<any |
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -200,7 +200,7 @@ export async function prefixExecute(
   return message.channel.send(payload);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const optUser1 = interaction.options.getUser('user')  ?? null;

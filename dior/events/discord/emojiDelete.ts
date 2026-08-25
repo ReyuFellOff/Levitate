@@ -4,7 +4,7 @@
 // exception key: `emoji`.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildEmojiDeletePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -12,7 +12,7 @@ import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
 export const name = 'emojiDelete';
 export const once = false;
 
-export async function execute(emoji: any, client: LevitateClient): Promise<void> {
+export async function execute(emoji: any, client: CassieClient): Promise<void> {
   if (!emoji.guild) return;
   const payload = buildEmojiDeletePayload(emoji);
   await dispatchLog(client, emoji.guild.id, 'server', ['emoji'], payload);

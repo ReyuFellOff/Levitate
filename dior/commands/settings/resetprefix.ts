@@ -5,7 +5,7 @@ import { config } from '../../config.js';
 // Requires Manage Guild. Slash-only entry point — prefix path uses
 // `setprefix reset` instead.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   ContainerBuilder,
   TextDisplayBuilder,
@@ -37,7 +37,7 @@ function reply(content: string) {
 export async function prefixExecute(
   message: any,
   _args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!message.member?.permissions?.has('ManageGuild')) {
     await message.reply(reply(`${emojis.redcross} You need the **Manage Server** permission to reset the prefix.`));
@@ -55,7 +55,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!interaction.member?.permissions?.has('ManageGuild')) {
     await interaction.reply({ ...reply(`${emojis.redcross} You need the **Manage Server** permission to reset the prefix.`), flags: MessageFlags.Ephemeral });

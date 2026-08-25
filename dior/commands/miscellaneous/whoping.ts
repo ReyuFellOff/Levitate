@@ -9,7 +9,7 @@
 //   $whoping <user ID>    — pings of a user by ID
 //   $whoping <username>   — pings of a user by username/display name
 
-import type { LevitateClient }          from '../../structures/LevitateClient.js';
+import type { CassieClient }          from '../../structures/CassieClient.js';
 import { sendError }                    from '../../components/statusMessages.js';
 import { buildWhopingPayload }          from '../../components/utility/whoping.js';
 import type { PingEntry }               from '../../components/utility/whoping.js';
@@ -31,7 +31,7 @@ const RESULT_LIMIT = 10;
 async function resolveTarget(
   args:    string[],
   message: any,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<{ userId: string; tag: string } | null> {
   if (!args[0]) {
     return { userId: message.author.id, tag: message.author.username };
@@ -89,7 +89,7 @@ async function collectPings(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!message.guild) {
     return sendError({ message }, 'This command can only be used in a server.');

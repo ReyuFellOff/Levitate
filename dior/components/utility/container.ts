@@ -32,7 +32,7 @@ import {
   TextInputStyle,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
@@ -69,7 +69,7 @@ interface BuilderSession {
   blocks:     Block[];
   mode:       BuilderMode;
   activeIdx:  number | null;  // used by move + spacerEdit
-  client:     LevitateClient;
+  client:     CassieClient;
   msg:        any;
   /** Guild saved-data entries of type 'cv2', for the Load Data picker. */
   savedItems: any[];
@@ -833,7 +833,7 @@ function parseBlock(type: Exclude<BlockType, 'spacer'>, fields: any): Block | nu
 // ─────────────────────────────────────────────────────────────────────────────
 
 function awaitModal(
-  client:    LevitateClient,
+  client:    CassieClient,
   customId:  string,
   userId:    string,
   ms:        number,
@@ -933,7 +933,7 @@ async function doSaveAsData(
   s:       BuilderSession,
   ix:      any,
   message: any,
-  client:  LevitateClient,
+  client:  CassieClient,
   token:   string,
 ): Promise<void> {
   const modalCid = `mb:modal:${token}:savename`;
@@ -1141,7 +1141,7 @@ function componentJsonToState(rawJson: any): { blocks: Block[]; hue: string } {
 
 export async function startBuilderSession(
   message:  any,
-  client:   LevitateClient,
+  client:   CassieClient,
   authorId: string,
 ): Promise<void> {
   // Pre-fetch saved CV2 entries for this guild so the Load Data button state

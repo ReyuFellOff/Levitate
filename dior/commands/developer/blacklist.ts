@@ -1,5 +1,5 @@
 // xoxo/commands/developer/blacklist.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -19,14 +19,14 @@ export const options = {
   cooldown: 0,
 };
 
-async function resolveTargetUserId(message: any, args: string[], client: LevitateClient): Promise<string | null> {
+async function resolveTargetUserId(message: any, args: string[], client: CassieClient): Promise<string | null> {
   const rawTarget = args.slice(1).join(' ').trim();
   if (!rawTarget) return null;
   const user = await resolveUser(client, message.guild, rawTarget);
   return user?.id ?? null;
 }
 
-async function handleList(message: any, client: LevitateClient) {
+async function handleList(message: any, client: CassieClient) {
   const users = await client.db.getBlacklistedUsers();
   const lines = await Promise.all(users.map(async (entry: any) => {
     const user = await client.users.fetch(entry.user_id).catch((): null => null);
@@ -42,7 +42,7 @@ async function handleList(message: any, client: LevitateClient) {
   );
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const action = args[0]?.toLowerCase();
   if (!action) return sendWrongUsage({ message, client }, options.name, options.usage);
 

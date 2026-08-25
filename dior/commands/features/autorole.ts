@@ -10,7 +10,7 @@
 // handle member/bot role selection, and buttons handle enable/disable/clear.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }           from '../../components/statusMessages.js';
 import { buildPanel, registerArSession } from '../../components/utility/autorole.js';
 
@@ -27,7 +27,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
@@ -58,7 +58,7 @@ function guildHasManageRoles(guild: any): boolean {
   return !!guild.members.me?.permissions?.has?.(PermissionFlagsBits.ManageRoles);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   if (!interaction.guild)

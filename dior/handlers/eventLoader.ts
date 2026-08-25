@@ -17,7 +17,7 @@
 import { readdirSync } from 'fs';
 import { join }        from 'path';
 import { pathToFileURL } from 'url';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ interface EventModule {
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function loadAllEvents(client: LevitateClient): Promise<void> {
+export async function loadAllEvents(client: CassieClient): Promise<void> {
   const dir = join(process.cwd(), 'dist', 'dior', 'events');
   let loaded = 0;
 
@@ -47,7 +47,7 @@ export async function loadAllEvents(client: LevitateClient): Promise<void> {
 // ── Internals ────────────────────────────────────────────────────────────────
 
 async function scanDir(
-  client:  LevitateClient,
+  client:  CassieClient,
   dir:     string,
   onLoad:  () => void,
 ): Promise<void> {
@@ -98,7 +98,7 @@ async function scanDir(
   }
 }
 
-function resolveEmitter(client: LevitateClient, type?: string): any {
+function resolveEmitter(client: CassieClient, type?: string): any {
   if (type === 'player') {
     return (client as any).kazagumo ?? null;
   }

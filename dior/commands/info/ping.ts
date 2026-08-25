@@ -2,7 +2,7 @@ import { config } from '../../config.js';
 // xoxo/commands/info/ping.ts
 
 import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildPingPayload } from '../../messages/ping.js';
 import { resolveWsPing } from '../../utils/wsPing.js';
 import { emojis } from '../../emojis.js';
@@ -19,7 +19,7 @@ export const options = {
 
 // ── Prefix ───────────────────────────────────────────────────────────────────
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<void> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<void> {
   const before = Date.now();
 
   const sent = await message.channel.send({
@@ -48,7 +48,7 @@ export async function prefixExecute(message: any, _args: string[], client: Levit
 
 // ── Slash ────────────────────────────────────────────────────────────────────
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<void> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<void> {
   await interaction.deferReply();
 
   const apiLatency  = Date.now() - interaction.createdTimestamp;

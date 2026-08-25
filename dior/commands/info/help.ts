@@ -1,5 +1,5 @@
 // xoxo/commands/info/help.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import {
   buildHelpMenuPayload,
   buildCategoryPayload,
@@ -12,7 +12,7 @@ import { sendError, reservedForDeveloper } from '../../components/statusMessages
 export const options = {
   name: 'help',
   aliases: ['h'] as string[],
-  description: 'Shows the Levitate help menu.',
+  description: 'Shows the Cassie help menu.',
   usage: `help
   help <command name | category>`,
   category: 'info',
@@ -20,7 +20,7 @@ export const options = {
   cooldown: 2,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const input = args[0]?.toLowerCase();
   const categoryInput = args.join(' ').trim().toLowerCase();
 
@@ -84,7 +84,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   });
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   if (!interaction.deferred && !interaction.replied) {
     await interaction.deferReply();
   }

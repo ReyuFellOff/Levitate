@@ -4,7 +4,7 @@ import {
   ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder,
   MessageFlags, SeparatorBuilder, TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { extractThumbnail, formatDuration } from '../../utils/formatting.js';
 
@@ -46,7 +46,7 @@ function buildPayload(track: any): any {
   return { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
 }
 
-async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean; user: any }, guildId: string, client: LevitateClient) {
+async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean; user: any }, guildId: string, client: CassieClient) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const player  = (client as any).kazagumo.players.get(guildId);
   if (!player?.queue?.current) return sendError(ctxObj, 'There is nothing currently playing.');
@@ -61,10 +61,10 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean;
   return sendSuccess(ctxObj, 'Sent you the track details in your DMs.');
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   await handle({ message, isSlash: false, user: message.author }, message.guild.id, client);
 }
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply({ ephemeral: true });
   await handle({ interaction, isSlash: true, user: interaction.user }, interaction.guild.id, client);
 }

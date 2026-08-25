@@ -19,7 +19,7 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildAfkConfirmationPayload, type AfkScope } from '../../components/afk.js';
 import { emojis } from '../../emojis.js';
@@ -47,7 +47,7 @@ interface ParsedSpecialAfk {
   tillAt: Date | null;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const rawInput = typeof message.commandRawArgs === 'string' ? message.commandRawArgs : args.join(' ');
   const attachment =
     message.attachments.first?.() ?? message.attachments.first?.call(message.attachments) ?? null;
@@ -81,7 +81,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
 async function parseSpecialAfkInput(
   rawInput: string,
   attachmentUrl: string | null,
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
 ): Promise<ParsedSpecialAfk | 'no-args' | 'bad-time' | 'bad-emoji'> {
   const trimmed = rawInput.trim();
@@ -147,7 +147,7 @@ async function sendSpecialAfkConfirmation({
   guildId,
   parsed,
 }: {
-  client: LevitateClient;
+  client: CassieClient;
   message: any;
   userId: string;
   guildId: string | null;

@@ -13,7 +13,7 @@
 // shows as "Unknown".
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildTimeoutExpiredDmPayload } from '../../components/moderation/timeout.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import {
@@ -26,7 +26,7 @@ import {
 export const name = 'guildMemberUpdate';
 export const once = false;
 
-async function logNicknameChange(oldMember: any, newMember: any, client: LevitateClient): Promise<void> {
+async function logNicknameChange(oldMember: any, newMember: any, client: CassieClient): Promise<void> {
   if (oldMember.nickname === newMember.nickname) return;
   // If there was no nickname before, fall back to the member's default display
   // name (global display name, or username) instead of showing "*None*".
@@ -35,7 +35,7 @@ async function logNicknameChange(oldMember: any, newMember: any, client: Levitat
   await dispatchLog(client, newMember.guild.id, 'member', [newMember.id], payload);
 }
 
-async function logRoleChange(oldMember: any, newMember: any, client: LevitateClient): Promise<void> {
+async function logRoleChange(oldMember: any, newMember: any, client: CassieClient): Promise<void> {
   const oldRoles = oldMember.roles?.cache;
   const newRoles = newMember.roles?.cache;
   if (!oldRoles || !newRoles) return;
@@ -53,7 +53,7 @@ async function logRoleChange(oldMember: any, newMember: any, client: LevitateCli
   await dispatchLog(client, newMember.guild.id, 'member', [newMember.id], payload);
 }
 
-async function logTimeoutChange(oldMember: any, newMember: any, client: LevitateClient): Promise<void> {
+async function logTimeoutChange(oldMember: any, newMember: any, client: CassieClient): Promise<void> {
   const oldUntil = oldMember.communicationDisabledUntil;
   const newUntil = newMember.communicationDisabledUntil;
   if (String(oldUntil) === String(newUntil)) return;
@@ -101,7 +101,7 @@ const SERVER_TAG_FLAG = 1 << 15; // 32768
 async function handleServerTagRole(
   oldMember: any,
   newMember: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!client.db) return;
   if (newMember.user?.bot) return;
@@ -144,7 +144,7 @@ async function handleServerTagRole(
 export async function execute(
   oldMember: any,
   newMember: any,
-  client:    LevitateClient,
+  client:    CassieClient,
 ): Promise<void> {
   if (newMember.guild) {
     await logNicknameChange(oldMember, newMember, client);

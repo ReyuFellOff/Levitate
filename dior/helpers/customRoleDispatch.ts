@@ -13,7 +13,7 @@
 //   • Max 10 resolved members acted on per invocation.
 //   • Remove mode is triggered by any of: remove / rem / -remove / --remove / -r
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { PermissionFlagsBits }  from 'discord.js';
 import { sendError, sendSuccess } from '../components/statusMessages.js';
 import { resolveUser } from './userResolver.js';
@@ -25,7 +25,7 @@ export async function dispatchCustomRole(
   message:     any,
   commandName: string,
   args:        string[],
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<boolean> {
   if (!message.guild || !client.db) return false;
 

@@ -46,8 +46,11 @@ export interface NowPlayingOptions {
   canvasBuffer?: Buffer;
 }
 
-function getSourceEmoji(sourceName?: string): string {
-  switch (sourceName?.toLowerCase()) {
+function getSourceEmoji(sourceName?: string, url?: string): string {
+  const source = sourceName?.toLowerCase().replace(/[\s_-]/g, '');
+  const urlSource = url?.toLowerCase();
+
+  switch (source) {
     case 'youtube':      return emojis.youtube;
     case 'youtubemusic': return emojis.youtubeMusic;
     case 'spotify':      return emojis.spotify;
@@ -55,8 +58,16 @@ function getSourceEmoji(sourceName?: string): string {
     case 'applemusic':   return emojis.appleMusic;
     case 'soundcloud':   return emojis.soundcloud;
     case 'jiosaavn':     return emojis.music;
-    default:             return emojis.music;
   }
+
+  if (urlSource?.includes('music.youtube.com')) return emojis.youtubeMusic;
+  if (urlSource?.includes('youtube.com') || urlSource?.includes('youtu.be')) return emojis.youtube;
+  if (urlSource?.includes('spotify.com') || urlSource?.startsWith('spotify:')) return emojis.spotify;
+  if (urlSource?.includes('deezer.com')) return emojis.deezer;
+  if (urlSource?.includes('music.apple.com')) return emojis.appleMusic;
+  if (urlSource?.includes('soundcloud.com')) return emojis.soundcloud;
+
+  return emojis.music;
 }
 
 function parseEmoji(emojiStr: string): { id: string; name: string; animated: boolean } | string {
@@ -74,7 +85,7 @@ export function buildNowPlayingPayload(
   const allDisabled = options?.allDisabled ?? isPeek;
   const titleDisplay = track.url ? `[${track.title}](${track.url})` : track.title;
   const volume       = track.volume ?? player.volume ?? 100;
-  const sourceEmoji  = getSourceEmoji(track.sourceName);
+  const sourceEmoji  = getSourceEmoji(track.sourceName, track.url);
 
   const loopStyle = !allDisabled && player.loop && player.loop !== 'none'
     ? ButtonStyle.Primary : ButtonStyle.Secondary;

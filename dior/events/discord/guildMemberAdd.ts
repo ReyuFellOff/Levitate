@@ -4,7 +4,7 @@
 // Dispatches the configured greet message (if any) via the shared greetSender.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendGreetMessage } from '../../components/welcomer/greetSender.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildMemberJoinPayload } from '../../components/logging/logMessages.js';
@@ -14,7 +14,7 @@ export const name = 'guildMemberAdd';
 export const once = false;
 
 /** Assigns the configured autorole set to a newly-joined member (humans and bots use separate lists). */
-async function applyAutorole(member: any, client: LevitateClient): Promise<void> {
+async function applyAutorole(member: any, client: CassieClient): Promise<void> {
   if (!client.db) return;
   const cfg = await client.db.getAutoroleConfig(member.guild.id).catch((): null => null);
   if (!cfg || cfg.enabled === false) return;
@@ -39,7 +39,7 @@ async function applyAutorole(member: any, client: LevitateClient): Promise<void>
 }
 
 /** Applies the configured prepend/append text to every new member, including bots. */
-async function applyAutonick(member: any, client: LevitateClient): Promise<void> {
+async function applyAutonick(member: any, client: CassieClient): Promise<void> {
   if (!client.db) return;
   const cfg = await client.db.getAutonickConfig(member.guild.id).catch((): null => null);
   const prepend = member.user?.bot ? cfg?.bot_prepend : (cfg?.member_prepend ?? cfg?.prepend);
@@ -57,7 +57,7 @@ async function applyAutonick(member: any, client: LevitateClient): Promise<void>
   });
 }
 
-export async function execute(member: any, client: LevitateClient): Promise<void> {
+export async function execute(member: any, client: CassieClient): Promise<void> {
   if (!member.guild) return;
   await applyAutonick(member, client);
   await applyAutorole(member, client);

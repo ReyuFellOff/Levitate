@@ -1,5 +1,5 @@
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { resolveTextChannel } from '../../helpers/textChannelResolver.js';
 import {
@@ -34,7 +34,7 @@ function hasManageChannels(member: any): boolean {
 async function runMedia(
   ctx: { message?: any; interaction?: any },
   guild: any,
-  client: LevitateClient,
+  client: CassieClient,
   action: string | undefined,
   rawChannel: string | undefined,
 ): Promise<any> {
@@ -85,7 +85,7 @@ async function runMedia(
   );
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
   if (!hasManageChannels(message.member)) {
     return sendError({ message }, 'You need the **Manage Channels** permission to use this command.');
@@ -101,7 +101,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   return runMedia({ message }, message.guild, client, action, rawChannel);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
   if (!interaction.guild) return sendError({ interaction }, 'This command can only be used in a server.');
   if (!interaction.memberPermissions?.has?.(PermissionFlagsBits.ManageChannels)) {

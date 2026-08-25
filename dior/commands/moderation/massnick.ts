@@ -22,7 +22,7 @@
 // Requires ManageNicknames (+ ManageGuild recommended).
 
 import { PermissionFlagsBits, MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendLoading, sendSuccess } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import {
@@ -74,7 +74,7 @@ function effectiveName(member: any): string {
 async function parseMembers(
   input:  string,
   guild:  any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<string[]> {
   const tokens = input.trim().split(/\s+/).slice(0, 10);
   const ids    = new Set<string>();
@@ -113,7 +113,7 @@ async function runMassNick(
   targetType:  string,
   displayLabel: string,
   invoker:     string,
-  client:      LevitateClient,
+  client:      CassieClient,
   specificIds: string[] = [],
 ): Promise<void> {
   await panel.edit(buildMassNickProgressPayload(mode, word, displayLabel)).catch((): null => null);
@@ -212,7 +212,7 @@ function attachCollector(
   word:       string | null,
   token:      string,
   invoker:    string,
-  client:     LevitateClient,
+  client:     CassieClient,
 ): void {
   // Track which page is currently rendered so we know what to disable on timeout.
   let currentPage: 'buttons' | 'role_select' = 'buttons';
@@ -319,7 +319,7 @@ function attachCollector(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -376,7 +376,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   const ctx   = { interaction };
   const guild = interaction.guild;

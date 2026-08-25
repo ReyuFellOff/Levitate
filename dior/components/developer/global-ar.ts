@@ -18,7 +18,7 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { AutoresponderDoc } from '../../database/database.js';
 import { emojis } from '../../emojis.js';
 
@@ -36,7 +36,7 @@ function wrap(container: ContainerBuilder): any {
 function buildGlobalArPanel(
   docs: AutoresponderDoc[],
   page: number,
-  client: LevitateClient,
+  client: CassieClient,
   statusNote?: string,
 ): any {
   const totalPages = Math.max(1, Math.ceil(docs.length / PAGE_SIZE));
@@ -117,7 +117,7 @@ function buildGlobalArPanel(
 
 export async function runGlobalArPanel(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!client.db) return;
 

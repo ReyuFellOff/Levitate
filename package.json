@@ -1,7 +1,7 @@
 {
-  "name": "levitate",
+  "name": "cassie",
   "version": "1.0.0",
-  "description": "Levitate Discord Bot",
+  "description": "Cassie Discord Bot",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

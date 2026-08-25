@@ -27,7 +27,7 @@ import { descriptions } from "../config/descriptions.js";
 import { emojis } from "../emojis.js";
 import { parseSayText } from "../helpers/emojiParser.js";
 import { resolveEmoji } from "../helpers/emojiResolver.js";
-import type { LevitateClient } from "../structures/LevitateClient.js";
+import type { CassieClient } from "../structures/CassieClient.js";
 import type {
   VoiceMasterChannelDoc,
   VoiceMasterSetupDoc,
@@ -42,7 +42,7 @@ function panelButton(emoji: string, action: string): ButtonBuilder {
 }
 
 export function buildVoiceMasterPanelPayload(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   state?: { locked?: boolean; hidden?: boolean },
 ): any {
@@ -194,7 +194,7 @@ function ephemeral(content: string): any {
 }
 
 async function ownedChannel(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   userId: string,
 ): Promise<{ record: VoiceMasterChannelDoc; channel: any } | null> {
@@ -214,7 +214,7 @@ function currentVoiceChannel(interaction: any): any | null {
 
 async function requireOwnerChannel(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<{ record: VoiceMasterChannelDoc; channel: any } | null> {
   const owned = await ownedChannel(
     client,
@@ -233,14 +233,14 @@ async function requireOwnerChannel(
 }
 
 async function saveChannel(
-  client: LevitateClient,
+  client: CassieClient,
   record: VoiceMasterChannelDoc,
 ): Promise<void> {
   await (client as any).db?.setVoiceMasterChannel?.(record);
 }
 
 async function closeTemporaryChannel(
-  client: LevitateClient,
+  client: CassieClient,
   channel: any,
 ): Promise<void> {
   await (client as any).db?.deleteVoiceMasterChannel?.(channel.id);
@@ -249,7 +249,7 @@ async function closeTemporaryChannel(
 
 export async function handleVoiceMasterInteraction(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (!interaction.guild) {
     await interaction

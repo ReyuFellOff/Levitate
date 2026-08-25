@@ -3,7 +3,7 @@
 // Logging: fires when a member is banned.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildMemberBanPayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -11,7 +11,7 @@ import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
 export const name = 'guildBanAdd';
 export const once = false;
 
-export async function execute(ban: any, client: LevitateClient): Promise<void> {
+export async function execute(ban: any, client: CassieClient): Promise<void> {
   const guild = ban.guild;
   const user = ban.user;
 

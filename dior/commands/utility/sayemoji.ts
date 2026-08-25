@@ -1,5 +1,5 @@
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 
@@ -21,7 +21,7 @@ function parseInput(input: string): string[][] {
   return input.split(/\s+/).map((token) => token.split(NO_SPACE_SEP));
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const invokerPerms = message.channel.permissionsFor?.(message.member);
   const hasManageMessages = invokerPerms?.has?.(PermissionFlagsBits.ManageMessages);
   const hasAdmin = invokerPerms?.has?.(PermissionFlagsBits.Administrator);

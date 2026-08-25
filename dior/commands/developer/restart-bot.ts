@@ -1,5 +1,5 @@
 // xoxo/commands/developer/restart-bot.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo } from '../../components/statusMessages.js';
 import {
   buildBotActionConfirmPayload,
@@ -17,7 +17,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   const confirmId = `restart-bot:confirm:${message.id}`;
   const cancelId  = `restart-bot:cancel:${message.id}`;
 

@@ -18,7 +18,7 @@
 //
 // Does NOT work with noprefix. Dispatch lives in helpers/customRoleDispatch.ts.
 
-import type { LevitateClient }           from '../../structures/LevitateClient.js';
+import type { CassieClient }           from '../../structures/CassieClient.js';
 import { PermissionFlagsBits }           from 'discord.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { Database }                      from '../../database/database.js';
@@ -107,7 +107,7 @@ async function requireBotManageRoles(message: any): Promise<boolean> {
 async function handleAccess(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
 
@@ -133,7 +133,7 @@ async function handleAccess(
 async function handleCreate(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
   if (!await requireBotManageRoles(message)) return;
@@ -208,7 +208,7 @@ async function handleCreate(
 async function handleDelete(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
    if (!await requireAdministrator(message)) return;
    if (!await requireBotManageRoles(message)) return;
@@ -229,7 +229,7 @@ async function handleDelete(
 
 async function handleList(
   message: any,
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
   const docs = await client.db!.getCustomRoles(message.guild.id);
@@ -248,7 +248,7 @@ async function handleList(
 async function handleInfo(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
   const keyword = args[0]?.toLowerCase();
@@ -291,7 +291,7 @@ async function handleInfo(
 async function handleAdd(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
   if (!await requireBotManageRoles(message)) return;
@@ -356,7 +356,7 @@ async function handleAdd(
 async function handleRemove(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!await requireAdministrator(message)) return;
   if (!await requireBotManageRoles(message)) return;
@@ -406,7 +406,7 @@ async function handleRemove(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<void> {
   if (!message.guild) {
     await sendError({ message }, 'This command can only be used in a server.');

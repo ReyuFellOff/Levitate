@@ -5,7 +5,7 @@
 // prefixExecute export so it is not loaded as a second text command.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess, sendInfo } from '../../components/statusMessages.js';
 import { sendRolePickerPanel } from '../../components/moderation/roleSelect.js';
 import {
@@ -51,7 +51,7 @@ function validateRoleForSlash(guild: any, role: any, invokerMember?: any): strin
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   const ctx = { interaction };
   if (!interaction.guild) {

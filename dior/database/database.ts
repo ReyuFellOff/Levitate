@@ -2894,7 +2894,7 @@ export const db = new Database();
 /**
  * Boot-block database initialiser.
  * Connects, emits startup log lines, and returns the `Database` singleton.
- * Call once from `levitate.ts` during bootstrap.
+ * Call once from `cassie.ts` during bootstrap.
  */
 export async function initDatabase(buildName: string): Promise<Database> {
   await db.initWithLogs(buildName);

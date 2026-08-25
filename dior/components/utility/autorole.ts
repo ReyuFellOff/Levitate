@@ -26,7 +26,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
-import type { LevitateClient }      from '../../structures/LevitateClient.js';
+import type { CassieClient }      from '../../structures/CassieClient.js';
 import type { AutoroleConfigDoc }   from '../../database/database.js';
 import { emojis }                   from '../../emojis.js';
 
@@ -41,7 +41,7 @@ interface ArSession {
   guildId:   string;
   channelId: string;
   botMsgId:  string;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 const sessions = new Map<string, ArSession>();
@@ -170,7 +170,7 @@ export function buildPanel(
 
 export async function handleAutoroleInteraction(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<void> {
   if (!interaction.guild || !client.db) return;
 
@@ -251,7 +251,7 @@ export async function handleAutoroleInteraction(
 
 async function refreshPanel(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
   session:     ArSession,
   scopeId:     string,
 ): Promise<void> {

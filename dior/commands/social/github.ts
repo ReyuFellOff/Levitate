@@ -2,7 +2,7 @@
 //
 // $github <username> — show a GitHub profile and recent repositories.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildGithubPayload } from '../../components/social/github.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -31,7 +31,7 @@ async function lookup(ctx: { message?: any; interaction?: any }, username: strin
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   if (args.length !== 1) return sendWrongUsage({ message }, options.name, options.usage);
 
@@ -43,7 +43,7 @@ export async function prefixExecute(
   return message.channel.send(buildGithubPayload(profile));
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   const username = interaction.options.getString('username', true).trim();
   await interaction.deferReply();
   const profile = await lookup({ interaction }, username);

@@ -16,7 +16,7 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { config }              from '../../config.js';
 import { developerPanelConfig as dev } from '../../config/developerPanel.js';
 
@@ -112,14 +112,14 @@ function buildPayload(requestedBy: string): object {
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   return message.channel.send(buildPayload(`@${message.author.username}`));
 }
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   return interaction.reply(buildPayload(`@${interaction.user.username}`));
 }

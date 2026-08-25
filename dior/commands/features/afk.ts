@@ -15,7 +15,7 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildAfkConfirmationPayload, type AfkScope } from '../../components/afk.js';
 import { emojis } from '../../emojis.js';
@@ -47,7 +47,7 @@ interface ParsedAfkInput {
 async function parseAfkInput(
   rawInput:      string,
   attachmentUrl: string | null,
-  client:        LevitateClient,
+  client:        CassieClient,
   guild:         any,
 ): Promise<ParsedAfkInput | null> {
   let text     = rawInput.trim();
@@ -107,7 +107,7 @@ async function sendAfkConfirmation({
   guildId,
   parsed,
 }: {
-  client:       LevitateClient;
+  client:       CassieClient;
   message?:     any;
   interaction?: any;
   userId:       string;
@@ -193,7 +193,7 @@ async function sendAfkConfirmation({
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   if (!client.db) return sendError({ message }, 'Database unavailable. Try again later.');
 
@@ -218,7 +218,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
 

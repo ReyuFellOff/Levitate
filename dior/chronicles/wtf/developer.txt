@@ -11,10 +11,10 @@ separator
 ## $! Reyansh 
 -# Creator and Owner of (botname) • (developer mention with mentions off)
 __**About:**__ 16 yo stupid programmer. (define in a config file in xoxo/config)
-thumbnail: developer avatar (define this in config.ts file and copy the developer avatar image url from Levitate-web)
+thumbnail: developer avatar (define this in config.ts file and copy the developer avatar image url from Cassie-web)
 separator
 ### (botname)
-- Project: Levitate
+- Project: Cassie
 - Year: 2026
 - Status: Active
 - Reason: Developer was bored

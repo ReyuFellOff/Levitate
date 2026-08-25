@@ -11,7 +11,7 @@ import { config } from '../../config.js';
 //   • message→ texts are newline-joined into one content block
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { resolvePlaceholders, type PlaceholderContext } from '../../helpers/placeholders.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 
@@ -32,7 +32,7 @@ export interface GreetResult {
  */
 export async function sendGreetMessage(
   member: any,
-  client: LevitateClient,
+  client: CassieClient,
   isTest = false,
 ): Promise<GreetResult> {
   if (!client.db) return { sent: false, reason: 'Database is unavailable.' };
@@ -100,7 +100,7 @@ async function dispatchSavedData(
   guildId:     string,
   channel:     any,
   ctx:         PlaceholderContext,
-  client:      LevitateClient,
+  client:      CassieClient,
   prependText: string | null = null,
 ): Promise<void> {
   const entry = await client.db.getSavedData(guildId, dataName).catch((err: unknown): null => {

@@ -16,11 +16,11 @@
 //     excepted channel and a non-excepted one still logs (per spec: "if two
 //     voice channels are in a log then it will be visible").
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { LogCategoryKey } from '../database/database.js';
 
 export async function dispatchLog(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   category: LogCategoryKey,
   exceptionIds: string[],

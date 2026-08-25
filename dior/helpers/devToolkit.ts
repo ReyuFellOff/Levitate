@@ -5,7 +5,7 @@ import { basename, join, normalize, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as vm from 'node:vm';
 import { inspect } from 'node:util';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 const execFile = promisify(execFileCallback);
 const WORKSPACE_ROOT = resolve(process.cwd());
@@ -37,7 +37,7 @@ export async function evaluateCode(
   message: any,
   code: string,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<string> {
   if (!code) return 'Usage: `$eval <javascript>`';
 
@@ -175,7 +175,7 @@ function findCommandFiles(dir: string): string[] {
 }
 
 export async function reloadPrefixCommand(
-  client: LevitateClient,
+  client: CassieClient,
   requestedName: string,
 ): Promise<string> {
   const requested = requestedName.toLowerCase().replace(/^\$/, '');

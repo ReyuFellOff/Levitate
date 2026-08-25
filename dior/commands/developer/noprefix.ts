@@ -1,5 +1,5 @@
 // xoxo/commands/developer/noprefix.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -73,7 +73,7 @@ function formatExpiry(expiresAt: Date | null | undefined): string {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function resolveTargetUserId(message: any, args: string[], client: LevitateClient, offset = 1): Promise<string | null> {
+async function resolveTargetUserId(message: any, args: string[], client: CassieClient, offset = 1): Promise<string | null> {
   const rawTarget = args.slice(offset).join(' ').trim();
   if (!rawTarget) return null;
   // Try just the first token for user resolution (rest may be the duration)
@@ -86,7 +86,7 @@ function resolveGuildId(message: any, maybeGuildId?: string): string | null {
   return /^\d{17,20}$/.test(maybeGuildId) ? maybeGuildId : null;
 }
 
-function formatGuild(client: LevitateClient, guildId: string): string {
+function formatGuild(client: CassieClient, guildId: string): string {
   const guild = client.guilds.cache.get(guildId);
   if (guild) return `${escapeMarkdown(guild.name)} (${guildId})`;
   return guildId;
@@ -94,7 +94,7 @@ function formatGuild(client: LevitateClient, guildId: string): string {
 
 // ── Subcommand handlers ───────────────────────────────────────────────────────
 
-async function handleList(message: any, client: LevitateClient) {
+async function handleList(message: any, client: CassieClient) {
   const users = await client.db.getNoPrefixUsers();
   const now   = Date.now();
   const lines = await Promise.all(users.map(async (entry: any) => {
@@ -117,7 +117,7 @@ async function handleList(message: any, client: LevitateClient) {
   );
 }
 
-async function handleServerList(message: any, client: LevitateClient) {
+async function handleServerList(message: any, client: CassieClient) {
   const guilds = await client.db.getNoPrefixDisabledGuilds();
   const lines  = guilds.map((entry: any) => {
     const guild = client.guilds.cache.get(entry.guild_id);
@@ -133,7 +133,7 @@ async function handleServerList(message: any, client: LevitateClient) {
   );
 }
 
-async function handleServer(message: any, args: string[], client: LevitateClient) {
+async function handleServer(message: any, args: string[], client: CassieClient) {
   const action = args[1]?.toLowerCase();
   if (action === 'list') return handleServerList(message, client);
   if (!['enable', 'disable'].includes(action)) {
@@ -155,7 +155,7 @@ async function handleServer(message: any, args: string[], client: LevitateClient
 
 // ── Main execute ──────────────────────────────────────────────────────────────
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (args.length === 0) return sendWrongUsage({ message, client }, options.name, options.usage);
 
   const action = args[0]?.toLowerCase();

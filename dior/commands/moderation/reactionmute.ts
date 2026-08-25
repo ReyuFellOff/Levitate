@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { runPrefixRestriction, runSlashRestriction } from '../../helpers/restrictionCommand.js';
 
 export const options = {
@@ -11,10 +11,10 @@ export const options = {
   cooldown: 5,
 };
 
-export function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   return runPrefixRestriction({ message, args, client, kind: 'reaction', enabled: true });
 }
 
-export function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   return runSlashRestriction({ interaction, client, kind: 'reaction', enabled: true });
 }

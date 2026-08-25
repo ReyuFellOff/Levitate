@@ -7,7 +7,7 @@
 // Slash:   /softban user:<user> [history] [reason]
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildSoftbanSuccessPayload } from '../../components/moderation/softban.js';
 import { buildModLogSoftban } from '../../components/moderation/modlog.js';
@@ -168,7 +168,7 @@ async function performSoftban(
 
 async function finishSoftban(
   ctx: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   targetUser: any,
   reason: string,
   historyChoice: HistoryChoice,
@@ -188,7 +188,7 @@ async function finishSoftban(
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -232,7 +232,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };

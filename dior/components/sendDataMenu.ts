@@ -24,7 +24,7 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { SavedDataDoc } from '../database/database.js';
 import { resolvePlaceholders } from '../helpers/placeholders.js';
 import { emojis } from '../emojis.js';
@@ -46,7 +46,7 @@ export interface SendDataSession {
   channelId: string;
   items:     SavedDataDoc[];
   page:      number;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 export const sendDataSessions = new Map<string, SendDataSession>();
@@ -213,7 +213,7 @@ async function resolveSendSession(
 export async function handleSendDataPage(
   interaction: any,
   direction: -1 | 1,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveSendSession(interaction);
   if (!resolved) return;
@@ -230,7 +230,7 @@ export async function handleSendDataPage(
 /** User selected an item — delete the panel, send the data directly. */
 export async function handleSendDataSelect(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveSendSession(interaction);
   if (!resolved) return;

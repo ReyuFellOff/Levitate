@@ -111,7 +111,7 @@ export function buildYoutubePayload(channel: YouTubeChannel, requestedBy?: strin
   if (requestedBy) {
     footerParts.push(`Requested by ${requestedBy}`);
   }
-  footerParts.push('Thank you for using Levitate');
+  footerParts.push('Thank you for using Cassie');
 
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(`-# ${footerParts.join(' | ')}`),

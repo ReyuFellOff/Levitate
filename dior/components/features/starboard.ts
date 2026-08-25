@@ -10,7 +10,7 @@ import {
   SeparatorSpacingSize,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { StarboardPostDoc, StarboardSettingsDoc } from '../../database/database.js';
 import {
   buildActionCancelledPayload,
@@ -20,7 +20,7 @@ import {
 import { clearStarboardPosts, type ClearStarboardResult } from '../../helpers/starboard.js';
 
 const TIMEOUT_MS = 10 * 60_000;
-const sessions = new Map<string, { guildId: string; channelId: string; client: LevitateClient }>();
+const sessions = new Map<string, { guildId: string; channelId: string; client: CassieClient }>();
 const timeouts = new Map<string, NodeJS.Timeout>();
 
 export function wrap(container: ContainerBuilder): any {
@@ -33,7 +33,7 @@ export function wrap(container: ContainerBuilder): any {
 
 export function registerStarboardSession(
   messageId: string,
-  session: { guildId: string; channelId: string; client: LevitateClient },
+  session: { guildId: string; channelId: string; client: CassieClient },
 ): void {
   sessions.set(messageId, session);
   clearTimeout(timeouts.get(messageId));
@@ -244,7 +244,7 @@ export function buildStarboardPost(
   return wrap(container);
 }
 
-export async function handleStarboardInteraction(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleStarboardInteraction(interaction: any, client: CassieClient): Promise<void> {
   const raw = String(interaction.customId);
   const session = sessions.get(interaction.message?.id);
   if (!session || session.guildId !== interaction.guild?.id) {

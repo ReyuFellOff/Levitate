@@ -12,7 +12,7 @@
 //   • If used as a reply, the bot also replies to that message
 
 import { AttachmentBuilder, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
@@ -32,7 +32,7 @@ export const options = {
 
 // ─── Prefix execute ──────────────────────────────────────────────────────────
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   // Permission check: Manage Messages or Administrator
   const invokerPerms = message.channel.permissionsFor?.(message.member);
   const hasManageMessages = invokerPerms?.has?.(PermissionFlagsBits.ManageMessages);
@@ -101,7 +101,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
 
 // ─── Slash execute ───────────────────────────────────────────────────────────
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   // Permission check: Manage Messages or Administrator
   const memberPerms = interaction.member?.permissions;
   const hasManageMessages = memberPerms?.has?.(PermissionFlagsBits.ManageMessages);

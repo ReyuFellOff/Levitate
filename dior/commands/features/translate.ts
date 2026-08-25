@@ -18,7 +18,7 @@ import { config } from '../../config.js';
 // Slash: /translate <text> [language]
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildTranslateContainer, LANG_INFO } from '../../components/features/translate.js';
 
@@ -134,7 +134,7 @@ async function translateText(
 
 // ── Detect which language-variant alias was used ───────────────────────────────
 
-async function detectTargetLang(message: any, client: LevitateClient): Promise<string> {
+async function detectTargetLang(message: any, client: CassieClient): Promise<string> {
   // Resolve the effective guild prefix (may be overridden via DB)
   let guildPrefix = client.config.prefix;
   if (client.db && message.guild?.id) {
@@ -163,7 +163,7 @@ async function detectTargetLang(message: any, client: LevitateClient): Promise<s
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -210,7 +210,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client:     LevitateClient,
+  _client:     CassieClient,
 ): Promise<any> {
   const ctx = { interaction };
 

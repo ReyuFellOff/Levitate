@@ -9,7 +9,7 @@
 // All button handling is in the global interactionCreate handler (no message
 // collectors), so every click is always acknowledged properly.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError }           from '../../components/statusMessages.js';
 import { resolveUser }         from '../../helpers/userResolver.js';
 import {
@@ -31,7 +31,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -102,7 +102,7 @@ export async function prefixExecute(
   });
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const scopeId    = interaction.id;

@@ -4,7 +4,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import {
   buildStarboardPost,
   wrap,
@@ -90,7 +90,7 @@ function ignored(message: any, settings: StarboardSettingsDoc): boolean {
   return roleIds.some((roleId) => settings.ignored_role_ids?.includes(roleId));
 }
 
-async function removeBoardPost(client: LevitateClient, post: any, guildId: string, count: number): Promise<void> {
+async function removeBoardPost(client: CassieClient, post: any, guildId: string, count: number): Promise<void> {
   if (post?.board_message_id) {
     try {
       const boardChannel = await client.channels.fetch(post.board_channel_id) as any;
@@ -112,7 +112,7 @@ async function removeBoardPost(client: LevitateClient, post: any, guildId: strin
 }
 
 export async function clearStarboardPosts(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
 ): Promise<ClearStarboardResult> {
   const posts = await client.db.getStarboardPosts(guildId);
@@ -141,7 +141,7 @@ export async function clearStarboardPosts(
 async function syncStarboardReactionNow(
   reaction: any,
   user: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   if (user?.bot) return;
   const resolved = await fetchReactionMessage(reaction);
@@ -225,7 +225,7 @@ async function syncStarboardReactionNow(
 export async function syncStarboardReaction(
   reaction: any,
   user: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   // Discord can deliver several reaction events for one message in the same
   // tick. Serialize those updates per source message so two workers cannot
@@ -257,7 +257,7 @@ export async function syncStarboardReaction(
 
 export async function syncStarboardChannel(
   channel: any,
-  client: LevitateClient,
+  client: CassieClient,
   limit = 100,
 ): Promise<number> {
   const messages = await channel.messages.fetch({ limit });
@@ -271,14 +271,14 @@ export async function syncStarboardChannel(
   return checked;
 }
 
-export async function handleStarboardSourceDelete(message: any, client: LevitateClient): Promise<void> {
+export async function handleStarboardSourceDelete(message: any, client: CassieClient): Promise<void> {
   if (!message.guild?.id || !message.id || !client.db) return;
   const post = await client.db.getStarboardPost(message.guild.id, message.id).catch((): null => null);
   if (!post) return;
   await removeBoardPost(client, post, message.guild.id, 0);
 }
 
-export async function buildLeaderboardPayload(client: LevitateClient, guildId: string): Promise<any> {
+export async function buildLeaderboardPayload(client: CassieClient, guildId: string): Promise<any> {
   const [settings, posts] = await Promise.all([
     client.db.getStarboardSettings(guildId).catch((): null => null),
     client.db.getTopStarboardPosts(guildId, 10),
@@ -295,7 +295,7 @@ export async function buildLeaderboardPayload(client: LevitateClient, guildId: s
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(lines)));
 }
 
-export async function buildRandomStarPayload(client: LevitateClient, guildId: string): Promise<any> {
+export async function buildRandomStarPayload(client: CassieClient, guildId: string): Promise<any> {
   const [settings, post] = await Promise.all([
     client.db.getStarboardSettings(guildId).catch((): null => null),
     client.db.getRandomStarboardPost(guildId),
@@ -312,7 +312,7 @@ export async function buildRandomStarPayload(client: LevitateClient, guildId: st
 
 export async function getStarboardSettingsForReaction(
   reaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<StarboardSettingsDoc | null> {
   const resolved = await fetchReactionMessage(reaction);
   if (!resolved) return null;

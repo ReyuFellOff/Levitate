@@ -1,5 +1,5 @@
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import {
@@ -35,7 +35,7 @@ async function runUnbanAll(guild: any, moderator: string): Promise<{ total: numb
   return { total: entries.length, success };
 }
 
-async function startUnbanAll(message: any, guild: any, client: LevitateClient): Promise<void> {
+async function startUnbanAll(message: any, guild: any, client: CassieClient): Promise<void> {
   const bans = await guild.bans.fetch().catch((): null => null);
   if (!bans?.size) {
     await sendError({ message }, 'There are no banned users in this server.');
@@ -70,7 +70,7 @@ async function startUnbanAll(message: any, guild: any, client: LevitateClient): 
   });
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<void> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<void> {
   const guild = message.guild;
   if (!guild) { await sendError({ message }, 'This command can only be used in a server.'); return; }
   const invoker = message.channel.permissionsFor?.(message.member);
@@ -80,7 +80,7 @@ export async function prefixExecute(message: any, _args: string[], client: Levit
   await startUnbanAll(message, guild, client);
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<void> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<void> {
   await interaction.deferReply();
   const guild = interaction.guild;
   if (!guild) { await interaction.editReply({ content: 'This command can only be used in a server.' }); return; }

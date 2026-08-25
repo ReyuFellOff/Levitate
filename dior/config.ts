@@ -144,7 +144,7 @@ export interface Config {
 // Bot name (named export — imported directly by many modules)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const botName = "Levitate";
+export const botName = "Cassie";
 
 /** Canonical bot invite link — no extra permission/scope query params. */
 export function getInviteUrl(clientId: string | undefined | null): string | null {
@@ -214,15 +214,15 @@ export const config: Config = {
   },
 
   // ── 8b. Music ──────────────────────────────────────────────────────────────
-  defaultSource: 'dzsearch',
+  defaultSource: 'ytsearch',
   nodes: [
-    /* {
+    {
       host:   'merlion.endercloud.in',
       port:   46573,
       name:   'Merlion',
       auth:   'youshallnotpass',
       secure: false,
-    }, */
+    },
     {
       host:   'lavalinkv4.serenetia.com',
       port:   443,
@@ -235,27 +235,6 @@ export const config: Config = {
       port:   13592,
       name:   'Jirayu',
       auth:   'youshallnotpass',
-      secure: false,
-    },
-    {
-      host:   'lavalink.devamop.in',
-      port:   443,
-      name:   'DevamOP',
-      auth:   'DevamOP',
-      secure: true,
-    },
-    {
-      host:   'sg1-nodelink.nyxbot.app',
-      port:   3000,
-      name:   'NyxBot',
-      auth:   'nyxbot.app/support',
-      secure: false,
-    },
-    {
-      host:   '89.106.84.59',
-      port:   4000,
-      name:   'HeavenCloud',
-      auth:   'heavencloud.in',
       secure: false,
     },
   ],

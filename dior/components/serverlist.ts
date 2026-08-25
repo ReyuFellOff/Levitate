@@ -23,7 +23,7 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { ensureGuildInvite, NO_INVITE } from '../helpers/inviteCache.js';
 import { emojis } from '../emojis.js';
 import config from '../config.js';
@@ -45,7 +45,7 @@ export interface ServerListSession {
   channelId: string;
   guildIds:  string[]; // sorted by memberCount desc
   page:      number;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export function resetServerListTimeout(messageId: string): void {
 
 export function buildServerListPayload(
   guildIds:  string[],
-  client:    LevitateClient,
+  client:    CassieClient,
   page     = 0,
   disabled = false,
 ): any {
@@ -252,7 +252,7 @@ function resolveSession(interaction: any): { session: ServerListSession; message
   return { session, messageId };
 }
 
-export async function handleServerListSelect(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleServerListSelect(interaction: any, client: CassieClient): Promise<void> {
   const resolved = resolveSession(interaction);
   if (!resolved) {
     await interaction.reply({ content: 'This session has expired. Run `$serverlist` again.', flags: MessageFlags.Ephemeral })
@@ -293,7 +293,7 @@ export async function handleServerListSelect(interaction: any, client: LevitateC
   resetServerListTimeout(resolved.messageId);
 }
 
-export async function handleServerListBack(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleServerListBack(interaction: any, client: CassieClient): Promise<void> {
   const resolved = resolveSession(interaction);
   if (!resolved) {
     await interaction.reply({ content: 'This session has expired. Run `$serverlist` again.', flags: MessageFlags.Ephemeral })
@@ -313,7 +313,7 @@ export async function handleServerListBack(interaction: any, client: LevitateCli
   resetServerListTimeout(resolved.messageId);
 }
 
-export async function handleServerListPage(interaction: any, client: LevitateClient, delta: number): Promise<void> {
+export async function handleServerListPage(interaction: any, client: CassieClient, delta: number): Promise<void> {
   const resolved = resolveSession(interaction);
   if (!resolved) {
     await interaction.reply({ content: 'This session has expired. Run `$serverlist` again.', flags: MessageFlags.Ephemeral })

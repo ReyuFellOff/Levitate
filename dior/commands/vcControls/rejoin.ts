@@ -1,5 +1,5 @@
 // xoxo/commands/vcControls/rejoin.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendSuccess, sendError } from '../../components/statusMessages.js';
 import { clearPlayerState } from '../../helpers/nowPlayingManager.js';
 
@@ -20,7 +20,7 @@ export const options = {
 
 async function handle(
   ctx: any,
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   textChannelId: string,
 ) {
@@ -64,11 +64,11 @@ async function handle(
   return sendSuccess(ctx, `Rejoined <#${voiceChannelId}>.`);
 }
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   return handle({ message }, client, message.guild, message.channel.id);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   const ctx = { interaction };
   if (!interaction.guild) return sendError(ctx, 'This command can only be used in a server.');

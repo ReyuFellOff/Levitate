@@ -1,5 +1,5 @@
 // xoxo/commands/developer/blacklist-server.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { blacklistedServer, sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { buildBlacklistListPayload } from '../../components/blacklistList.js';
@@ -25,7 +25,7 @@ function resolveGuildId(message: any, maybeGuildId?: string): string | null {
   return /^\d{17,20}$/.test(maybeGuildId) ? maybeGuildId : null;
 }
 
-function formatGuild(client: LevitateClient, guildId: string): string {
+function formatGuild(client: CassieClient, guildId: string): string {
   const guild = client.guilds.cache.get(guildId);
   if (guild) return `${escapeMarkdown(guild.name)} (${guildId})`;
   return guildId;
@@ -37,7 +37,7 @@ function getSendableChannel(guild: any) {
   ) ?? null;
 }
 
-async function notifyAndLeaveGuild(client: LevitateClient, guildId: string) {
+async function notifyAndLeaveGuild(client: CassieClient, guildId: string) {
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return;
   const channel = getSendableChannel(guild);
@@ -45,7 +45,7 @@ async function notifyAndLeaveGuild(client: LevitateClient, guildId: string) {
   await guild.leave().catch((): null => null);
 }
 
-async function handleList(message: any, client: LevitateClient) {
+async function handleList(message: any, client: CassieClient) {
   const servers = await client.db.getBlacklistedServers();
   const lines = servers.map((entry: any) => {
     const guild = client.guilds.cache.get(entry.guild_id);
@@ -70,7 +70,7 @@ async function handleList(message: any, client: LevitateClient) {
   );
 }
 
-async function isDeveloperOwnedGuild(client: LevitateClient, guildId: string): Promise<boolean> {
+async function isDeveloperOwnedGuild(client: CassieClient, guildId: string): Promise<boolean> {
   const developerIds: string[] = client.config.developers.map((dev: [string, string]) => dev[1]);
   const cached = client.guilds.cache.get(guildId);
   if (cached) return developerIds.includes(cached.ownerId);
@@ -81,7 +81,7 @@ async function isDeveloperOwnedGuild(client: LevitateClient, guildId: string): P
   return ownerId ? developerIds.includes(ownerId) : false;
 }
 
-async function addServer(message: any, guildId: string, client: LevitateClient) {
+async function addServer(message: any, guildId: string, client: CassieClient) {
   if (await isDeveloperOwnedGuild(client, guildId)) {
     const label = formatGuild(client, guildId);
     return sendError(
@@ -103,7 +103,7 @@ async function addServer(message: any, guildId: string, client: LevitateClient) 
   }
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const action = args[0]?.toLowerCase();
 
   if (!action) {

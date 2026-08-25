@@ -13,7 +13,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
 
@@ -66,13 +66,13 @@ function buildPayload(msg: any): object {
   };
 }
 
-export async function prefixExecute(message: any, _args: string[], _client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, _args: string[], _client: CassieClient): Promise<any> {
   const first = await fetchFirstMessage(message.channel);
   if (!first) return sendError({ message }, 'Could not fetch the first message in this channel.');
   await message.channel.send(buildPayload(first));
 }
 
-export async function slashExecute(interaction: any, _client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const first = await fetchFirstMessage(interaction.channel);
   if (!first) return sendError({ interaction }, 'Could not fetch the first message in this channel.');

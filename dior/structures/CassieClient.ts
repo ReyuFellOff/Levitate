@@ -1,7 +1,7 @@
-// xoxo/structures/LevitateClient.ts
+// xoxo/structures/CassieClient.ts
 //
 // Extended discord.js Client. Construction is intentionally silent — no console
-// output here. The boot sequence in `xoxo/levitate.ts` controls what prints and
+// output here. The boot sequence in `xoxo/cassie.ts` controls what prints and
 // when. Each subsystem has its own init method so bootstrap can call them in
 // order.
 //
@@ -85,7 +85,7 @@ function buildClientOptions() {
   return { matched, ws };
 }
 
-export class LevitateClient extends Client {
+export class CassieClient extends Client {
   public cluster: ClusterClient<this>;
   public config        = config;
   public commands:      Collection<string, any>;
@@ -124,7 +124,7 @@ export class LevitateClient extends Client {
    */
   public db!: Database;
   /**
-   * Presence / status rotator — instantiated and started in levitate.ts after
+   * Presence / status rotator — instantiated and started in cassie.ts after
    * the loaders have finished. May be undefined until that point.
    */
   public statusManager: StatusManager | undefined;

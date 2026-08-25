@@ -19,7 +19,7 @@ import {
   ThumbnailBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient }  from '../../structures/LevitateClient.js';
+import type { CassieClient }  from '../../structures/CassieClient.js';
 import { sendError }             from '../../components/statusMessages.js';
 import { getReactionSnipe }      from '../../components/moderation/snipeStore.js';
 import { emojis }                from '../../emojis.js';
@@ -99,7 +99,7 @@ function buildReactionSnipePayload(snipe: import('../../components/moderation/sn
 export async function prefixExecute(
   message: any,
   args:    string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

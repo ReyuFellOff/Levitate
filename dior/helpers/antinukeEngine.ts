@@ -17,7 +17,7 @@ import {
   PermissionsBitField,
 } from 'discord.js';
 import type { Guild, GuildMember, User } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type {
   AntinukeConfigDoc,
   AntinukeModuleKey,
@@ -128,7 +128,7 @@ export function grantedDangerousPermissions(before: Readonly<PermissionsBitField
 // Quarantine role
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function ensureQuarantineRole(client: LevitateClient, guild: Guild, config: AntinukeConfigDoc): Promise<string | null> {
+export async function ensureQuarantineRole(client: CassieClient, guild: Guild, config: AntinukeConfigDoc): Promise<string | null> {
   if (config.quarantine_role_id) {
     const existing = await guild.roles.fetch(config.quarantine_role_id).catch((): null => null);
     if (existing) return existing.id;
@@ -164,7 +164,7 @@ export async function ensureQuarantineRole(client: LevitateClient, guild: Guild,
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function executePunishment(
-  client: LevitateClient,
+  client: CassieClient,
   guild: Guild,
   executorId: string,
   punishment: AntinukePunishment,
@@ -225,7 +225,7 @@ async function executePunishment(
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function dispatchAntinukeLog(
-  client: LevitateClient,
+  client: CassieClient,
   guild: Guild,
   config: AntinukeConfigDoc,
   moduleName: string,
@@ -260,7 +260,7 @@ async function dispatchAntinukeLog(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AntinukeCheckOptions {
-  client:     LevitateClient;
+  client:     CassieClient;
   guild:      Guild;
   module:     AntinukeModuleKey;
   executor:   User | GuildMember | null | undefined;

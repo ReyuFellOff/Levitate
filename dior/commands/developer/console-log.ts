@@ -1,5 +1,5 @@
 // xoxo/commands/developer/console-log.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 
@@ -13,7 +13,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!args.length) return sendWrongUsage({ message, client }, options.name, options.usage);
 
   const firstWsMatch = message.content.match(/^\S+\s+/);

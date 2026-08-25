@@ -5,7 +5,7 @@
 // URL). Category: `server`, exception key: `guildUpdate`.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildGuildUpdatePayload } from '../../components/logging/logMessages.js';
 import { checkAntinukeModule } from '../../helpers/antinukeEngine.js';
@@ -55,7 +55,7 @@ function diffFields(oldGuild: any, newGuild: any): { field: string; before: stri
   return changes;
 }
 
-export async function execute(oldGuild: any, newGuild: any, client: LevitateClient): Promise<void> {
+export async function execute(oldGuild: any, newGuild: any, client: CassieClient): Promise<void> {
   const changes = diffFields(oldGuild, newGuild);
   if (!changes.length) return;
 

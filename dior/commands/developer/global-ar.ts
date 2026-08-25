@@ -4,7 +4,7 @@
 // Opens an interactive panel listing every trigger across every guild,
 // paginated, with multi-select to toggle global status.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { runGlobalArPanel } from '../../components/developer/global-ar.js';
 
@@ -18,7 +18,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
   if (!client.db) return sendError(ctx, 'Database is unavailable right now.');
   return runGlobalArPanel(message, client);

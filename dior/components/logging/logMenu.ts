@@ -36,7 +36,7 @@ import {
   TextDisplayBuilder,
   UserSelectMenuBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { LogCategoryKey, LogConfigDoc } from '../../database/database.js';
 import { logCategories, serverLogEventTypeOptions, getLogCategoryInfo } from '../../config/logCategories.js';
 import { emojis } from '../../emojis.js';
@@ -62,7 +62,7 @@ interface LogMenuSession {
   page: 'home' | 'all' | LogCategoryKey;
   guildId: string;
   channelId: string;
-  client: LevitateClient;
+  client: CassieClient;
 }
 
 const logMenuSessions = new Map<string, LogMenuSession>();
@@ -97,7 +97,7 @@ function resetLogMenuTimeout(messageId: string): void {
 }
 
 async function buildPageByName(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   page: 'home' | 'all' | LogCategoryKey,
   disabled: boolean,
@@ -151,7 +151,7 @@ function channelLabel(channelId: string | null): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function buildLogHomePayload(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   disabled = false,
 ) {
@@ -212,7 +212,7 @@ export async function buildLogHomePayload(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function buildLogAllPayload(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   disabled = false,
 ) {
@@ -336,7 +336,7 @@ function describeExceptions(category: LogCategoryKey, cfg: LogConfigDoc | null):
 }
 
 export async function buildLogCategoryPayload(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
   category: LogCategoryKey,
   disabled = false,
@@ -399,7 +399,7 @@ async function denyNoPermission(interaction: any): Promise<void> {
   }).catch((): null => null);
 }
 
-export async function handleLogConfigInteraction(interaction: any, client: LevitateClient): Promise<void> {
+export async function handleLogConfigInteraction(interaction: any, client: CassieClient): Promise<void> {
   if (!interaction.guildId) return;
   if (!hasManageGuild(interaction)) return void (await denyNoPermission(interaction));
 

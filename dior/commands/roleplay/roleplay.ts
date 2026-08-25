@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { roleplayActions, runRoleplay } from '../../helpers/roleplay.js';
 
 export const commands = roleplayActions.map((action) => ({
@@ -11,7 +11,7 @@ export const commands = roleplayActions.map((action) => ({
     owner: false,
     cooldown: 3,
   },
-  prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+  prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
     return runRoleplay(action, { message }, client, args);
   },
 }));

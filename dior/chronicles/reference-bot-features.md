@@ -1,6 +1,6 @@
 # Reference Bot Features — Potential Imports
 
-> Features present in `reference/soul/` that do not currently exist in the main Levitate bot.
+> Features present in `reference/soul/` that do not currently exist in the main Cassie bot.
 > These are documented for future implementation consideration. Nothing here has been built yet.
 
 ---
@@ -124,7 +124,7 @@ Commands not currently in the main bot's developer suite:
 From `reference/soul/commands/utility/`:
 
 - **`$serverpurge`** — developer-level purge that can target multiple channels at once; different from `$special-purge` in scope
-- **`$steal <emoji>`** — adds an emoji from another server to the current server (same concept as `$emoji steal` which already exists in Levitate under the developer category)
+- **`$steal <emoji>`** — adds an emoji from another server to the current server (same concept as `$emoji steal` which already exists in Cassie under the developer category)
 
 ---
 
@@ -133,5 +133,5 @@ From `reference/soul/commands/utility/`:
 - All music features require a voice connection library (e.g. `@discordjs/voice` + `distube`, `lavalink-client`, or `erela.js`). The reference bot uses a custom integration.
 - Last.fm requires an API key from `https://www.last.fm/api/account/create`.
 - Spotify OAuth requires registering an app at `https://developer.spotify.com/dashboard` and setting up a redirect URI.
-- The `$fmcharts` and `$fmprofile` commands use `@napi-rs/canvas` for image generation (already a dependency in Levitate).
+- The `$fmcharts` and `$fmprofile` commands use `@napi-rs/canvas` for image generation (already a dependency in Cassie).
 - Music and Last.fm are independent features — Last.fm can be added without music support.

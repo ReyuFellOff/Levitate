@@ -9,7 +9,7 @@
 //   {user} {mention} {id} {reason} {invoker} {invokerMention}
 //   {duration} {count} {command}
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { INVOKE_COMMANDS, type InvokeCommand } from '../../helpers/invoke.js';
 import {
@@ -41,7 +41,7 @@ function supportedText(): string {
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!client.db) return sendError(ctx, 'Database is unavailable right now.');

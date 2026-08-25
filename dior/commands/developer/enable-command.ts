@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { resolveCommand } from './disable-command.js';
 
@@ -12,7 +12,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   if (!client.db) return sendError({ message }, 'Database is unavailable.');
   const input = args[0]?.trim();
   if (!input) return sendError({ message }, 'Please provide a command name or default alias.');

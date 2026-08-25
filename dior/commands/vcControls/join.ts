@@ -1,6 +1,6 @@
 // xoxo/commands/vcControls/join.ts
 import { ChannelType } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendSuccess, sendError } from '../../components/statusMessages.js';
 
 export const options = {
@@ -34,7 +34,7 @@ function resolveVoiceChannel(guild: any, arg: string): any | null {
 
 async function handle(
   ctx: any,
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   textChannelId: string,
   targetChannel: any,
@@ -67,7 +67,7 @@ async function handle(
   return sendSuccess(ctx, `Joined <#${targetChannel.id}>.`);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const ctx = { message };
   const guild = message.guild;
   const member = message.member;
@@ -88,7 +88,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   return handle(ctx, client, guild, message.channel.id, targetChannel);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   const ctx = { interaction };
   const guild = interaction.guild;

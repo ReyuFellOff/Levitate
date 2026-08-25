@@ -14,7 +14,7 @@
 // The command message is always deleted after sending.
 // If used as a reply, the bot replies to that message.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 
 export const options = {
@@ -28,7 +28,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, args: string[], _client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], _client: CassieClient) {
   let rawJson: string =
     typeof message.commandRawArgs === 'string' ? message.commandRawArgs.trim() : args.join(' ').trim();
 

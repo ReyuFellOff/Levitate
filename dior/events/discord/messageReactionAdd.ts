@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { syncStarboardReaction } from '../../helpers/starboard.js';
 import { enforceReactionRestriction } from '../../helpers/memberRestrictions.js';
 import { handleReactionRoleReaction } from '../../helpers/reactionRoles.js';
@@ -7,14 +7,14 @@ import { isVoiceMasterControlMessage } from '../../helpers/voiceMaster.js';
 export const name = 'messageReactionAdd';
 export const once = false;
 
-export async function execute(reaction: any, user: any, client?: LevitateClient): Promise<void> {
+export async function execute(reaction: any, user: any, client?: CassieClient): Promise<void> {
   const message = reaction?.message;
   const guildId = message?.guildId ?? message?.guild?.id;
   const channelId = message?.channelId ?? message?.channel?.id;
   const messageId = message?.id;
-  const activeClient = (client as LevitateClient | undefined)
-    ?? (reaction?.client as LevitateClient | undefined)
-    ?? (message?.client as LevitateClient | undefined);
+  const activeClient = (client as CassieClient | undefined)
+    ?? (reaction?.client as CassieClient | undefined)
+    ?? (message?.client as CassieClient | undefined);
 
   if (guildId && channelId && messageId && activeClient) {
     const isProtected = await isVoiceMasterControlMessage(activeClient, guildId, channelId, messageId);
@@ -27,7 +27,7 @@ export async function execute(reaction: any, user: any, client?: LevitateClient)
   const candidates = [client, reaction?.client, reaction?.message?.client];
   const runtimeClient = candidates.find((candidate: any) =>
     candidate?.db && typeof candidate.db.getStarboardSettings === 'function',
-  ) as LevitateClient | undefined;
+  ) as CassieClient | undefined;
   if (!runtimeClient) {
     console.error(`[starboard] Reaction add had no database client reference (injectedDb=${Boolean((client as any)?.db)} reactionDb=${Boolean(reaction?.client?.db)} messageDb=${Boolean(reaction?.message?.client?.db)})`);
     return;

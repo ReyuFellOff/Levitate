@@ -48,7 +48,7 @@ export interface RpsSession {
   guildId:           string;
   channelId:         string;
   botMsgId:          string;    // the bot's message ID (set after send)
-  client:            any;       // LevitateClient — used by timeout cleanup
+  client:            any;       // CassieClient — used by timeout cleanup
 }
 
 // ── Session store ─────────────────────────────────────────────────────────────

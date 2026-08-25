@@ -8,7 +8,7 @@
 //   avatar bot        — bot's avatar
 //   avatar server     — server icon
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import {
@@ -130,7 +130,7 @@ async function sendWithChoice(
   });
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const guild = message.guild;
   const requesterId: string = message.author.id;
   const channel = message.channel;
@@ -192,7 +192,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   return sendImagePanel({ channel, sendAsReply: null, title: avatarTitle(fullUser.username, 'global'), imageUrl: globalUrl, requesterId, idPrefix: 'av' });
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const guild = interaction.guild;

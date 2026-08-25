@@ -4,7 +4,7 @@
 // command: the persistent panel itself is the user-facing control surface.
 
 import { ChannelType } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import {
   createVoiceMasterSetup,
@@ -27,7 +27,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   args: string[],
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');

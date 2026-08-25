@@ -6,7 +6,7 @@
 // Requires: Manage Server (invoker)
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient }  from '../../structures/LevitateClient.js';
+import type { CassieClient }  from '../../structures/CassieClient.js';
 import { sendError }            from '../../components/statusMessages.js';
 import {
   buildFormPage,
@@ -33,7 +33,7 @@ export const options = {
 export async function prefixExecute(
   message: any,
   _args:   string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -91,7 +91,7 @@ export async function prefixExecute(
   registerNsSession(scopeId, session);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   if (!interaction.guild)

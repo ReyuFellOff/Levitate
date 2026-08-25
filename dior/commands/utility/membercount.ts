@@ -10,7 +10,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { emojis } from '../../emojis.js';
 import { formatClock } from '../../utils/formatting.js';
@@ -80,7 +80,7 @@ async function buildMembercountPayload(guild: any, requestedBy: string): Promise
     );
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
 
   const ctx = { interaction };
@@ -111,7 +111,7 @@ export async function slashExecute(interaction: any, client: LevitateClient): Pr
   });
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   if (!message.guild) return sendError({ message }, 'This command can only be used in a server.');
 
   const developers: [string, string][] = client.config.developers;

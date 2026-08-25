@@ -2,7 +2,7 @@
 //
 // $userroles — list the roles assigned to a user.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildListPayload, registerListSession } from '../../components/utility/list.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -26,7 +26,7 @@ function getRoles(member: any, guild: any): any[] {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx   = { message };
   const guild = message.guild;
@@ -61,7 +61,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const guild = interaction.guild;

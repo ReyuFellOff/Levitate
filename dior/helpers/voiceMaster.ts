@@ -12,7 +12,7 @@ import {
   PermissionFlagsBits,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type {
   VoiceMasterChannelDoc,
   VoiceMasterSetupDoc,
@@ -33,21 +33,21 @@ async function clearVoiceMasterPanelReactions(message: any): Promise<void> {
 }
 
 export async function getVoiceMasterSetup(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
 ): Promise<VoiceMasterSetupDoc | null> {
   return (client as any).db?.getVoiceMasterSetup?.(guildId) ?? null;
 }
 
 export async function getVoiceMasterChannel(
-  client: LevitateClient,
+  client: CassieClient,
   channelId: string,
 ): Promise<VoiceMasterChannelDoc | null> {
   return (client as any).db?.getVoiceMasterChannel?.(channelId) ?? null;
 }
 
 export async function createVoiceMasterSetup(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   requestedControlChannel?: any,
 ): Promise<VoiceMasterSetupDoc> {
@@ -110,7 +110,7 @@ export async function createVoiceMasterSetup(
  * channel is renamed to the new default `interface` channel.
  */
 export async function migrateVoiceMasterSetup(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
 ): Promise<VoiceMasterSetupDoc> {
   const setup = await getVoiceMasterSetup(client, guild.id);
@@ -133,7 +133,7 @@ export async function migrateVoiceMasterSetup(
 }
 
 /** Refreshes all existing setups once the bot has connected and loaded MongoDB. */
-export async function migrateVoiceMasterSetups(client: LevitateClient): Promise<void> {
+export async function migrateVoiceMasterSetups(client: CassieClient): Promise<void> {
   let migrated = 0;
   for (const guild of client.guilds.cache.values()) {
     if (!await getVoiceMasterSetup(client, guild.id)) continue;
@@ -152,7 +152,7 @@ export async function migrateVoiceMasterSetups(client: LevitateClient): Promise<
 }
 
 export async function resolveGuildPrefix(
-  client: LevitateClient,
+  client: CassieClient,
   guildId?: string | null,
 ): Promise<string> {
   const fallback = client.config?.prefix ?? '$';
@@ -163,7 +163,7 @@ export async function resolveGuildPrefix(
 }
 
 export async function isVoiceMasterControlMessage(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string | null | undefined,
   channelId: string,
   messageId: string,
@@ -219,7 +219,7 @@ export async function findVoiceMasterDeletionExecutor(
 }
 
 export async function restoreVoiceMasterPanel(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
   channel?: any,
   actingUser?: any,
@@ -270,7 +270,7 @@ export async function restoreVoiceMasterPanel(
 }
 
 export async function deleteVoiceMasterSetup(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
 ): Promise<void> {
   const setup = await getVoiceMasterSetup(client, guild.id);
@@ -294,7 +294,7 @@ export async function deleteVoiceMasterSetup(
 }
 
 export async function syncVoiceMasterCategory(
-  client: LevitateClient,
+  client: CassieClient,
   updatedChannel: any,
 ): Promise<void> {
   if (!updatedChannel?.guild) return;
@@ -325,7 +325,7 @@ export async function syncVoiceMasterCategory(
 }
 
 export async function refreshVoiceMasterPanel(
-  client: LevitateClient,
+  client: CassieClient,
   guild: any,
 ): Promise<void> {
   const setup = await getVoiceMasterSetup(client, guild.id);
@@ -352,7 +352,7 @@ export async function refreshVoiceMasterPanel(
 }
 
 async function removeIfEmpty(
-  client: LevitateClient,
+  client: CassieClient,
   channel: any,
 ): Promise<void> {
   if (!channel || channel.members?.size > 0) return;
@@ -365,7 +365,7 @@ async function removeIfEmpty(
 export async function handleVoiceMasterVoiceState(
   oldState: any,
   newState: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const member = newState.member ?? oldState.member;
   const guild = newState.guild ?? oldState.guild;

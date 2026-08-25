@@ -18,7 +18,7 @@ import { config } from '../../config.js';
 // bot is in — but the announcement channel/message are configured per server.
 
 import { ChannelType, MessageFlags, PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { parseSayText } from '../../helpers/emojiParser.js';
 import { resolveEmoji } from '../../helpers/emojiResolver.js';
@@ -73,7 +73,7 @@ function hasManageGuild(message: any): boolean {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx    = { message };
   const prefix = client.config.prefix;

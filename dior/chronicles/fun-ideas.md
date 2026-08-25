@@ -1,4 +1,4 @@
-# Fun Command Ideas for Levitate
+# Fun Command Ideas for Cassie
 
 > Additional commands to grow the fun suite beyond `autistic`, `cute`, `gay`, `intelligence`, `rps`, `ship`,
 > `simp`, `rizz`, `tictactoe`, `guessthenumber`, `wanted`, and `whowouldwin` (all implemented).

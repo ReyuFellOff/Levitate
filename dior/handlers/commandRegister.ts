@@ -17,7 +17,7 @@ import { readdirSync } from 'fs';
 import { join }        from 'path';
 import { pathToFileURL } from 'url';
 import { REST, Routes }  from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 
 // Discord permits at most 100 top-level global chat-input commands per
 // application. These low-value informational commands remain available via
@@ -46,7 +46,7 @@ const MAX_GLOBAL_SLASH_COMMANDS = 100;
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function registerSlashCommands(client: LevitateClient): Promise<void> {
+export async function registerSlashCommands(client: CassieClient): Promise<void> {
   const token    = client.config.botToken;
   const clientId = client.config.clientId;
 

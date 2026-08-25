@@ -1,5 +1,5 @@
 // xoxo/commands/music/seek.ts
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendSuccess } from '../../components/statusMessages.js';
 import { parseTime, TimeParseError, TIME_FORMAT_HELP } from '../../utils/parseTime.js';
 import { updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
@@ -20,7 +20,7 @@ export const options = {
   cooldown: 3,
 };
 
-async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean }, guildId: string, timeArg: string | null, client: LevitateClient) {
+async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean }, guildId: string, timeArg: string | null, client: CassieClient) {
   const ctxObj = ctx.isSlash ? { interaction: ctx.interaction } : { message: ctx.message };
   const player  = (client as any).kazagumo.players.get(guildId);
   if (!player?.queue?.current) return sendError(ctxObj, 'There is nothing currently playing.');
@@ -63,11 +63,11 @@ async function handle(ctx: { message?: any; interaction?: any; isSlash: boolean 
   return sendSuccess(ctxObj, `Seeked to **${m}:${String(s).padStart(2, '0')}**.`);
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   await handle({ message, isSlash: false }, message.guild.id, args.join(' ') || null, client);
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient) {
+export async function slashExecute(interaction: any, client: CassieClient) {
   await interaction.deferReply();
   try {
     await handle({ interaction, isSlash: true }, interaction.guild.id, interaction.options.getString('time', true), client);

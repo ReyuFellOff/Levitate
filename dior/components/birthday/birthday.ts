@@ -9,7 +9,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { formatBirthday } from '../../helpers/parseBirthdayDate.js';
 
 const LIST_DISPLAY_LIMIT = 40;
@@ -20,7 +20,7 @@ const LIST_DISPLAY_LIMIT = 40;
 
 export async function buildBirthdaySettingsContainer(
   guild:      any,
-  client:     LevitateClient,
+  client:     CassieClient,
   prefix:     string,
   invokerId:  string,
 ): Promise<ContainerBuilder> {

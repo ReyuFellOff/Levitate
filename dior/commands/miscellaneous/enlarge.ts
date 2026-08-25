@@ -9,7 +9,7 @@
 //   <:name:id>   animated <a:name:id>   raw numeric ID   :name:   bare name
 
 import { MessageFlags } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { buildEnlargePayload } from '../../components/utility/enlarge.js';
@@ -57,7 +57,7 @@ function emojiCdnUrl(id: string, animated: boolean): string {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 

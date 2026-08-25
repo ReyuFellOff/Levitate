@@ -8,7 +8,7 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { emojis } from '../emojis.js';
 
 const mediaChannelCache = new Map<string, { channelIds: Set<string>; expiresAt: number }>();
@@ -23,7 +23,7 @@ export function invalidateMediaChannelCache(guildId: string): void {
 }
 
 export async function getMediaChannelIds(
-  client: LevitateClient,
+  client: CassieClient,
   guildId: string,
 ): Promise<string[]> {
   const cached = mediaChannelCache.get(cacheKey(guildId));
@@ -37,7 +37,7 @@ export async function getMediaChannelIds(
   return ids;
 }
 
-export async function enforceMediaChannel(message: any, client: LevitateClient): Promise<boolean> {
+export async function enforceMediaChannel(message: any, client: CassieClient): Promise<boolean> {
   if (!message.guild || !client.db) return false;
 
   const channelIds = await getMediaChannelIds(client, message.guild.id);

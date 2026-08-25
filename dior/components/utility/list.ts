@@ -26,7 +26,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export interface ListSession {
   page:      number;
   detailId:  string | null; // currently showing detail for this ID
   heading?:  string;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

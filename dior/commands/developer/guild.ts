@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildDeveloperOutput } from '../../components/developer/devToolkit.js';
 
 export const options = {
@@ -11,7 +11,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, args: string[], client: CassieClient) {
   const guildId = args[0] ?? message.guild?.id;
   if (!guildId) return message.channel.send(buildDeveloperOutput('Guild', 'Usage: `$guild [guild-id]`', false));
 

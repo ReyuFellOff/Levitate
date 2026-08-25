@@ -5,7 +5,7 @@
 // Enforces user and server blacklists via DB.
 // Client is injected as the last argument by eventLoader.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 import {
   blacklistedUser,
@@ -27,7 +27,7 @@ import { enforceHoneypot } from '../../helpers/honeypot.js';
 export const name = 'messageCreate';
 export const once = false;
 
-export async function execute(message: any, client: LevitateClient): Promise<void> {
+export async function execute(message: any, client: CassieClient): Promise<void> {
   // Sticky must run for ALL messages (including bot-authored ones) so the sticky
   // re-posts at the bottom even when the bot itself sends a message.
   if (message.guild) {
@@ -368,7 +368,7 @@ async function enforceUserAliasPermissions(message: any, command: any): Promise<
 
 async function hasNoPrefixAccess(
   message: any,
-  client: LevitateClient,
+  client: CassieClient,
   isDeveloper: boolean,
 ): Promise<boolean> {
   // A global disable applies to every user, including developers.

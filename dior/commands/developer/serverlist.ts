@@ -3,7 +3,7 @@
 // Developer-only command. Responds inline with a CV2 panel listing all servers
 // the bot is in, with a dropdown to view detailed info for any selected server.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import {
   buildServerListPayload,
@@ -20,7 +20,7 @@ export const options = {
   cooldown: 0,
 };
 
-export async function prefixExecute(message: any, _args: string[], client: LevitateClient) {
+export async function prefixExecute(message: any, _args: string[], client: CassieClient) {
   const guilds = [...client.guilds.cache.values()].sort(
     (a, b) => (b.memberCount ?? 0) - (a.memberCount ?? 0),
   );

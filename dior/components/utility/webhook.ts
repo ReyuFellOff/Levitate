@@ -40,7 +40,7 @@ import {
   TextInputStyle,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 
@@ -110,7 +110,7 @@ type Mode = 'home' | 'create_channel' | 'manage' | 'delete_confirm' | 'send_data
 interface Session {
   authorId: string;
   guild:    any;
-  client:   LevitateClient;
+  client:   CassieClient;
   mode:     Mode;
   webhooks: any[];
   /** Count of guild webhooks that exist but can't be managed here (see `fetchWebhookState`). */
@@ -478,7 +478,7 @@ function modalSend(token: string): ModalBuilder {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function awaitModal(
-  client:   LevitateClient,
+  client:   CassieClient,
   customId: string,
   userId:   string,
   ms:       number,
@@ -572,7 +572,7 @@ async function withModal(opts: {
 async function resolveAndSendSavedData(
   s:             Session,
   dataNameLower: string,
-  client:        LevitateClient,
+  client:        CassieClient,
 ): Promise<string> {
   if (!client.db) return `${emojis.redcross} Database is unavailable.`;
 
@@ -668,7 +668,7 @@ async function resolveAndSendSavedData(
 
 export async function startWebhookSession(
   message:  any,
-  client:   LevitateClient,
+  client:   CassieClient,
   authorId: string,
 ): Promise<void> {
   const guild = message.guild;

@@ -26,7 +26,7 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { SavedDataDoc } from '../database/database.js';
 import { resolvePlaceholders } from '../helpers/placeholders.js';
 import { emojis } from '../emojis.js';
@@ -49,7 +49,7 @@ export interface ViewDataSession {
   items:     SavedDataDoc[];
   page:      number;
   lastSent?: string;
-  client:    LevitateClient;
+  client:    CassieClient;
 }
 
 export const viewDataSessions = new Map<string, ViewDataSession>();
@@ -213,7 +213,7 @@ async function resolveViewDataSession(
 export async function handleViewDataPage(
   interaction: any,
   direction: -1 | 1,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveViewDataSession(interaction);
   if (!resolved) return;
@@ -229,7 +229,7 @@ export async function handleViewDataPage(
 
 export async function handleViewDataSelect(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const resolved = await resolveViewDataSession(interaction);
   if (!resolved) return;

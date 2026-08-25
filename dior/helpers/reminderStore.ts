@@ -1,4 +1,4 @@
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import type { ReminderDoc } from '../database/database.js';
 
 export const MAX_REMINDERS_PER_USER = 25;
@@ -23,7 +23,7 @@ function toDoc(reminder: Reminder): ReminderDoc {
   return { id: reminder.id, user_id: reminder.userId, channel_id: reminder.channelId, reason: reminder.reason, remind_at: reminder.remindAt, created_at: reminder.createdAt };
 }
 
-export async function initializeReminders(client: LevitateClient): Promise<void> {
+export async function initializeReminders(client: CassieClient): Promise<void> {
   if (!client.db) return;
   await client.db.deleteExpiredReminders(Date.now()).catch(() => 0);
   const active = await client.db.listActiveReminders().catch((): ReminderDoc[] => []);
@@ -31,7 +31,7 @@ export async function initializeReminders(client: LevitateClient): Promise<void>
 }
 
 export async function createReminder(
-  client: LevitateClient,
+  client: CassieClient,
   userId: string,
   channelId: string,
   delayMs: number,
@@ -57,12 +57,12 @@ export async function createReminder(
   return reminder;
 }
 
-export async function listReminders(client: LevitateClient, userId: string): Promise<Reminder[]> {
+export async function listReminders(client: CassieClient, userId: string): Promise<Reminder[]> {
   if (!client.db) return [];
   return (await client.db.listReminders(userId)).map(fromDoc);
 }
 
-export async function deleteReminder(client: LevitateClient, userId: string, number: number): Promise<Reminder | null> {
+export async function deleteReminder(client: CassieClient, userId: string, number: number): Promise<Reminder | null> {
   if (!client.db) return null;
   const userReminders = await listReminders(client, userId);
   const target = userReminders[number - 1];
@@ -74,7 +74,7 @@ export async function deleteReminder(client: LevitateClient, userId: string, num
   return target;
 }
 
-function scheduleReminder(client: LevitateClient, reminder: Reminder): void {
+function scheduleReminder(client: CassieClient, reminder: Reminder): void {
   const existing = timers.get(reminder.id);
   if (existing) clearTimeout(existing);
 
@@ -88,7 +88,7 @@ function scheduleReminder(client: LevitateClient, reminder: Reminder): void {
   timers.set(reminder.id, setTimeout(() => scheduleReminder(client, reminder), wait));
 }
 
-async function deliverReminder(client: LevitateClient, reminder: Reminder): Promise<void> {
+async function deliverReminder(client: CassieClient, reminder: Reminder): Promise<void> {
   timers.delete(reminder.id);
   await client.db?.deleteReminder(reminder.id).catch((): null => null);
 

@@ -13,7 +13,7 @@
 // from hammering the same reaction/message trigger (and risking a Discord
 // rate limit) by repeating the same word rapidly.
 
-import type { LevitateClient } from '../structures/LevitateClient.js';
+import type { CassieClient } from '../structures/CassieClient.js';
 import { messageMatchesTrigger } from './autoresponderMatcher.js';
 import type { AutoresponderDoc, AutoresponderReplyMode } from '../database/database.js';
 
@@ -54,7 +54,7 @@ async function fireResponses(message: any, doc: AutoresponderDoc): Promise<void>
   }
 }
 
-export async function dispatchAutoresponders(client: LevitateClient, message: any): Promise<void> {
+export async function dispatchAutoresponders(client: CassieClient, message: any): Promise<void> {
   if (!client.db || !message.guild) return;
   // Process other bots' messages, but never process this bot's own responses.
   if (message.author?.id && message.author.id === client.user?.id) return;

@@ -2,7 +2,7 @@
 //
 // $cinema <movie or TV show> — search TMDB for either type and show details.
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { buildTmdbPayload } from '../../components/info/tmdb.js';
 import { sendError, sendLoading } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -40,7 +40,7 @@ async function executeSearch(
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   if (!args.length) return sendWrongUsage({ message }, options.name, options.usage);
 
@@ -54,7 +54,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  _client: LevitateClient,
+  _client: CassieClient,
 ): Promise<any> {
   const query = interaction.options.getString('query', true).trim();
   await interaction.deferReply();

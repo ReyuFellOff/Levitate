@@ -1,6 +1,6 @@
 // xoxo/commands/miscellaneous/accountage.ts
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildAccountAgePayload } from '../../components/utility/accountAge.js';
 import { resolveUser } from '../../helpers/userResolver.js';
@@ -15,11 +15,11 @@ export const options = {
   cooldown: 5,
 };
 
-async function resolveTarget(message: any, args: string[], client: LevitateClient): Promise<any | null> {
+async function resolveTarget(message: any, args: string[], client: CassieClient): Promise<any | null> {
   return args.length ? resolveUser(client, message.guild, args.join(' ')) : message.author;
 }
 
-export async function prefixExecute(message: any, args: string[], client: LevitateClient): Promise<any> {
+export async function prefixExecute(message: any, args: string[], client: CassieClient): Promise<any> {
   const ctx = { message };
   if (!message.guild) return sendError(ctx, 'This command can only be used in a server.');
 
@@ -30,7 +30,7 @@ export async function prefixExecute(message: any, args: string[], client: Levita
   return message.channel.send(buildAccountAgePayload(user, member));
 }
 
-export async function slashExecute(interaction: any, client: LevitateClient): Promise<any> {
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
   await interaction.deferReply();
   const user = interaction.options.getUser('user') ?? interaction.user;
   const member = interaction.guild

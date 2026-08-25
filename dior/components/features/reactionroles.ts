@@ -15,7 +15,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import type { ReactionRolePair } from '../../database/database.js';
 import {
   buildActionCancelledPayload,
@@ -43,7 +43,7 @@ interface ReactionRoleSession {
   targetMessageId: string;
   pairs: ReactionRolePair[];
   allowMultiple: boolean;
-  client: LevitateClient;
+  client: CassieClient;
 }
 
 const sessions = new Map<string, ReactionRoleSession>();
@@ -245,7 +245,7 @@ async function replyEphemeral(interaction: any, content: string): Promise<void> 
 
 export async function startReactionRolePanel(
   context: { message?: any; interaction?: any },
-  client: LevitateClient,
+  client: CassieClient,
   targetMessage: any,
   existingPairs: ReactionRolePair[] = [],
   existingAllowMultiple = false,
@@ -284,7 +284,7 @@ export async function startReactionRolePanel(
 
 export async function handleReactionRoleInteraction(
   interaction: any,
-  client: LevitateClient,
+  client: CassieClient,
 ): Promise<void> {
   const session = getSession(interaction.customId as string);
   if (!session || session.guildId !== interaction.guildId) {

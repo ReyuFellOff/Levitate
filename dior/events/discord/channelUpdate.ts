@@ -3,7 +3,7 @@
 // Logging: fires when a guild channel's properties change.
 
 import { AuditLogEvent } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog, fetchAuditLogExecutor } from '../../helpers/logDispatcher.js';
 import { buildChannelUpdatePayload } from '../../components/logging/logMessages.js';
 import { syncVoiceMasterCategory } from '../../helpers/voiceMaster.js';
@@ -47,7 +47,7 @@ function diffFields(oldChannel: any, newChannel: any): { field: string; before: 
   return changes;
 }
 
-export async function execute(oldChannel: any, newChannel: any, client: LevitateClient): Promise<void> {
+export async function execute(oldChannel: any, newChannel: any, client: CassieClient): Promise<void> {
   if (!newChannel.guild) return;
 
   await syncVoiceMasterCategory(client, newChannel).catch((error: unknown) => {

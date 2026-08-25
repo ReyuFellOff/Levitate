@@ -4,7 +4,7 @@
 // DMs, and updates where the text content didn't actually change (e.g. an
 // embed loading in after a link is posted).
 
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { dispatchLog } from '../../helpers/logDispatcher.js';
 import { buildMessageUpdatePayload } from '../../components/logging/logMessages.js';
 import { getStarboardSettingsForReaction, syncStarboardReaction } from '../../helpers/starboard.js';
@@ -14,7 +14,7 @@ import { enforceMediaChannel } from '../../helpers/mediaChannel.js';
 export const name = 'messageUpdate';
 export const once = false;
 
-export async function execute(oldMessage: any, newMessage: any, client: LevitateClient): Promise<void> {
+export async function execute(oldMessage: any, newMessage: any, client: CassieClient): Promise<void> {
   if (!newMessage.guild) return;
   if (newMessage.author?.bot) return;
   if (await enforceMediaChannel(newMessage, client)) return;

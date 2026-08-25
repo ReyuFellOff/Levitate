@@ -17,7 +17,7 @@
 // DM notification is attempted before the kick. Failure is non-fatal.
 
 import { PermissionFlagsBits } from 'discord.js';
-import type { LevitateClient } from '../../structures/LevitateClient.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildKickSuccessPayload, buildKickDmPayload } from '../../components/moderation/kick.js';
 import { buildModLogKick } from '../../components/moderation/modlog.js';
@@ -82,7 +82,7 @@ async function getMemberAndCheck(opts: {
 export async function prefixExecute(
   message: any,
   args:    string[],
-  client:  LevitateClient,
+  client:  CassieClient,
 ): Promise<any> {
   const ctx = { message };
 
@@ -145,7 +145,7 @@ export async function prefixExecute(
 
 export async function slashExecute(
   interaction: any,
-  client:      LevitateClient,
+  client:      CassieClient,
 ): Promise<any> {
   await interaction.deferReply();
   const ctx = { interaction };
