@@ -3,11 +3,13 @@ yarn.lock
 node_modules/
 dist/
 Levitate-Typeshit/
+Cassie-Typeshit/
 Levitate-Web/
+Cassie-Web/
 Ref/
 grace.md
 .env
 *.zip
 scripts/
 .vscode
-xoxo/chronicles/
+dior/chronicles/
