@@ -12,9 +12,9 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { generateRatingCanvas, pinkTheme } from '../../structures/RatingCanvas.js';
+import { generateRatingCanvas, pinkTheme } from '../../canvas/RatingCanvas.js';
 import { pickSimpCaption } from '../../config/captions/captionPickers.js';
-import type { RatingContext } from '../../config/ratingBackgrounds.js';
+import type { RatingContext } from '../../config/rating/ratingBackgrounds.js';
 
 export async function buildSimpPayload(opts: {
   user:        any;

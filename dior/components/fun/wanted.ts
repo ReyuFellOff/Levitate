@@ -22,11 +22,11 @@ try { GlobalFonts.loadFontsFromDir('/usr/share/fonts'); } catch { /* ignore */ }
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype'); } catch { /* ignore */ }
 
 // Register the vintage western font for "Dead or Alive" and the crime line.
-// The font lives in dior/fonts/ (source) → dist is 4 levels up from the
-// compiled file, so we step back to the project root then into dior/fonts/.
+// The font lives in dior/resources/fonts/ (source) → dist is 4 levels up from
+// the compiled file, so we step back to the project root then into that folder.
 try {
   const fontBuf = readFileSync(
-    new URL('../../../../dior/fonts/JimNightshade-Regular.ttf', import.meta.url),
+    new URL('../../../../dior/resources/fonts/JimNightshade-Regular.ttf', import.meta.url),
   );
   GlobalFonts.register(fontBuf, 'JimNightshade');
 } catch { /* font missing at runtime — falls back to serif */ }

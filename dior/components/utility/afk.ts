@@ -10,9 +10,9 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import { config } from '../config.js';
-import { emojis } from '../emojis.js';
-import { formatClock } from '../utils/formatting.js';
+import { config } from '../../config.js';
+import { emojis } from '../../emojis.js';
+import { formatClock } from '../../utils/formatting.js';
 
 export type AfkScope = 'server' | 'global';
 

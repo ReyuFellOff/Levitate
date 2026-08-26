@@ -16,7 +16,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { buildPrefixInfoPayload } from '../../components/prefixInfo.js';
+import { buildPrefixInfoPayload } from '../../components/settings/prefixInfo.js';
 
 export const options = {
   name: 'setprefix',

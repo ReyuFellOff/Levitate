@@ -19,7 +19,7 @@ import {
 } from 'discord.js';
 import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
-import { PERMISSION_NAMES } from '../../data/discordPermissions.js';
+import { PERMISSION_NAMES } from '../../config/permissions/discordPermissions.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types (exported so the command file can reference them)

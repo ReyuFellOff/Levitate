@@ -85,8 +85,6 @@ async function bootstrap(): Promise<void> {
   console.log(`[CLIENT] Logged in as ${client.user?.tag}`);
   console.log(`[CLIENT] Cluster ID: ${client.cluster.id}`);
 
-  await initializeReminders(client);
-
   // ── [HOST] ──────────────────────────────────────────────────────────────────
   await getHostingServiceIP();
 
@@ -99,6 +97,9 @@ async function bootstrap(): Promise<void> {
     console.error(`[DATABASE] Failed to initialise: ${(err as Error).message}`);
     // Non-fatal — bot runs without DB (noprefix/blacklist silently skipped).
   }
+
+  // Reminders need the connected database so persisted timers can be restored.
+  await initializeReminders(client);
 
   // ── [DATABASE - LOADING DATA] ────────────────────────────────────────────────
   if (client.db) {

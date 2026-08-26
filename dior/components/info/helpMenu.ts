@@ -12,11 +12,11 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import type { CassieClient } from '../structures/CassieClient.js';
-import { emojis } from '../emojis.js';
-import { categories, excludedCategories } from '../config/categories.js';
-import { descriptions } from '../config/descriptions.js';
-import { config, getInviteUrl } from '../config.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
+import { emojis } from '../../emojis.js';
+import { categories, excludedCategories } from '../../config/categories.js';
+import { descriptions } from '../../config/descriptions.js';
+import { config, getInviteUrl } from '../../config.js';
 
 const NO_USER_PING = { parse: [] as any[] };
 

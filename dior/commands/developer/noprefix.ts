@@ -3,7 +3,7 @@ import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { resolveUser } from '../../helpers/userResolver.js';
-import { buildNoprefixListPayload } from '../../components/noprefixList.js';
+import { buildNoprefixListPayload } from '../../components/settings/noprefixList.js';
 import { escapeMarkdown } from '../../utils/formatting.js';
 
 export const options = {

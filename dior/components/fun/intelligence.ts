@@ -2,7 +2,7 @@ import { config } from '../../config.js';
 // xoxo/components/fun/intelligence.ts
 //
 // CV2 payload builder for the $intelligence / $iq command.
-// Canvas work lives in xoxo/structures/RatingCanvas.ts (blue theme).
+// Canvas work lives in xoxo/canvas/RatingCanvas.ts (blue theme).
 
 import {
   ContainerBuilder,
@@ -13,9 +13,9 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { generateRatingCanvas, blueTheme } from '../../structures/RatingCanvas.js';
+import { generateRatingCanvas, blueTheme } from '../../canvas/RatingCanvas.js';
 import { pickIntelligenceCaption } from '../../config/captions/captionPickers.js';
-import type { RatingContext } from '../../config/ratingBackgrounds.js';
+import type { RatingContext } from '../../config/rating/ratingBackgrounds.js';
 
 export async function buildIntelligencePayload(opts: {
   user:        any;

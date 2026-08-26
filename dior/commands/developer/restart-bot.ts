@@ -4,7 +4,7 @@ import { sendError, sendInfo } from '../../components/statusMessages.js';
 import {
   buildBotActionConfirmPayload,
   buildBotActionTimedOutPayload,
-} from '../../components/botActionConfirm.js';
+} from '../../components/developer/botActionConfirm.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 
 export const options = {

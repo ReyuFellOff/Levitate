@@ -11,7 +11,7 @@ import { sendError } from '../../components/statusMessages.js';
 import {
   buildPayload,
   registerPhHelpSession,
-} from '../../components/placeholderHelp.js';
+} from '../../components/utility/placeholderHelp.js';
 
 export const options = {
   name: 'placeholder-help',

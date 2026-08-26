@@ -3,8 +3,8 @@ import {
   MessageFlags,
   TextDisplayBuilder,
 } from 'discord.js';
-import { config } from '../config.js';
-import { emojis } from '../emojis.js';
+import { config } from '../../config.js';
+import { emojis } from '../../emojis.js';
 
 export function buildPrefixInfoPayload(
   serverPrefix: string,

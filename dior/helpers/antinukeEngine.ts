@@ -23,7 +23,7 @@ import type {
   AntinukeModuleKey,
   AntinukePunishment,
 } from '../database/database.js';
-import { getAntinukeModuleInfo } from '../config/antinukeModules.js';
+import { getAntinukeModuleInfo } from '../config/antinuke/antinukeModules.js';
 import { buildAntinukeTriggerContainer } from '../components/antinuke/antinuke.js';
 
 // ─────────────────────────────────────────────────────────────────────────────

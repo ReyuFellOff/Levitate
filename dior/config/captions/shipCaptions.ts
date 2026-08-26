@@ -17,7 +17,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
   {
     min: 0, max: 9,
     captions: [
-      'The universe looked at this ship and said \*absolutely not.\*',
+      'The universe looked at this ship and said \\*absolutely not.\\*',
       '404: Love not found. Try again in another lifetime.',
       'The stars collectively sighed and went home.',
       'Even a coin flip would\'ve been more romantic.',
@@ -31,10 +31,10 @@ export const shipCaptionBands: ShipCaptionBand[] = [
     min: 10, max: 19,
     captions: [
       'A very firm handshake. At best.',
-      'The vibes are off. \*Way\* off.',
+      'The vibes are off. \\*Way\\* off.',
       'They could survive a car ride together. Barely.',
       'Somewhere in a parallel universe this is a love story. Not this one.',
-      'Less \*opposites attract\*, more \*opposites repel.\*',
+      'Less \\*opposites attract\\*, more \\*opposites repel.\\*',
       'They make better strangers than anything else.',
       'The situationship has situationships.',
       'Nature said no. The data agrees.',
@@ -43,12 +43,12 @@ export const shipCaptionBands: ShipCaptionBand[] = [
   {
     min: 20, max: 29,
     captions: [
-      'Strong \*"we met once at a party"\* energy.',
+      'Strong \\*"we met once at a party"\\* energy.',
       'Technically they breathe the same air. That\'s something.',
       'A slow-burn potential — but the wood is damp.',
       'Could work... with a lot of therapy and questionable life decisions.',
       'The spark exists. It\'s just buried very, very deep.',
-      'More of a \*maybe\* than a \*yes\* — but not quite a \*no\* either.',
+      'More of a \\*maybe\\* than a \\*yes\\* — but not quite a \\*no\\* either.',
       'Friends who should probably talk more and overthink less.',
       'There\'s a plot here. It just hasn\'t found its genre yet.',
     ],
@@ -60,7 +60,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
       'They\'d argue constantly but in a weirdly entertaining way.',
       'The potential is there. The courage? Still loading.',
       'Not soulmates yet — but something worth exploring.',
-      'A whole lot of \*what if\* and not enough \*let\'s find out.\*',
+      'A whole lot of \\*what if\\* and not enough \\*let\'s find out.\\*',
       'They give each other looks that say a lot more than words.',
       'The tension is there. Someone just hasn\'t named it yet.',
       'Close enough to wonder. Far enough to hesitate.',
@@ -75,7 +75,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
       'One good conversation away from everything changing.',
       'They\'re both thinking the same thing. Neither will say it first.',
       'Accidentally flirting every time without realising it.',
-      'The \*almost\* is loud. Someone needs to close the gap.',
+      'The \\*almost\\* is loud. Someone needs to close the gap.',
       'Not quite magnetised — but definitely not repelling either.',
     ],
   },
@@ -84,7 +84,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
     captions: [
       'More than a little something, less than forever — for now.',
       'The slow dance has started. Will either of them notice?',
-      'Halfway between \*what if\* and \*why not.\*',
+      'Halfway between \\*what if\\* and \\*why not.\\*',
       'Cute enough to ship, spicy enough to keep watching.',
       'They\'re both playing it cool. Neither is actually cool.',
       'Late-night texts that mean more than they\'ll ever admit.',
@@ -97,8 +97,8 @@ export const shipCaptionBands: ShipCaptionBand[] = [
     captions: [
       'Something is definitely brewing here.',
       'They orbit each other without even knowing it.',
-      'Strong \*"we should hang out more"\* energy.',
-      'There\'s a \*we\* forming whether they like it or not.',
+      'Strong \\*"we should hang out more"\\* energy.',
+      'There\'s a \\*we\\* forming whether they like it or not.',
       'They\'d deny everything. Their faces would not.',
       'Give it a week. Maybe two. Then it\'s obvious to everyone.',
       'The kind of connection songs get quietly written about.',
@@ -111,7 +111,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
       'The heart has already decided. The head is still catching up.',
       'Deeply connected and probably still in denial.',
       'High compatibility. Very high chaos potential.',
-      'The \*"just friends"\* phase is barely holding together.',
+      'The \\*"just friends"\\* phase is barely holding together.',
       'They\'d move mountains for each other and call it no big deal.',
       'Everyone around them already knows. They\'re the last to find out.',
       'Their playlists overlap almost perfectly. That says everything.',
@@ -135,7 +135,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
     min: 90, max: 100,
     captions: [
       'Certified soulmates. The universe approves.',
-      'If they\'re not together yet — \*what are they even waiting for?\*',
+      'If they\'re not together yet — \\*what are they even waiting for?\\*',
       'No notes. Absolutely no notes.',
       'Fated. Written in the stars before either of them existed.',
       'They probably complete each other\'s sentences without thinking.',
@@ -153,7 +153,7 @@ export const selfShipCaptions: string[] = [
   'Loving yourself first — and doing it exceptionally well.',
   'No one loves them more than they do. As it should be.',
   'Most people search a lifetime. This one already found the one.',
-  'The relationship status is \*thriving\*, thank you very much.',
+  'The relationship status is \\*thriving\\*, thank you very much.',
 ];
 
 /**

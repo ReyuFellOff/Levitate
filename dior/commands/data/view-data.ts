@@ -11,7 +11,7 @@ import { sendError } from '../../components/statusMessages.js';
 import {
   buildViewDataPayload,
   registerViewDataSession,
-} from '../../components/viewDataMenu.js';
+} from '../../components/data/viewDataMenu.js';
 
 export const options = {
   name: 'view-data',

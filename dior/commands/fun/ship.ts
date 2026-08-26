@@ -20,7 +20,7 @@
 
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
-import { buildShipPayload } from '../../components/fun/ship.js';
+import { buildShipPayload } from '../../canvas/ShipCanvas.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 
 export const options = {

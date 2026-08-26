@@ -23,10 +23,10 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { CassieClient } from '../structures/CassieClient.js';
-import { ensureGuildInvite, NO_INVITE } from '../helpers/inviteCache.js';
-import { emojis } from '../emojis.js';
-import config from '../config.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
+import { ensureGuildInvite, NO_INVITE } from '../../helpers/inviteCache.js';
+import { emojis } from '../../emojis.js';
+import config from '../../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants

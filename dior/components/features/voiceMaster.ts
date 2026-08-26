@@ -22,17 +22,17 @@ import {
   ThumbnailBuilder,
   UserSelectMenuBuilder,
 } from "discord.js";
-import config from "../config.js";
-import { descriptions } from "../config/descriptions.js";
-import { emojis } from "../emojis.js";
-import { parseSayText } from "../helpers/emojiParser.js";
-import { resolveEmoji } from "../helpers/emojiResolver.js";
-import type { CassieClient } from "../structures/CassieClient.js";
+import config from "../../config.js";
+import { descriptions } from "../../config/descriptions.js";
+import { emojis } from "../../emojis.js";
+import { parseSayText } from "../../helpers/emojiParser.js";
+import { resolveEmoji } from "../../helpers/emojiResolver.js";
+import type { CassieClient } from "../../structures/CassieClient.js";
 import type {
   VoiceMasterChannelDoc,
   VoiceMasterSetupDoc,
-} from "../database/database.js";
-import { refreshVoiceMasterPanel } from "../helpers/voiceMaster.js";
+} from "../../database/database.js";
+import { refreshVoiceMasterPanel } from "../../helpers/voiceMaster.js";
 
 function panelButton(emoji: string, action: string): ButtonBuilder {
   return new ButtonBuilder()

@@ -3,7 +3,7 @@ import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
 import { buildTrackInfo } from '../../helpers/nowPlayingManager.js';
-import { generateNowPlayingCanvas } from '../../structures/NowPlayingCanvas.js';
+import { generateNowPlayingCanvas } from '../../canvas/NowPlayingCanvas.js';
 import { extractThumbnail, formatDuration } from '../../utils/formatting.js';
 import { unifiedSearch } from '../../helpers/sourceSearch.js';
 

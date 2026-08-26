@@ -22,7 +22,7 @@ import {
   buildLogCategoryPayload,
   registerLogMenuSession,
 } from '../../components/logging/logMenu.js';
-import { logCategories } from '../../config/logCategories.js';
+import { logCategories } from '../../config/logging/logCategories.js';
 import type { LogCategoryKey } from '../../database/database.js';
 import { PermissionFlagsBits } from 'discord.js';
 

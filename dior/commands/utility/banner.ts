@@ -15,7 +15,7 @@ import {
   buildChoicePayload,
   buildTimedOutChoicePayload,
   type MediaType,
-} from '../../components/avatarBanner.js';
+} from '../../components/utility/avatarBanner.js';
 import { sendImagePanel } from '../../helpers/imagePanel.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 

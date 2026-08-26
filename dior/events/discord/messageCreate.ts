@@ -16,7 +16,7 @@ import {
   reservedForDeveloper,
 } from '../../components/statusMessages.js';
 import { updateSticky } from '../../helpers/stickyHelper.js';
-import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/afk.js';
+import { buildAfkNoticePayload, buildAfkRemovedPayload, formatHumanDuration } from '../../components/utility/afk.js';
 import { dispatchAutoresponders } from '../../helpers/autoresponderDispatch.js';
 import { dispatchCustomRole }     from '../../helpers/customRoleDispatch.js';
 import { withDeveloperPermissionBypass } from '../../helpers/developerPermissionBypass.js';
@@ -378,15 +378,15 @@ async function hasNoPrefixAccess(
     const globalEnabled = await client.db.getNoprefixGlobalEnabled().catch((): boolean => false);
     if (!globalEnabled) return false;
 
+    if (message.guild?.id) {
+      const guildDisabled = await client.db.isGuildNoPrefixDisabled(message.guild.id).catch((): boolean => false);
+      if (guildDisabled) return false;
+    }
+
     // Developers have no-prefix access unless they've self-disabled it via $mynop off.
     if (isDeveloper) {
       const selfDisabled = await client.db.isDevNoprefixSelfDisabled(message.author.id).catch((): boolean => false);
       return !selfDisabled;
-    }
-
-    if (message.guild?.id) {
-      const guildDisabled = await client.db.isGuildNoPrefixDisabled(message.guild.id).catch((): boolean => false);
-      if (guildDisabled) return false;
     }
 
     return await client.db.isNoPrefixUser(message.author.id).catch((): boolean => false);

@@ -17,7 +17,7 @@ import {
 } from 'discord.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
-import { buildAfkConfirmationPayload, type AfkScope } from '../../components/afk.js';
+import { buildAfkConfirmationPayload, type AfkScope } from '../../components/utility/afk.js';
 import { emojis } from '../../emojis.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import { parseSayText } from '../../helpers/emojiParser.js';

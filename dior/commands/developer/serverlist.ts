@@ -8,7 +8,7 @@ import { sendError } from '../../components/statusMessages.js';
 import {
   buildServerListPayload,
   registerServerListSession,
-} from '../../components/serverlist.js';
+} from '../../components/developer/serverlist.js';
 
 export const options = {
   name: 'serverlist',

@@ -2,7 +2,7 @@
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { blacklistedServer, sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
-import { buildBlacklistListPayload } from '../../components/blacklistList.js';
+import { buildBlacklistListPayload } from '../../components/developer/blacklistList.js';
 import { escapeFormatting, escapeMarkdown } from '../../utils/formatting.js';
 
 export const options = {

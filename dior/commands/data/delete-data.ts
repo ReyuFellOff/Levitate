@@ -11,7 +11,7 @@ import { sendError } from '../../components/statusMessages.js';
 import {
   buildDeleteDataPayload,
   registerDeleteDataSession,
-} from '../../components/deleteDataMenu.js';
+} from '../../components/data/deleteDataMenu.js';
 
 export const options = {
   name: 'delete-data',

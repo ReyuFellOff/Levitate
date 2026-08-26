@@ -5,7 +5,7 @@ import { sendError } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { sendNowPlaying } from '../../components/music/nowPlaying.js';
 import { extractThumbnail, formatDuration } from '../../utils/formatting.js';
-import { generateNowPlayingCanvas } from '../../structures/NowPlayingCanvas.js';
+import { generateNowPlayingCanvas } from '../../canvas/NowPlayingCanvas.js';
 
 export const options = {
   name: 'peek',

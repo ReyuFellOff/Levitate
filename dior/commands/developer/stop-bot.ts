@@ -14,7 +14,7 @@ import { sendError, sendInfo } from '../../components/statusMessages.js';
 import {
   buildBotActionConfirmPayload,
   buildBotActionTimedOutPayload,
-} from '../../components/botActionConfirm.js';
+} from '../../components/developer/botActionConfirm.js';
 import { getHostingProviderName } from '../../helpers/getHostingServiceIP.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import { writeFileSync } from 'fs';

@@ -23,10 +23,10 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { CassieClient } from '../structures/CassieClient.js';
-import type { SavedDataDoc } from '../database/database.js';
-import { emojis } from '../emojis.js';
-import { config } from '../config.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
+import type { SavedDataDoc } from '../../database/database.js';
+import { emojis } from '../../emojis.js';
+import { config } from '../../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants

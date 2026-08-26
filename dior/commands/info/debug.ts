@@ -12,7 +12,7 @@ import {
   buildDebugHomePayload,
   registerDebugSession,
   type DebugSession,
-} from '../../messages/debug.js';
+} from '../../components/info/debug.js';
 
 export const options = {
   name:        'debug',

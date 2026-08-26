@@ -57,7 +57,7 @@ import {
   resolveAntinukePunishment,
   getAntinukeModuleInfo,
   resolveAntinukeProfile,
-} from '../../config/antinukeModules.js';
+} from '../../config/antinuke/antinukeModules.js';
 import { resolveUser } from '../../helpers/userResolver.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
 import type { AntinukeModuleKey, AntinukePunishment, AntinukeWhitelistType } from '../../database/database.js';

@@ -15,7 +15,7 @@ import {
   ThumbnailBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
-import { honeypotConfig } from '../../config/honeypot.js';
+import { honeypotConfig } from '../../config/features/honeypot.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import type { HoneypotSettingsDoc } from '../../database/database.js';
 import { emojis } from '../../emojis.js';

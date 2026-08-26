@@ -7,7 +7,7 @@
 
 import type { CassieClient } from '../structures/CassieClient.js';
 import type { RatingCommandName } from '../database/database.js';
-import { ratingDevValues } from '../config/ratingDevValues.js';
+import { ratingDevValues } from '../config/rating/ratingDevValues.js';
 
 export const DEV_ID = '922491166149214218';
 

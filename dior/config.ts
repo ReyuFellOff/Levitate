@@ -216,13 +216,13 @@ export const config: Config = {
   // ── 8b. Music ──────────────────────────────────────────────────────────────
   defaultSource: 'ytsearch',
   nodes: [
-    {
+    /* {
       host:   'merlion.endercloud.in',
       port:   46573,
       name:   'Merlion',
       auth:   'youshallnotpass',
       secure: false,
-    },
+    }, */
     {
       host:   'lavalinkv4.serenetia.com',
       port:   443,

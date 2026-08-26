@@ -1,4 +1,4 @@
-// xoxo/messages/ping.ts
+// xoxo/components/info/ping.ts
 //
 // Builds the Components V2 payload for the ping command response.
 // Lavalink latency is omitted — it's not applicable to Cassie.
@@ -8,8 +8,8 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import { config } from '../config.js';
-import { emojis } from '../emojis.js';
+import { config } from '../../config.js';
+import { emojis } from '../../emojis.js';
 
 export interface PingStats {
   apiLatency:     number;

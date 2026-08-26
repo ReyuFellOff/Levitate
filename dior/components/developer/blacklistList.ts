@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/blacklistList.ts
 import {
   ContainerBuilder,
@@ -6,7 +6,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import { emojis } from '../emojis.js';
+import { emojis } from '../../emojis.js';
 
 export function buildBlacklistListPayload(
   title: string,

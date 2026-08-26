@@ -18,7 +18,7 @@ import {
 } from 'discord.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { config }              from '../../config.js';
-import { developerPanelConfig as dev } from '../../config/developerPanel.js';
+import { developerPanelConfig as dev } from '../../config/developer/developerPanel.js';
 
 export const options = {
   name:        'developer',

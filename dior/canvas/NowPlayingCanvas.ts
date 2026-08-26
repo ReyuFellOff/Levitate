@@ -1,4 +1,4 @@
-// xoxo/structures/NowPlayingCanvas.ts
+// xoxo/canvas/NowPlayingCanvas.ts
 //
 // Generates the custom now-playing card image for the music player.
 //

@@ -29,13 +29,14 @@ export function buildReminderListPayload(reminders: Reminder[], userId: string):
 }
 
 export function buildReminderCompletePayload(reminder: Reminder): any {
+  const mention = new TextDisplayBuilder().setContent(`<@${reminder.userId}>`);
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      `### ${emojis.remindIcon} <@${reminder.userId}> Reminder: ${reminder.reason}`,
+      `### ${emojis.remindIcon} Reminder: ${reminder.reason}`,
     ));
   return {
-    components: [container],
+    components: [mention, container],
     flags: MessageFlags.IsComponentsV2,
     allowedMentions: { users: [reminder.userId] },
   };

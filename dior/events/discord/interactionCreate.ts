@@ -22,7 +22,7 @@ import {
   buildDebugHomePayload,
   buildDebugCategoryPayload,
   buildDebugAllStatsPayload,
-} from '../../messages/debug.js';
+} from '../../components/info/debug.js';
 import { gatherDebugStats } from '../../helpers/debugStats.js';
 import {
   helpSessions,
@@ -31,22 +31,22 @@ import {
   buildAllCommandsPayload,
   buildCategoryPayload,
   buildDisabledHelpPayload,
-} from '../../components/helpMenu.js';
+} from '../../components/info/helpMenu.js';
 import {
   handleViewDataSelect,
   handleViewDataPage,
-} from '../../components/viewDataMenu.js';
-import { handlePhHelpNav } from '../../components/placeholderHelp.js';
+} from '../../components/data/viewDataMenu.js';
+import { handlePhHelpNav } from '../../components/utility/placeholderHelp.js';
 import {
   handleDeleteDataSelect,
   handleDeleteDataPage,
   handleDeleteDataConfirm,
   handleDeleteDataCancel,
-} from '../../components/deleteDataMenu.js';
+} from '../../components/data/deleteDataMenu.js';
 import {
   handleSendDataSelect,
   handleSendDataPage,
-} from '../../components/sendDataMenu.js';
+} from '../../components/data/sendDataMenu.js';
 import { handleUnTimeoutSelect } from '../../components/moderation/untimeout.js';
 import { handleUnbanSelect } from '../../components/moderation/unban.js';
 import {
@@ -64,7 +64,7 @@ import {
   handleServerListSelect,
   handleServerListBack,
   handleServerListPage,
-} from '../../components/serverlist.js';
+} from '../../components/developer/serverlist.js';
 import { handleLogConfigInteraction }    from '../../components/logging/logMenu.js';
 import { handleNsInteraction }           from '../../components/utility/namestyle.js';
 import { handleCustomiseInteraction }    from '../../components/customisation/customise.js';
@@ -84,7 +84,7 @@ import { clearSession } from '../../helpers/sessionQueue.js';
 import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 import { buildPlayerStoppedPayload } from '../../components/music/nowPlaying.js';
 import { clearPlayerState, updateNowPlayingMessage } from '../../helpers/nowPlayingManager.js';
-import { handleVoiceMasterInteraction } from '../../components/voiceMaster.js';
+import { handleVoiceMasterInteraction } from '../../components/features/voiceMaster.js';
 import { handleHoneypotInteraction } from '../../components/features/honeypot.js';
 
 export const name = 'interactionCreate';

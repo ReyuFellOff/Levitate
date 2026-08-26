@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/botActionConfirm.ts
 //
 // Generic confirmation prompt used by both `restart-bot` and `stop-bot`.

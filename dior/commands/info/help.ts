@@ -6,7 +6,7 @@ import {
   buildCommandInfoPayload,
   registerHelpSession,
   resolveHelpCategory,
-} from '../../components/helpMenu.js';
+} from '../../components/info/helpMenu.js';
 import { sendError, reservedForDeveloper } from '../../components/statusMessages.js';
 
 export const options = {

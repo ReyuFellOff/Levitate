@@ -38,7 +38,7 @@ import {
 } from 'discord.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import type { LogCategoryKey, LogConfigDoc } from '../../database/database.js';
-import { logCategories, serverLogEventTypeOptions, getLogCategoryInfo } from '../../config/logCategories.js';
+import { logCategories, serverLogEventTypeOptions, getLogCategoryInfo } from '../../config/logging/logCategories.js';
 import { emojis } from '../../emojis.js';
 
 /** Converts one of our `<a:name:id>` emoji strings into a button-compatible emoji object. */

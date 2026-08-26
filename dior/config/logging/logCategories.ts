@@ -5,7 +5,7 @@
 // per-category config page, and which native select-menu type is used
 // to pick "exceptions" for that category.
 
-import type { LogCategoryKey } from '../database/database.js';
+import type { LogCategoryKey } from '../../database/database.js';
 
 export type ExceptionKind = 'channel' | 'voiceChannel' | 'role' | 'user' | 'eventType';
 

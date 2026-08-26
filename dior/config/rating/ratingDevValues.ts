@@ -8,7 +8,7 @@
 // Use `Infinity` for "always Infinite%", or any finite number (can be
 // negative) for a fixed value.
 
-import type { RatingCommandName } from '../database/database.js';
+import type { RatingCommandName } from '../../database/database.js';
 
 export const ratingDevValues: Record<RatingCommandName, number> = {
   cute:        Infinity,

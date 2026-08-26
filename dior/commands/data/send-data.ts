@@ -13,7 +13,7 @@ import { sendError } from '../../components/statusMessages.js';
 import {
   buildSendDataPayload,
   registerSendDataSession,
-} from '../../components/sendDataMenu.js';
+} from '../../components/data/sendDataMenu.js';
 
 export const options = {
   name: 'send-data',

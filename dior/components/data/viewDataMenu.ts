@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/viewDataMenu.ts
 //
 // Session tracking, payload builder, and interaction handlers for $view-data.
@@ -26,10 +26,10 @@ import {
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import type { CassieClient } from '../structures/CassieClient.js';
-import type { SavedDataDoc } from '../database/database.js';
-import { resolvePlaceholders } from '../helpers/placeholders.js';
-import { emojis } from '../emojis.js';
+import type { CassieClient } from '../../structures/CassieClient.js';
+import type { SavedDataDoc } from '../../database/database.js';
+import { resolvePlaceholders } from '../../helpers/placeholders.js';
+import { emojis } from '../../emojis.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants

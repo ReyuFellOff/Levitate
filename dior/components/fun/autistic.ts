@@ -2,7 +2,7 @@ import { config } from '../../config.js';
 // xoxo/components/fun/autistic.ts
 //
 // CV2 payload builder for the $autistic command.
-// Canvas work lives in xoxo/structures/RatingCanvas.ts (teal theme).
+// Canvas work lives in xoxo/canvas/RatingCanvas.ts (teal theme).
 
 import {
   ContainerBuilder,
@@ -13,9 +13,9 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { generateRatingCanvas, tealTheme } from '../../structures/RatingCanvas.js';
+import { generateRatingCanvas, tealTheme } from '../../canvas/RatingCanvas.js';
 import { pickAutisticCaption } from '../../config/captions/captionPickers.js';
-import type { RatingContext } from '../../config/ratingBackgrounds.js';
+import type { RatingContext } from '../../config/rating/ratingBackgrounds.js';
 
 export async function buildAutisticPayload(opts: {
   user:        any;

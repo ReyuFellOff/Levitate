@@ -27,7 +27,7 @@ import {
   antinukePunishmentLabels,
   getAntinukeModuleInfo,
   type AntinukeProfile,
-} from '../../config/antinukeModules.js';
+} from '../../config/antinuke/antinukeModules.js';
 
 const NO_MENTIONS = { parse: [] as any[] };
 

@@ -90,7 +90,6 @@ function scheduleReminder(client: CassieClient, reminder: Reminder): void {
 
 async function deliverReminder(client: CassieClient, reminder: Reminder): Promise<void> {
   timers.delete(reminder.id);
-  await client.db?.deleteReminder(reminder.id).catch((): null => null);
 
   const { buildReminderCompletePayload } = await import('../components/utility/reminder.js');
   const payload = buildReminderCompletePayload(reminder);
@@ -99,11 +98,17 @@ async function deliverReminder(client: CassieClient, reminder: Reminder): Promis
 
   if (channel && typeof (channel as any).send === 'function') {
     const sent = await (channel as any).send(payload).then(() => true).catch(() => false);
-    if (sent) return;
+    if (sent) {
+      await client.db?.deleteReminder(reminder.id).catch((): null => null);
+      return;
+    }
   }
 
   const user = await client.users.fetch(reminder.userId).catch((): null => null);
-  if (user) await user.send(payload).catch((): null => null);
+  if (user) {
+    const sent = await user.send(payload).then(() => true).catch(() => false);
+    if (sent) await client.db?.deleteReminder(reminder.id).catch((): null => null);
+  }
 }
 
 export function reminderRelativeTime(reminder: Reminder): string {

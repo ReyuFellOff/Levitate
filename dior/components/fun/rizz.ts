@@ -12,9 +12,9 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { generateRatingCanvas, rainbowTheme } from '../../structures/RatingCanvas.js';
+import { generateRatingCanvas, rainbowTheme } from '../../canvas/RatingCanvas.js';
 import { pickRizzCaption } from '../../config/captions/captionPickers.js';
-import type { RatingContext } from '../../config/ratingBackgrounds.js';
+import type { RatingContext } from '../../config/rating/ratingBackgrounds.js';
 
 export async function buildRizzPayload(opts: {
   user:        any;

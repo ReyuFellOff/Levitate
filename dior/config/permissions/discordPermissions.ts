@@ -1,4 +1,4 @@
-// xoxo/data/discordPermissions.ts
+// xoxo/config/permissions/discordPermissions.ts
 //
 // Maps every Discord.js PermissionsBitField flag key to the display name shown
 // in the userinfo Permissions tab.  The format requested is PascalCase with no

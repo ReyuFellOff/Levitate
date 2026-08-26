@@ -1,4 +1,4 @@
-// xoxo/messages/debug.ts
+// xoxo/components/info/debug.ts
 //
 // Components V2 payload builders for the debug command.
 // Lavalink / music sections are intentionally omitted.
@@ -16,10 +16,10 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
 } from 'discord.js';
-import { emojis } from '../emojis.js';
-import debugConfig from '../config/debugConfig.js';
-import { config } from '../config.js';
-import type { DebugStats } from '../helpers/debugStats.js';
+import { emojis } from '../../emojis.js';
+import debugConfig from '../../config/info/debugConfig.js';
+import { config } from '../../config.js';
+import type { DebugStats } from '../../helpers/debugStats.js';
 import {
   buildGeneralLines,
   buildSystemLines,
@@ -28,8 +28,8 @@ import {
   buildArchitectureLines,
   buildOtherLines,
   getCategoryDisplayName,
-} from '../helpers/debugStats.js';
-import { getHostingProviderName } from '../helpers/getHostingServiceIP.js';
+} from '../../helpers/debugStats.js';
+import { getHostingProviderName } from '../../helpers/getHostingServiceIP.js';
 
 // ─────────────────────────── Session tracking ───────────────────────────
 

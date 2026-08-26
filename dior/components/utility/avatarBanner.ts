@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/avatarBanner.ts
 //
 // CV2 builders for the server-vs-global choice prompt used by

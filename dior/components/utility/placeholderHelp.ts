@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/placeholderHelp.ts
 //
 // Paginated CV2 help panel listing all supported placeholder tokens.

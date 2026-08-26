@@ -2,7 +2,7 @@ import { config } from '../../config.js';
 // xoxo/components/fun/gay.ts
 //
 // CV2 payload builder for the $gay command.
-// Canvas work lives in xoxo/structures/RatingCanvas.ts (rainbow theme).
+// Canvas work lives in xoxo/canvas/RatingCanvas.ts (rainbow theme).
 
 import {
   ContainerBuilder,
@@ -13,9 +13,9 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { emojis } from '../../emojis.js';
-import { generateRatingCanvas, rainbowTheme } from '../../structures/RatingCanvas.js';
+import { generateRatingCanvas, rainbowTheme } from '../../canvas/RatingCanvas.js';
 import { pickGayCaption } from '../../config/captions/captionPickers.js';
-import type { RatingContext } from '../../config/ratingBackgrounds.js';
+import type { RatingContext } from '../../config/rating/ratingBackgrounds.js';
 
 export async function buildGayPayload(opts: {
   user:        any;

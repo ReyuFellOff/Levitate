@@ -1,4 +1,4 @@
-// xoxo/structures/RatingCanvas.ts
+// xoxo/canvas/RatingCanvas.ts
 //
 // Unified canvas generator for ALL 4 rating commands:
 //   $howcute   (pink)  |  $gay      (rainbow)
@@ -9,16 +9,16 @@
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync } from 'node:fs';
-import type { RatingContext } from '../config/ratingBackgrounds.js';
-import { ratingBackgrounds } from '../config/ratingBackgrounds.js';
+import type { RatingContext } from '../config/rating/ratingBackgrounds.js';
+import { ratingBackgrounds } from '../config/rating/ratingBackgrounds.js';
 
 // ── Font loading ───────────────────────────────────────────────────────────────
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts'); } catch { /* ignore */ }
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype'); } catch { /* ignore */ }
 for (const fontName of ['Poppins-Regular.ttf', 'Poppins-SemiBold.ttf', 'Poppins-Bold.ttf']) {
   for (const fontPath of [
-    new URL(`../fonts/${fontName}`, import.meta.url),
-    new URL(`../../dior/fonts/${fontName}`, import.meta.url),
+    new URL(`../resources/fonts/${fontName}`, import.meta.url),
+    new URL(`../../dior/resources/fonts/${fontName}`, import.meta.url),
   ]) {
     try {
       GlobalFonts.register(readFileSync(fontPath), 'Poppins');

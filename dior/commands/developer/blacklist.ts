@@ -3,7 +3,7 @@ import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
 import { resolveUser } from '../../helpers/userResolver.js';
-import { buildBlacklistListPayload } from '../../components/blacklistList.js';
+import { buildBlacklistListPayload } from '../../components/developer/blacklistList.js';
 
 export const options = {
   name: 'blacklist',

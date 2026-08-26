@@ -6,7 +6,7 @@ import {
   ThumbnailBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
-import { PERMISSION_NAMES } from '../../data/discordPermissions.js';
+import { PERMISSION_NAMES } from '../../config/permissions/discordPermissions.js';
 
 const CV2_FLAGS = {
   flags: MessageFlags.IsComponentsV2,

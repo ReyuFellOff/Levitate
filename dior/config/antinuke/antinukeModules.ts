@@ -7,7 +7,7 @@
 //
 // Also contains the pre-made profile definitions used by `$antinuke profile`.
 
-import type { AntinukeModuleKey, AntinukePunishment } from '../database/database.js';
+import type { AntinukeModuleKey, AntinukePunishment } from '../../database/database.js';
 
 export interface AntinukeModuleInfo {
   key:          AntinukeModuleKey;

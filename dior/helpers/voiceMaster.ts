@@ -17,7 +17,7 @@ import type {
   VoiceMasterChannelDoc,
   VoiceMasterSetupDoc,
 } from '../database/database.js';
-import { buildVoiceMasterPanelPayload } from '../components/voiceMaster.js';
+import { buildVoiceMasterPanelPayload } from '../components/features/voiceMaster.js';
 import { descriptions } from '../config/descriptions.js';
 
 const creatingUsers = new Set<string>();

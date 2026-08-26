@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { version as djsVersion } from 'discord.js';
 import { formatUptime, formatCreatedAt } from '../utils/formatting.js';
-import debugConfig from '../config/debugConfig.js';
+import debugConfig from '../config/info/debugConfig.js';
 import { resolveWsPing } from '../utils/wsPing.js';
 import { findBotInstanceByClientId } from '../config/botInstances.js';
 

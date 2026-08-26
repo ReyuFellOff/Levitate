@@ -3,7 +3,7 @@ import { config } from '../../config.js';
 
 import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from 'discord.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
-import { buildPingPayload } from '../../messages/ping.js';
+import { buildPingPayload } from '../../components/info/ping.js';
 import { resolveWsPing } from '../../utils/wsPing.js';
 import { emojis } from '../../emojis.js';
 

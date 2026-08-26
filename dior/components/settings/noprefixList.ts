@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../../config.js';
 // xoxo/components/noprefixList.ts
 import {
   ContainerBuilder,
@@ -6,7 +6,7 @@ import {
   SeparatorBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
-import { emojis } from '../emojis.js';
+import { emojis } from '../../emojis.js';
 
 export function buildNoprefixListPayload(
   title: string,

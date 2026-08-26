@@ -1,7 +1,7 @@
 // xoxo/helpers/nowPlayingManager.ts
 import { sendNowPlaying, buildNowPlayingPayload, type NowPlayingTrackInfo } from '../components/music/nowPlaying.js';
 import { extractThumbnail, formatDuration } from '../utils/formatting.js';
-import { generateNowPlayingCanvas } from '../structures/NowPlayingCanvas.js';
+import { generateNowPlayingCanvas } from '../canvas/NowPlayingCanvas.js';
 
 interface PositionSnapshot {
   position: number;
