@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
     .addStringOption((option) => option
       .setName('reason')
       .setDescription('What should you be reminded about?')
-      .setRequired(true)))
+      .setRequired(false)))
   .addSubcommand((sub) => sub
     .setName('list')
     .setDescription('Show your active reminders.'))

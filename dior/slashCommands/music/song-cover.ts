@@ -7,5 +7,5 @@ export const data = new SlashCommandBuilder()
     option
       .setName('query')
       .setDescription('Song name or "Song Name - Artist Name"')
-      .setRequired(true),
+      .setRequired(false),
   );

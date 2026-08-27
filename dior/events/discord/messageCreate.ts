@@ -385,11 +385,11 @@ async function hasNoPrefixAccess(
 
     // Developers have no-prefix access unless they've self-disabled it via $mynop off.
     if (isDeveloper) {
-      const selfDisabled = await client.db.isDevNoprefixSelfDisabled(message.author.id).catch((): boolean => false);
+      const selfDisabled = await client.db.isDevNoprefixSelfDisabled(message.author.id, message.guild.id).catch((): boolean => false);
       return !selfDisabled;
     }
 
-    return await client.db.isNoPrefixUser(message.author.id).catch((): boolean => false);
+    return await client.db.isNoPrefixUser(message.author.id, message.guild?.id).catch((): boolean => false);
   } catch {
     return false;
   }

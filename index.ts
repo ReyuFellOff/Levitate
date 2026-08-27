@@ -106,7 +106,25 @@ async function preflightCheck(botToken: string): Promise<void> {
 
 await preflightCheck(token);
 
-manager.spawn({ timeout: -1 }).catch((err: Error) => {
-  console.error('[CLUSTER] Failed to spawn clusters:', err.message);
-  process.exit(1);
-});
+async function spawnClustersWithRetry(): Promise<void> {
+  const maxAttempts = 6;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await manager.spawn({ timeout: -1 });
+      return;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (attempt === maxAttempts) {
+        console.error('[CLUSTER] Failed to spawn clusters after retries:', message);
+        process.exit(1);
+      }
+
+      const delayMs = Math.min(60_000, 5_000 * 2 ** (attempt - 1));
+      console.warn(`[CLUSTER] Spawn attempt ${attempt}/${maxAttempts} failed: ${message}. Retrying in ${delayMs / 1000}s.`);
+      await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
+await spawnClustersWithRetry();

@@ -43,7 +43,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
   {
     min: 20, max: 29,
     captions: [
-      'Strong \\*"we met once at a party"\\* energy.',
+      'Strong \\*we met once at a party\\* energy.',
       'Technically they breathe the same air. That\'s something.',
       'A slow-burn potential — but the wood is damp.',
       'Could work... with a lot of therapy and questionable life decisions.',
@@ -97,7 +97,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
     captions: [
       'Something is definitely brewing here.',
       'They orbit each other without even knowing it.',
-      'Strong \\*"we should hang out more"\\* energy.',
+      'Strong \\*we should hang out more\\* energy.',
       'There\'s a \\*we\\* forming whether they like it or not.',
       'They\'d deny everything. Their faces would not.',
       'Give it a week. Maybe two. Then it\'s obvious to everyone.',
@@ -111,7 +111,7 @@ export const shipCaptionBands: ShipCaptionBand[] = [
       'The heart has already decided. The head is still catching up.',
       'Deeply connected and probably still in denial.',
       'High compatibility. Very high chaos potential.',
-      'The \\*"just friends"\\* phase is barely holding together.',
+      'The \\*just friends\\* phase is barely holding together.',
       'They\'d move mountains for each other and call it no big deal.',
       'Everyone around them already knows. They\'re the last to find out.',
       'Their playlists overlap almost perfectly. That says everything.',

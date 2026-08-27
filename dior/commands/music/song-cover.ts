@@ -10,12 +10,13 @@ import {
 import { config } from '../../config.js';
 import { sendError } from '../../components/statusMessages.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
+import { extractThumbnail } from '../../utils/formatting.js';
 
 export const options = {
   name: 'song-cover',
   aliases: ['cover', 'songcover', 'coverart'] as string[],
   description: 'Search iTunes for a song and show its cover art.',
-  usage: 'song-cover <song name or "Song Name - Artist Name">',
+  usage: 'song-cover [song name or "Song Name - Artist Name"]',
   category: 'music',
   owner: false,
   cooldown: 8,
@@ -107,34 +108,46 @@ async function resolveSongCover(query: string): Promise<{ title: string; artist:
   };
 }
 
+function resolveCurrentSongCover(context: any, client: CassieClient): { title: string; artist: string; imageUrl: string } {
+  const guildId = context.guild?.id ?? context.guildId;
+  const player = (client as any).kazagumo?.players?.get(guildId);
+  const track = player?.queue?.current;
+  const imageUrl = track?.thumbnail ?? extractThumbnail(track);
+  if (!track || !imageUrl) throw new Error('There is no currently playing song with cover art.');
+
+  return {
+    title: String(track.title || 'Unknown title'),
+    artist: String(track.author || 'Unknown artist'),
+    imageUrl,
+  };
+}
+
 export async function prefixExecute(
   message: any,
   args: string[],
-  _client: CassieClient,
+  client: CassieClient,
 ): Promise<any> {
   const query = args.join(' ').trim();
-  if (!query) {
-    return sendError({ message }, 'Please provide a song name or a "Song Name - Artist Name" query.');
-  }
 
   try {
-    const result = await resolveSongCover(query);
+    const result = query
+      ? await resolveSongCover(query)
+      : resolveCurrentSongCover(message, client);
     return message.channel.send(buildSongCoverPayload(result));
   } catch (err: any) {
     return sendError({ message }, err?.message || 'Could not fetch the song cover art.');
   }
 }
 
-export async function slashExecute(interaction: any, _client: CassieClient): Promise<any> {
-  const query = interaction.options.getString('query', true)?.trim();
-  if (!query) {
-    return sendError({ interaction }, 'Please provide a song name or a "Song Name - Artist Name" query.');
-  }
+export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
+  const query = interaction.options.getString('query', false)?.trim();
 
   await interaction.deferReply();
 
   try {
-    const result = await resolveSongCover(query);
+    const result = query
+      ? await resolveSongCover(query)
+      : resolveCurrentSongCover(interaction, client);
     return interaction.editReply(buildSongCoverPayload(result));
   } catch (err: any) {
     return sendError({ interaction }, err?.message || 'Could not fetch the song cover art.');

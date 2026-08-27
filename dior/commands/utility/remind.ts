@@ -13,7 +13,7 @@ export const options = {
   name: 'remind',
   aliases: ['remindme'] as string[],
   description: 'Create and manage personal reminders.',
-  usage: 'remind <duration> <reason>\nremind list\nremind delete <number>',
+  usage: 'remind <duration> [reason]\nremind list\nremind delete <number>',
   category: 'utility',
   owner: false,
   cooldown: 3,
@@ -27,6 +27,8 @@ function findDuration(args: string[]): { delayMs: number; reason: string } | nul
   }
   return null;
 }
+
+const DEFAULT_REASON = 'No reason? I hope you have a good memory.';
 
 async function sendList(message: any, client: CassieClient): Promise<void> {
   const reminders = await listReminders(client, message.author.id);
@@ -49,14 +51,15 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
   }
 
   const parsed = findDuration(args);
-  if (!parsed || !parsed.reason) {
+  if (!parsed) {
     return sendError({ message }, `Usage: \`${client.config.prefix}${options.usage.split('\n')[0]}\``);
   }
   if (parsed.delayMs > MAX_REMINDER_MS) {
     return sendError({ message }, 'A reminder cannot be set for more than 2 years.');
   }
 
-  const reminder = await createReminder(client, message.author.id, message.channel.id, parsed.delayMs, parsed.reason)
+  const reason = parsed.reason || DEFAULT_REASON;
+  const reminder = await createReminder(client, message.author.id, message.channel.id, parsed.delayMs, reason)
     .catch((error: Error) => ({ error }));
   if ('error' in reminder) return sendError({ message }, reminder.error.message);
 
@@ -80,7 +83,7 @@ export async function slashExecute(interaction: any, client: CassieClient): Prom
   }
 
   const delayMs = parseDuration(interaction.options.getString('duration', true));
-  const reason = interaction.options.getString('reason', true).trim();
+  const reason = interaction.options.getString('reason', false)?.trim() || DEFAULT_REASON;
   if (delayMs === null) return interaction.editReply({ content: 'Invalid duration.' });
   if (delayMs > MAX_REMINDER_MS) return interaction.editReply({ content: 'A reminder cannot be set for more than 2 years.' });
 

@@ -9,8 +9,10 @@ import { sendError, sendInfo, sendSuccess } from '../../components/statusMessage
 import {
   ContainerBuilder,
   MessageFlags,
+  SectionBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
+  ThumbnailBuilder,
   TextDisplayBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
@@ -62,18 +64,24 @@ async function sendNoprefixStatus(message: any, client: CassieClient, isDevelope
         : 'No noprefix grant';
 
   const details = [
-    `**Server:** ${guild.name}`,
-    `**Global noprefix:** ${globalEnabled ? 'enabled' : 'disabled'}`,
-    `**Server noprefix:** ${serverDisabled ? 'disabled by the server' : 'enabled'}`,
-    `**Your access:** ${grant}`,
-    `**Your server toggle:** ${personalDisabled ? 'disabled' : 'enabled'}`,
-    `**Effective status:** ${effective ? 'enabled' : 'disabled'}`,
+    `- **Server:** ${guild.name}`,
+    `- **Global noprefix:** ${globalEnabled ? 'enabled' : 'disabled'}`,
+    `- **Server noprefix:** ${serverDisabled ? 'disabled by the server' : 'enabled'}`,
+    `- **Your access:** ${grant}`,
+    `- **Your server toggle:** ${personalDisabled ? 'disabled' : 'enabled'}`,
+    `- **Effective status:** ${effective ? 'enabled' : 'disabled'}`,
   ].join('\n');
+  const avatarUrl = message.member?.avatarURL?.({ extension: 'png', size: 128 })
+    ?? message.author?.displayAvatarURL?.({ extension: 'png', size: 128 });
+  const detailsSection = new SectionBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(details));
+  if (avatarUrl) detailsSection.setThumbnailAccessory(new ThumbnailBuilder().setURL(avatarUrl));
+
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${emojis.pinkFlowers} Your Noprefix Status`))
     .addSeparatorComponents(new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(details))
+    .addSectionComponents(detailsSection)
     .addSeparatorComponents(new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# Use ${client.config.prefix}help mynoprefix for help.`));
 

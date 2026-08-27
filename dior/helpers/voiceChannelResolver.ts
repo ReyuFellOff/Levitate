@@ -19,10 +19,14 @@ export function resolveVoiceChannel(guild: any, input: string): any | null {
   }
 
   const name = value.toLocaleLowerCase();
-  return [...(guild.channels?.cache?.values?.() ?? [])]
-    .filter((channel: any) =>
-      channel.type === ChannelType.GuildVoice &&
-      channel.name?.toLocaleLowerCase() === name,
-    )
-    .sort((a: any, b: any) => a.rawPosition - b.rawPosition)[0] ?? null;
+  const voiceChannels = [...(guild.channels?.cache?.values?.() ?? [])]
+    .filter((channel: any) => channel.type === ChannelType.GuildVoice);
+  const exactMatch = voiceChannels.filter((channel: any) =>
+    channel.name?.toLocaleLowerCase() === name,
+  );
+  const matches = exactMatch.length > 0
+    ? exactMatch
+    : voiceChannels.filter((channel: any) => channel.name?.toLocaleLowerCase().includes(name));
+
+  return matches.sort((a: any, b: any) => a.rawPosition - b.rawPosition || a.id.localeCompare(b.id))[0] ?? null;
 }

@@ -42,8 +42,10 @@ export interface NoPrefixUserDoc {
   addedBy?:     string;
   /** Null = permanent; Date = expires at that time. */
   expiresAt:    Date | null;
-  /** Set by the user themselves via $mynop off — does NOT remove the entry or touch expiry. */
+  /** Legacy global self-disable flag. */
   selfDisabled?: boolean;
+  /** Guilds where the user has disabled their own noprefix access. */
+  selfDisabledGuildIds?: string[];
 }
 
 export interface NoPrefixDisabledGuildDoc {
@@ -956,7 +958,7 @@ export class Database {
     return true;
   }
 
-  async isNoPrefixUser(userId: string): Promise<boolean> {
+  async isNoPrefixUser(userId: string, guildId?: string): Promise<boolean> {
     await this.connect();
     const doc = await this.col<NoPrefixUserDoc>('noprefix_users').findOne({ user_id: userId });
     if (!doc) return false;
@@ -966,15 +968,17 @@ export class Database {
       return false;
     }
     // Respect user's own self-disable toggle ($mynop off)
-    if (doc.selfDisabled === true) return false;
+    if (guildId && doc.selfDisabledGuildIds?.includes(guildId)) return false;
     return true;
   }
 
-  async setSelfNoPrefixDisabled(userId: string, disabled: boolean): Promise<boolean> {
+  async setSelfNoPrefixDisabled(userId: string, guildId: string, disabled: boolean): Promise<boolean> {
     await this.connect();
     const result = await this.col<NoPrefixUserDoc>('noprefix_users').updateOne(
       { user_id: userId },
-      { $set: { selfDisabled: disabled } },
+      disabled
+        ? { $addToSet: { selfDisabledGuildIds: guildId } }
+        : { $pull: { selfDisabledGuildIds: guildId } },
     );
     return result.matchedCount > 0;
   }
@@ -1032,25 +1036,26 @@ export class Database {
   }
 
   /** Check if a developer has self-disabled their own noprefix via $mynop off. */
-  async isDevNoprefixSelfDisabled(userId: string): Promise<boolean> {
+  async isDevNoprefixSelfDisabled(userId: string, guildId: string): Promise<boolean> {
     await this.connect();
     const doc = await this.col<{ _id?: string; user_ids: string[] }>('settings').findOne({ _id: 'noprefix_dev_self_disabled' } as any);
-    return doc?.user_ids?.includes(userId) ?? false;
+    return doc?.user_ids?.includes(`${userId}:${guildId}`) ?? false;
   }
 
   /** Set or clear a developer's self-disable flag for noprefix. */
-  async setDevNoprefixSelfDisabled(userId: string, disabled: boolean): Promise<void> {
+  async setDevNoprefixSelfDisabled(userId: string, guildId: string, disabled: boolean): Promise<void> {
     await this.connect();
+    const key = `${userId}:${guildId}`;
     if (disabled) {
       await this.col('settings').updateOne(
         { _id: 'noprefix_dev_self_disabled' } as any,
-        { $addToSet: { user_ids: userId } } as any,
+        { $addToSet: { user_ids: key } } as any,
         { upsert: true },
       );
     } else {
       await this.col('settings').updateOne(
         { _id: 'noprefix_dev_self_disabled' } as any,
-        { $pull: { user_ids: userId } } as any,
+        { $pull: { user_ids: key } } as any,
       );
     }
   }

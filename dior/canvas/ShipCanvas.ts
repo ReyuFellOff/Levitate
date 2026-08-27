@@ -13,9 +13,12 @@ import {
 } from 'discord.js';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { emojis } from '../emojis.js';
 import { pickCaption, pickSelfCaption } from '../config/captions/captionPickers.js';
+
+const resourceRoot = join(dirname(fileURLToPath(import.meta.url)), '../resources');
 
 // ── Font loading ──────────────────────────────────────────────────────────────
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts'); } catch { /* ignore */ }
@@ -23,7 +26,7 @@ try { GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype'); } catch { /* ig
 for (const fontName of ['Poppins-Regular.ttf', 'Poppins-SemiBold.ttf', 'Poppins-Bold.ttf']) {
   try {
     GlobalFonts.register(
-      readFileSync(join(process.cwd(), 'dior', 'resources', 'fonts', fontName)),
+      readFileSync(join(resourceRoot, 'fonts', fontName)),
       'Poppins',
     );
   } catch { /* bundled font may be unavailable in development */ }
@@ -121,6 +124,13 @@ function fitCaption(ctx: any, caption: string, maxWidth: number): { lines: strin
   return { lines: [`${line}...`], fontSize: 14 };
 }
 
+function cleanCanvasCaption(caption: string): string {
+  return caption
+    .replace(/\\/g, '')
+    .replace(/\*/g, '')
+    .replace(/"/g, '');
+}
+
 // ── Canvas image generator ────────────────────────────────────────────────────
 
 async function generateShipImage(user1: any, user2: any, pct: number, caption: string): Promise<Buffer> {
@@ -131,7 +141,7 @@ async function generateShipImage(user1: any, user2: any, pct: number, caption: s
   // ── Background — one of the saved romantic textures ──────────────────────
   const backgroundName = SHIP_BACKGROUNDS[Math.floor(Math.random() * SHIP_BACKGROUNDS.length)];
   const background = await loadImage(
-    join(process.cwd(), 'dior', 'resources', 'shipbackgrounds', backgroundName),
+    join(resourceRoot, 'shipbackgrounds', backgroundName),
   ).catch((): null => null);
   ctx.fillStyle = '#f4dfe2';
   ctx.fillRect(0, 0, W, H);
@@ -200,7 +210,7 @@ async function generateShipImage(user1: any, user2: any, pct: number, caption: s
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#191316';
-  ctx.fillText(`${pct}%`, cx, 119);
+  ctx.fillText(`${pct}%`, cx, 110);
   ctx.restore();
 
   // ── Names ──────────────────────────────────────────────────────────────────
@@ -219,21 +229,21 @@ async function generateShipImage(user1: any, user2: any, pct: number, caption: s
 
   // ── Short compatibility label ────────────────────────────────────────────
   ctx.save();
-  ctx.font = '600 13px Poppins, sans-serif';
+  ctx.font = '600 12px Poppins, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(255, 238, 244, 0.98)';
   ctx.shadowColor = 'rgba(177, 46, 91, 0.92)';
   ctx.shadowBlur = 15;
-  ctx.fillText(getLoveLabel(pct), cx, 137);
+  ctx.fillText(getLoveLabel(pct), cx, 128);
   ctx.fillStyle = '#000000';
   ctx.shadowColor = 'rgba(255, 255, 255, 0.75)';
   ctx.shadowBlur = 2;
-  ctx.fillText(getLoveLabel(pct), cx, 137);
+  ctx.fillText(getLoveLabel(pct), cx, 128);
   ctx.restore();
 
   // ── Long caption ──────────────────────────────────────────────────────────
-  const captionLayout = fitCaption(ctx, caption, W - 36);
+  const captionLayout = fitCaption(ctx, cleanCanvasCaption(caption), W - 36);
   ctx.save();
   ctx.font = `italic ${captionLayout.fontSize}px Poppins, sans-serif`;
   ctx.textAlign = 'center';

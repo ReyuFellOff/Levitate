@@ -15,6 +15,8 @@ import {
 } from 'discord.js';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { emojis } from '../../emojis.js';
 import { DEV_ID } from '../../helpers/ratingBias.js';
 
@@ -22,11 +24,9 @@ try { GlobalFonts.loadFontsFromDir('/usr/share/fonts'); } catch { /* ignore */ }
 try { GlobalFonts.loadFontsFromDir('/usr/share/fonts/truetype'); } catch { /* ignore */ }
 
 // Register the vintage western font for "Dead or Alive" and the crime line.
-// The font lives in dior/resources/fonts/ (source) → dist is 4 levels up from
-// the compiled file, so we step back to the project root then into that folder.
 try {
   const fontBuf = readFileSync(
-    new URL('../../../../dior/resources/fonts/JimNightshade-Regular.ttf', import.meta.url),
+    join(dirname(fileURLToPath(import.meta.url)), '../../resources/fonts/JimNightshade-Regular.ttf'),
   );
   GlobalFonts.register(fontBuf, 'JimNightshade');
 } catch { /* font missing at runtime — falls back to serif */ }

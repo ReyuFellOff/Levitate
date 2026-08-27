@@ -105,6 +105,7 @@ export const emojis = {
   youtubeEmojiForYoutubeCommand: '<:youtube:1538866982630465557>',
   remindIcon:   '<:remindIcon:1541079180718899320>',
   workingClock: '<a:workingClock:1541079620646871110>',
+  pinkFlowers: '<a:pinkFlowers:1542549868520931409>',
 
   // Honeypot
   honeypot:       '🍯',

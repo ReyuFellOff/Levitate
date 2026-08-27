@@ -48,16 +48,20 @@ async function applyLock(channel: any, guild: any, reason: string): Promise<Resu
   if (!botPerms?.has?.(PermissionFlagsBits.ManageChannels))
     return { ok: false, line: `<#${channel.id}> - I'm missing Manage Channels there.` };
 
-  const ok = await channel.permissionOverwrites
-    .edit(
-      guild.roles.everyone,
-      {
+  const overwrite = channel.isVoiceBased?.()
+    ? { Connect: false }
+    : {
         SendMessages:          false,
         SendMessagesInThreads: false,
         AddReactions:          false,
         CreatePublicThreads:   false,
         CreatePrivateThreads:  false,
-      },
+      };
+
+  const ok = await channel.permissionOverwrites
+    .edit(
+      guild.roles.everyone,
+      overwrite,
       { reason: reason || 'Channel locked.' },
     )
     .then(() => true).catch(() => false);
