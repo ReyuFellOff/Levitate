@@ -11,6 +11,13 @@
 
 import type { CassieClient } from '../structures/CassieClient.js';
 
+export class AmbiguousUserError extends Error {
+  constructor() {
+    super('There are multiple bots with that username. Please be more specific.');
+    this.name = 'AmbiguousUserError';
+  }
+}
+
 export async function resolveUser(
   client: CassieClient,
   guild: any,
@@ -73,7 +80,11 @@ export async function resolveUser(
       (m: any) => m.user.username.toLowerCase() === lowerArg,
     );
     if (usernameMatches.length === 1) return usernameMatches[0].user;
-    if (usernameMatches.length > 1) return null;
+    if (usernameMatches.length > 1) {
+      const botMatches = usernameMatches.filter((m: any) => m.user.bot);
+      if (botMatches.length > 1) throw new AmbiguousUserError();
+      return null;
+    }
 
     const displayNameMatches = [...members.values()].filter(
       (m: any) => m.displayName?.toLowerCase() === lowerArg,

@@ -106,6 +106,7 @@ export const emojis = {
   remindIcon:   '<:remindIcon:1541079180718899320>',
   workingClock: '<a:workingClock:1541079620646871110>',
   pinkFlowers: '<a:pinkFlowers:1542549868520931409>',
+  whoWouldWin: '<a:whoWouldWin:1542709506692227223>',
 
   // Honeypot
   honeypot:       '🍯',

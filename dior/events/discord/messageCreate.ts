@@ -23,6 +23,8 @@ import { withDeveloperPermissionBypass } from '../../helpers/developerPermission
 import { enforceImageRestriction } from '../../helpers/memberRestrictions.js';
 import { enforceMediaChannel } from '../../helpers/mediaChannel.js';
 import { enforceHoneypot } from '../../helpers/honeypot.js';
+import { emojiUploadSessions } from '../../commands/developer/emoji-upload.js';
+import { AmbiguousUserError } from '../../helpers/userResolver.js';
 
 export const name = 'messageCreate';
 export const once = false;
@@ -46,6 +48,9 @@ export async function execute(message: any, client: CassieClient): Promise<void>
   }
 
   if (await enforceHoneypot(message, client)) return;
+
+  // Replies collected by emoji-upload are names or server numbers, not commands.
+  if (emojiUploadSessions.has(`${message.author.id}:${message.channel.id}`)) return;
 
   // Enforce member-targeted image mutes before commands, autoresponders, and
   // other message side effects can process prohibited content.
@@ -333,7 +338,11 @@ export async function execute(message: any, client: CassieClient): Promise<void>
     client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[messageCreate] Error in "${commandName}": ${msg}`);
+    if (err instanceof AmbiguousUserError) {
+      await sendError({ message }, err.message).catch((): null => null);
+    } else {
+      console.error(`[messageCreate] Error in "${commandName}": ${msg}`);
+    }
   }
 }
 

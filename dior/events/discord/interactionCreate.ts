@@ -14,6 +14,7 @@ import {
 } from 'discord.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { withDeveloperPermissionBypass } from '../../helpers/developerPermissionBypass.js';
+import { AmbiguousUserError } from '../../helpers/userResolver.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 import { sendError, sendWarning, reservedForDeveloper } from '../../components/statusMessages.js';
 import {
@@ -264,8 +265,15 @@ export async function execute(interaction: any, client: CassieClient): Promise<v
       client.db?.incrementGlobalCommandsExecuted?.().catch((): null => null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[interactionCreate] Error in "${interaction.commandName}": ${msg}`);
-      const errPayload = { content: 'Something went wrong while running this command.', flags: MessageFlags.Ephemeral };
+      if (!(err instanceof AmbiguousUserError)) {
+        console.error(`[interactionCreate] Error in "${interaction.commandName}": ${msg}`);
+      }
+      const errPayload = {
+        content: err instanceof AmbiguousUserError
+          ? err.message
+          : 'Something went wrong while running this command.',
+        flags: MessageFlags.Ephemeral,
+      };
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(errPayload).catch((): null => null);
       } else {

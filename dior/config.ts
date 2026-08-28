@@ -39,6 +39,8 @@ export interface Config {
   // 2. Developers
   /** `[name, id][]` — first entry is treated as the MAIN developer. */
   developers: [string, string][];
+  /** Guild IDs used by the developer-only emoji upload command. */
+  emojiServerIds: [string, string, string];
 
   // 3. Display labels
   /**
@@ -167,6 +169,12 @@ export const config: Config = {
   // ── 2. Developers ──────────────────────────────────────────────────────────
   // The first entry is treated as the MAIN developer wherever needed.
   developers: [["Reyansh", "922491166149214218"]],
+  // Set these to the three guilds that store emojis.
+  emojiServerIds: [
+    "1068184193093349376",
+    "946257905877913610",
+    "1537811128657383485",
+  ],
 
   // ── 3. Display labels ──────────────────────────────────────────────────────
   // Leave hardcodeHostingService as "" to fall back to IP-based detection

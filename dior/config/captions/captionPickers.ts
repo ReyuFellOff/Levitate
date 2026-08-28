@@ -31,3 +31,6 @@ export { shipCaptionBands, selfShipCaptions,
 
 export { simpCaptionBands, rareSimpCaption,
          infiniteSimpCaption, pickSimpCaption }                 from './simpCaptions.js';
+
+export { pickWhoWouldWinCaption }                               from './whoWouldWinCaptions.js';
+export { getWhoWouldWinBotCaption }                             from './whoWouldWinCaptions.js';

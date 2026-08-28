@@ -6,7 +6,7 @@ export const data = new SlashCommandBuilder()
   .addUserOption((o) =>
     o.setName('user')
       .setDescription('First user (or the opponent if only one is provided — you vs them).')
-      .setRequired(true),
+    .setRequired(false),
   )
   .addUserOption((o) =>
     o.setName('user2')
