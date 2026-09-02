@@ -26,6 +26,7 @@ import {
   TextDisplayBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
+import { hexToDominantColor } from '../../helpers/dominantColor.js';
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { emojis } from '../../emojis.js';
 
@@ -488,7 +489,7 @@ export function buildRoleInfoPayload(
     : '**Permissions:** None';
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(parseInt((hexToDominantColor(item.hexColor)?.hex ?? config.defaultAccentColor).replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `## ${TYPE_EMOJI.roles} ${TYPE_LABEL.roles} — Details`,

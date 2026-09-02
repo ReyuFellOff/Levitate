@@ -25,6 +25,7 @@ import { enforceMediaChannel } from '../../helpers/mediaChannel.js';
 import { enforceHoneypot } from '../../helpers/honeypot.js';
 import { emojiUploadSessions } from '../../commands/developer/emoji-upload.js';
 import { AmbiguousUserError } from '../../helpers/userResolver.js';
+import { consumeCommandCooldown, getCommandCooldown, getPrefixSubcommand } from '../../helpers/commandCooldown.js';
 
 export const name = 'messageCreate';
 export const once = false;
@@ -209,6 +210,14 @@ export async function execute(message: any, client: CassieClient): Promise<void>
         }
         if (mentionUserAlias && !(await enforceUserAliasPermissions(message, mentionCmd))) return;
 
+        if (client.db && !['disable-command', 'enable-command'].includes(mentionCmd.options?.name?.toLowerCase())) {
+          const disabled = await client.db.getDisabledCommand(mentionCmd.options?.name ?? mentionCmdName).catch((): null => null);
+          if (disabled) {
+            await sendWarning({ message }, `${mentionCmd.options?.name ?? mentionCmdName} has been disabled by the developer. Reason: ${disabled.reason}`).catch((): null => null);
+            return;
+          }
+        }
+
         message.commandRawArgs = rest.slice(mentionCmdName.length).trimStart();
 
         webhookLogger.logCommand(
@@ -316,6 +325,17 @@ export async function execute(message: any, client: CassieClient): Promise<void>
   }
   if (userAlias && !(await enforceUserAliasPermissions(message, command))) return;
 
+  const subcommand = getPrefixSubcommand(args);
+  const remainingCooldown = consumeCommandCooldown(client, command, message.author.id, subcommand);
+  if (remainingCooldown > 0) {
+    const configuredCooldown = getCommandCooldown(command, subcommand);
+    await sendWarning(
+      { message },
+      `Please wait **${remainingCooldown}s** before using this command again. Cooldown: **${configuredCooldown}s**.`,
+    ).catch((): null => null);
+    return;
+  }
+
   // ── Attach raw args to message for commands that need real newlines ────────
   // Strips the prefix + commandName token, preserving actual whitespace/newlines.
   const prefixAndCmd = message.content.startsWith(usedPrefix)
@@ -392,7 +412,7 @@ async function hasNoPrefixAccess(
       if (guildDisabled) return false;
     }
 
-    // Developers have no-prefix access unless they've self-disabled it via $mynop off.
+    // Developers have no-prefix access unless they've self-disabled it via $nop off.
     if (isDeveloper) {
       const selfDisabled = await client.db.isDevNoprefixSelfDisabled(message.author.id, message.guild.id).catch((): boolean => false);
       return !selfDisabled;

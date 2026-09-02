@@ -21,6 +21,7 @@ import {
 } from 'discord.js';
 import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
+import type { DominantColor } from '../../helpers/dominantColor.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -45,6 +46,7 @@ export interface ServerData {
   bannerUrl:        string | null;
   splashUrl:        string | null;
   discoverySplashUrl: string | null;
+  dominantColor:       DominantColor | null;
 }
 
 export interface SIds {
@@ -108,7 +110,7 @@ export function buildTabRow(ids: SIds, active: ServerTab, disabled = false): Act
 }
 
 function title(guild: any): string {
-  return `## ${emojis.blackCards} Server Information — ${guild.name}`;
+  return `## ${emojis.redDrink} Server Information ~ ${guild.name}`;
 }
 
 function ts(ms: number): string {
@@ -192,7 +194,7 @@ function buildOverview(data: ServerData, ids: SIds, state: ServerState, disabled
   if (isDiscoverable) badges.push('Discoverable');
 
   const lines = [
-    `${emojis.whiteArrow} **__Overview__**`,
+    `${emojis.redBulletPoint} **__Overview__**`,
     `**Name:** ${guild.name}`,
     `**Server ID:** \`${guild.id}\``,
     `**Owner:** <@${guild.ownerId}>${data.ownerTag ? ` (${data.ownerTag})` : ''}`,
@@ -212,7 +214,7 @@ function buildOverview(data: ServerData, ids: SIds, state: ServerState, disabled
     : null;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(guild)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
@@ -251,17 +253,17 @@ function buildCommunity(data: ServerData, ids: SIds, state: ServerState, disable
   const afkTimeout = guild.afkTimeout ? `${guild.afkTimeout / 60} min` : 'N/A';
 
   const lines = [
-    `${emojis.whiteArrow} **__Members__**`,
+    `${emojis.redBulletPoint} **__Members__**`,
     `**Total Members:** ${data.memberCount.toLocaleString()}`,
     `**Humans:** ${data.humanCount.toLocaleString()}`,
     `**Bots:** ${data.botCount.toLocaleString()}`,
     '',
-    `${emojis.whiteArrow} **__Boosts__**`,
+    `${emojis.redBulletPoint} **__Boosts__**`,
     `**Boost Tier:** ${boostTierLabel(guild.premiumTier)}`,
     `**Boost Count:** ${guild.premiumSubscriptionCount?.toLocaleString() ?? '0'}`,
     `**Booster Role:** ${boostRoleTxt}`,
     '',
-    `${emojis.whiteArrow} **__Channels__**`,
+    `${emojis.redBulletPoint} **__Channels__**`,
     `**System Channel:** ${systemChannel}`,
     `**Rules Channel:** ${rulesChannel}`,
     `**Updates Channel:** ${publicUpdatesChannel}`,
@@ -277,7 +279,7 @@ function buildCommunity(data: ServerData, ids: SIds, state: ServerState, disable
     : null;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(guild)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
@@ -319,7 +321,7 @@ function buildCounts(data: ServerData, ids: SIds, state: ServerState, disabled: 
   const rolesCount    = (guild.roles?.cache?.size ?? 1) - 1; // subtract @everyone
 
   const lines = [
-    `${emojis.whiteArrow} **__Channel Breakdown__**`,
+    `${emojis.redBulletPoint} **__Channel Breakdown__**`,
     `**Text:** ${text.toLocaleString()}`,
     `**Voice:** ${voice.toLocaleString()}`,
     `**Category:** ${category.toLocaleString()}`,
@@ -329,7 +331,7 @@ function buildCounts(data: ServerData, ids: SIds, state: ServerState, disabled: 
     `**Media:** ${media.toLocaleString()}`,
     `**Total:** ${total.toLocaleString()}`,
     '',
-    `${emojis.whiteArrow} **__Expressions__**`,
+    `${emojis.redBulletPoint} **__Expressions__**`,
     `**Custom Emojis:** ${emojisCount.toLocaleString()}`,
     `**Stickers:** ${stickersCount.toLocaleString()}`,
     `**Roles:** ${rolesCount.toLocaleString()}`,
@@ -343,7 +345,7 @@ function buildCounts(data: ServerData, ids: SIds, state: ServerState, disabled: 
     : null;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(guild)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
@@ -380,13 +382,13 @@ function buildSecurity(data: ServerData, ids: SIds, state: ServerState, disabled
   const totalRoles = (guild.roles?.cache?.size ?? 1) - 1;
 
   const lines = [
-    `${emojis.whiteArrow} **__Security__**`,
+    `${emojis.redBulletPoint} **__Security__**`,
     `**Verification Level:** ${verificationLabel(guild.verificationLevel)}`,
     `**2FA Requirement:** ${mfaLabel(guild.mfaLevel)}`,
     `**Content Filter:** ${contentFilterLabel(guild.explicitContentFilter)}`,
     `**NSFW Level:** ${nsfwLabel(guild.nsfwLevel)}`,
     '',
-    `${emojis.whiteArrow} **__Roles (${totalRoles} total)__**`,
+    `${emojis.redBulletPoint} **__Roles (${totalRoles} total)__**`,
     `${roleList}`,
     totalRoles > 12 ? `*…and ${totalRoles - 12} more*` : '',
   ].filter(l => l !== undefined).join('\n');
@@ -399,7 +401,7 @@ function buildSecurity(data: ServerData, ids: SIds, state: ServerState, disabled
     : null;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(guild)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 
@@ -450,10 +452,10 @@ function buildAssets(data: ServerData, ids: SIds, state: ServerState, disabled: 
   };
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(title(guild)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${emojis.whiteArrow} **__${active?.label ?? 'Asset'}__**`));
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${emojis.redBulletPoint} **__${active?.label ?? 'Asset'}__**`));
 
   if (currentUrl) {
     container.addMediaGalleryComponents(

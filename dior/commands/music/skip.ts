@@ -4,7 +4,7 @@ import { sendError, sendSuccess } from '../../components/statusMessages.js';
 
 export const options = {
   name: 'skip',
-  aliases: ['s', 'next'] as string[],
+  aliases: ['s'] as string[],
   description: 'Skip the currently playing track.',
   usage: 'skip',
   category: 'music',

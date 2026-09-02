@@ -4,6 +4,7 @@ import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError } from '../../components/statusMessages.js';
 import { buildAccountAgePayload } from '../../components/utility/accountAge.js';
 import { resolveUser } from '../../helpers/userResolver.js';
+import { getDominantColor } from '../../helpers/dominantColor.js';
 
 export const options = {
   name: 'accountage',
@@ -27,7 +28,8 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
   if (!user) return sendError(ctx, 'User not found. Try a mention, user ID, or username.');
   const member = await message.guild.members.fetch(user.id).catch((): null => null);
 
-  return message.channel.send(buildAccountAgePayload(user, member));
+  const avatarUrl = member?.avatarURL?.({ size: 4096 }) ?? user.displayAvatarURL({ size: 4096 });
+  return message.channel.send(buildAccountAgePayload(user, member, await getDominantColor(avatarUrl)));
 }
 
 export async function slashExecute(interaction: any, client: CassieClient): Promise<any> {
@@ -37,5 +39,6 @@ export async function slashExecute(interaction: any, client: CassieClient): Prom
     ? await interaction.guild.members.fetch(user.id).catch((): null => null)
     : null;
 
-  return interaction.editReply(buildAccountAgePayload(user, member));
+  const avatarUrl = member?.avatarURL?.({ size: 4096 }) ?? user.displayAvatarURL({ size: 4096 });
+  return interaction.editReply(buildAccountAgePayload(user, member, await getDominantColor(avatarUrl)));
 }

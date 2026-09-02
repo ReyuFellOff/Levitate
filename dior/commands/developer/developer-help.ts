@@ -26,7 +26,7 @@ export async function prefixExecute(message: any) {
       '`$fixbotroles` — Rename the bot-managed roles',
       '`$global-ar` — Manage global auto-responses',
       '`$guild` — Inspect a guild',
-      '`$noprefix` — Manage user no-prefix access',
+      '`$glnoprefix` — Manage user no-prefix access',
       '`$note` — Manage developer notes',
       '`$reload` — Reload a prefix command',
       '`$restart-bot` — Restart the bot',

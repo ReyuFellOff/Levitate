@@ -12,7 +12,7 @@ import { sendError } from '../../components/statusMessages.js';
 
 export const options = {
   name: 'emoji-upload',
-  aliases: ['upload-emoji'] as string[],
+  aliases: ['emu'] as string[],
   description: 'Upload an attached image to one of the emoji servers (developer only).',
   usage: 'emoji-upload <image attachment>',
   category: 'developer',
@@ -22,7 +22,7 @@ export const options = {
 
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'jfif', 'png', 'gif', 'webp', 'avif']);
 const EMOJI_SERVER_THUMBNAIL = 'https://i.ibb.co/ym7qk0N1/image.png';
-const PROMPT_TIMEOUT = 60_000;
+const PROMPT_TIMEOUT = 5 * 60_000;
 
 export const emojiUploadSessions = new Map<string, string>();
 

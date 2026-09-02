@@ -20,6 +20,7 @@ import {
 import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
 import { PERMISSION_NAMES } from '../../config/permissions/discordPermissions.js';
+import type { DominantColor } from '../../helpers/dominantColor.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types (exported so the command file can reference them)
@@ -49,6 +50,7 @@ export interface UserData {
   serverAvatarUrl: string | null;
   globalBannerUrl: string | null;
   serverBannerUrl: string | null;
+  dominantColor:   DominantColor | null;
   // Server-tag related (resolved from client.guilds.cache in command file)
   tagGuildName:       string | null;  // name of the primaryGuild, if bot is in it
   tagBadgeUrl:        string | null;  // clan badge CDN URL
@@ -214,7 +216,7 @@ function buildAbout(data: UserData, ids: Ids, state: UIState, disabled: boolean,
   const mainBody = baseLines.join('\n');
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildTitle(data)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addSectionComponents(makeSection(mainBody, bestThumbnail(data)));
@@ -269,10 +271,9 @@ function buildRoles(data: UserData, ids: Ids, state: UIState, disabled: boolean,
   ].join('\n');
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildTitle(data)))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
-    .addSectionComponents(makeSection(body, bestThumbnail(data)))
+    .addSectionComponents(makeSection(`${buildTitle(data)}\n${body}`, bestThumbnail(data)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addActionRowComponents(buildTabRow(ids, state.tab, disabled))
     .addTextDisplayComponents(
@@ -318,7 +319,7 @@ function buildPerms(data: UserData, ids: Ids, state: UIState, disabled: boolean,
   const body = `${emojis.whiteArrow} **__Permissions__**\n${permBody}`;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildTitle(data)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true))
     .addSectionComponents(makeSection(body, bestThumbnail(data)))
@@ -359,7 +360,7 @@ function buildAssets(data: UserData, ids: Ids, state: UIState, disabled: boolean
 
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .setAccentColor(data.dominantColor?.hex ? parseInt(data.dominantColor.hex.slice(1), 16) : parseInt(config.defaultAccentColor.replace('#', ''), 16))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(buildTitle(data)))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 

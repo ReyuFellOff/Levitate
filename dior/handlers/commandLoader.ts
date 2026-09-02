@@ -15,6 +15,11 @@ import type { CassieClient } from '../structures/CassieClient.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+export interface CommandCooldown {
+  default?: number;
+  subcommands?: Record<string, number>;
+}
+
 export interface CommandOptions {
   name:        string;
   description: string;
@@ -25,8 +30,8 @@ export interface CommandOptions {
   owner?:      boolean;
   userPerms?:  string[];
   botPerms?:   string[];
-  /** Per-user cooldown in seconds. */
-  cooldown?:   number;
+  /** Per-user cooldown in seconds, optionally overridden per subcommand. */
+  cooldown?:   number | CommandCooldown;
 }
 
 interface PrefixCommandModule {

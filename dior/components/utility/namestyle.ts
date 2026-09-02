@@ -7,7 +7,7 @@ import { config } from '../../config.js';
 // color preset dropdowns, and a "Custom hex" button that opens a modal.
 // The form is pre-populated with any existing DB style.
 //
-// Session timeout: 5 minutes of inactivity → components disabled.
+// Session timeout: 3 minutes of inactivity → components disabled.
 
 import {
   ActionRowBuilder,
@@ -30,7 +30,7 @@ import type { CassieClient } from '../../structures/CassieClient.js';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const HEADER    = `## ${emojis.blackCross ?? '🎨'} Name Style`;
-const TIMEOUT_MS = 5 * 60_000;
+const TIMEOUT_MS = 3 * 60_000;
 
 const FONT_DESCS: Record<number, string> = {
   1:  'Bold Comic — thick comic-book lettering',
@@ -133,9 +133,9 @@ function wrap(container: ContainerBuilder): any {
   return { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } };
 }
 
-function headerContainer(): ContainerBuilder {
+function headerContainer(serverName?: string): ContainerBuilder {
   return new ContainerBuilder().setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(HEADER))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${HEADER}${serverName ? ` - ${serverName}` : ''}`))
     .addSeparatorComponents(new SeparatorBuilder().setDivider(true));
 }
 
@@ -263,9 +263,8 @@ export function buildFormPage(
 
   // ── Assemble container ─────────────────────────────────────────────────────
 
-  const c = headerContainer()
+  const c = headerContainer(session.guildName)
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      `**${session.guildName}**\n` +
       `${emojis.whiteArrow} **Font:** ${fontName}\n` +
       `${emojis.whiteArrow} **Effect:** ${effectName}\n` +
       `${emojis.whiteArrow} **Color:** ${colorText}${customNote}`,
@@ -408,6 +407,11 @@ function awaitModal(
   });
 }
 
+function optionalTextInputValue(interaction: any, customId: string): string {
+  if (!interaction.fields?.fields?.has?.(customId)) return '';
+  return interaction.fields.getTextInputValue(customId)?.trim() || '';
+}
+
 // ── Main interaction handler ──────────────────────────────────────────────────
 
 export async function handleNsInteraction(interaction: any, client: CassieClient): Promise<void> {
@@ -504,13 +508,14 @@ export async function handleNsInteraction(interaction: any, client: CassieClient
   // ── Custom hex button → open modal ───────────────────────────────────────
   if (action === 'customhex') {
     const modalId = `ns:modal:customhex:${scopeId}`;
+    const submitPromise = awaitModal(client, modalId, session.authorId, 60_000);
     await interaction.showModal(makeCustomHexModal(scopeId, session)).catch((): null => null);
 
-    const submit = await awaitModal(client, modalId, session.authorId, 60_000);
+    const submit = await submitPromise;
     if (!submit) return;
 
-    const raw1 = submit.fields.getTextInputValue?.('ns:input:hex1')?.trim() || '';
-    const raw2 = submit.fields.getTextInputValue?.('ns:input:hex2')?.trim() || '';
+    const raw1 = optionalTextInputValue(submit, 'ns:input:hex1');
+    const raw2 = optionalTextInputValue(submit, 'ns:input:hex2');
 
     const errors: string[] = [];
 
@@ -532,16 +537,20 @@ export async function handleNsInteraction(interaction: any, client: CassieClient
       }
     }
 
-    await submit.deferUpdate().catch((): null => null);
-
     if (errors.length) {
-      await submit.followUp({
+      await submit.reply({
         content: errors.join('\n'),
         flags: MessageFlags.Ephemeral,
       }).catch((): null => null);
+    } else {
+      await submit.deferUpdate().catch((): null => null);
     }
 
-    await submit.message?.edit(buildFormPage(scopeId, session)).catch((): null => null);
+    if (submit.message) {
+      await submit.message.edit(buildFormPage(scopeId, session)).catch((): null => null);
+    } else {
+      await interaction.message?.edit(buildFormPage(scopeId, session)).catch((): null => null);
+    }
     return;
   }
 
@@ -578,11 +587,11 @@ async function applyAndFinish(
   colors:      number[],
 ): Promise<void> {
   await interaction.deferUpdate().catch((): null => null);
-  await finishApply(interaction.message, scopeId, session, colors);
+  await finishApply(interaction, scopeId, session, colors);
 }
 
 async function finishApply(
-  message:  any,
+  interaction: any,
   scopeId:  string,
   session:  NsSession,
   colors:   number[],
@@ -591,9 +600,9 @@ async function finishApply(
 
   const ok = await applyNameStyle(session.client, guildId, fontId!, effectId!, colors);
   if (!ok) {
-    await message.channel?.send({
+    await interaction.followUp?.({
       content: 'Failed to apply the style. Make sure I have **Change Nickname** permission.',
-      flags: MessageFlags.Ephemeral,
+      flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
     }).catch((): null => null);
     return;
   }
@@ -603,6 +612,13 @@ async function finishApply(
     .then(() => true)
     .catch(() => false) ?? false;
 
-  clearSession(scopeId);
-  await message.edit(buildAppliedPage(fontId!, effectId!, colors, guildName, saved)).catch((): null => null);
+  const status = saved ? 'saved successfully' : 'applied successfully, but could not be saved';
+  const success = new ContainerBuilder()
+    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Name style ${status}.`));
+  await interaction.followUp?.({
+    components: [success],
+    flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] },
+  }).catch((): null => null);
 }

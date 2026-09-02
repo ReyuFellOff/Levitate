@@ -19,8 +19,8 @@ import { config } from '../../config.js';
 import { emojis } from '../../emojis.js';
 
 export const options = {
-  name: 'mynoprefix',
-  aliases: ['mynop'] as string[],
+  name: 'noprefix',
+  aliases: ['nop', 'mynop', 'mynoprefix'] as string[],
   description: 'Toggle your own noprefix access on or off.',
   usage: `mynoprefix
   mynoprefix on
@@ -39,22 +39,31 @@ function formatExpiry(expiresAt: Date | null): string {
   return `<t:${s}:R> (on <t:${s}:f>)`;
 }
 
-async function sendNoprefixStatus(message: any, client: CassieClient, isDeveloper: boolean): Promise<any> {
+export async function sendNoprefixStatus(
+  message: any,
+  client: CassieClient,
+  isDeveloper: boolean,
+  targetUserId = message.author.id,
+  targetUser = message.author,
+): Promise<any> {
   const guild = message.guild;
   const globalEnabled = await client.db!.getNoprefixGlobalEnabled().catch((): boolean => false);
   const serverDisabled = await client.db!.isGuildNoPrefixDisabled(guild.id).catch((): boolean => false);
   const entry = isDeveloper
     ? null
-    : await client.db!.getNoPrefixUserEntry(message.author.id).catch((): null => null);
+    : await client.db!.getNoPrefixUserEntry(targetUserId).catch((): null => null);
   const developerDisabled = isDeveloper
-    ? await client.db!.isDevNoprefixSelfDisabled(message.author.id, guild.id).catch((): boolean => false)
+    ? await client.db!.isDevNoprefixSelfDisabled(targetUserId, guild.id).catch((): boolean => false)
     : false;
   const personalDisabled = isDeveloper
     ? developerDisabled
-    : Boolean(entry?.selfDisabledGuildIds?.includes(guild.id));
+    : Boolean(entry?.selfDisabled || entry?.selfDisabledGuildIds?.includes(guild.id));
   const expired = Boolean(entry?.expiresAt && entry.expiresAt.getTime() <= Date.now());
   const hasGrant = isDeveloper || Boolean(entry && !expired);
   const effective = globalEnabled && !serverDisabled && hasGrant && !personalDisabled;
+  const subject = targetUserId === message.author.id
+    ? 'Your'
+    : `${targetUser?.username ?? `<@${targetUserId}>`}'s`;
   const grant = isDeveloper
     ? 'Developer access (permanent)'
     : entry && !expired
@@ -67,11 +76,11 @@ async function sendNoprefixStatus(message: any, client: CassieClient, isDevelope
     `- **Server:** ${guild.name}`,
     `- **Global noprefix:** ${globalEnabled ? 'enabled' : 'disabled'}`,
     `- **Server noprefix:** ${serverDisabled ? 'disabled by the server' : 'enabled'}`,
-    `- **Your access:** ${grant}`,
-    `- **Your server toggle:** ${personalDisabled ? 'disabled' : 'enabled'}`,
+    `- **${subject} access:** ${grant}`,
+    `- **${subject} server toggle:** ${personalDisabled ? 'disabled' : 'enabled'}`,
     `- **Effective status:** ${effective ? 'enabled' : 'disabled'}`,
   ].join('\n');
-  const avatarUrl = message.member?.avatarURL?.({ extension: 'png', size: 128 })
+  const avatarUrl = targetUser?.displayAvatarURL?.({ extension: 'png', size: 128 })
     ?? message.author?.displayAvatarURL?.({ extension: 'png', size: 128 });
   const detailsSection = new SectionBuilder()
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(details));
@@ -79,7 +88,7 @@ async function sendNoprefixStatus(message: any, client: CassieClient, isDevelope
 
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${emojis.pinkFlowers} Your Noprefix Status`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${emojis.pinkFlowers} ${subject} Noprefix Status`))
     .addSeparatorComponents(new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }))
     .addSectionComponents(detailsSection)
     .addSeparatorComponents(new SeparatorBuilder({ spacing: SeparatorSpacingSize.Small, divider: true }))
@@ -147,7 +156,7 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
 
   // ── No args → status ────────────────────────────────────────────────────────
   if (!action) {
-    const isOn = !entry.selfDisabledGuildIds?.includes(message.guild.id);
+    const isOn = !entry.selfDisabled && !entry.selfDisabledGuildIds?.includes(message.guild.id);
     return sendInfo(
       { message },
       [
@@ -160,7 +169,7 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
 
   // ── on / enable ─────────────────────────────────────────────────────────────
   if (toggleAction === 'on' || toggleAction === 'enable') {
-    if (entry.selfDisabledGuildIds?.includes(message.guild.id)) {
+    if (!entry.selfDisabled && !entry.selfDisabledGuildIds?.includes(message.guild.id)) {
       return sendInfo({ message }, 'Noprefix is already enabled for you.');
     }
     await client.db.setSelfNoPrefixDisabled(message.author.id, message.guild.id, false);
@@ -169,7 +178,7 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
 
   // ── off / disable ────────────────────────────────────────────────────────────
   if (toggleAction === 'off' || toggleAction === 'disable') {
-    if (entry.selfDisabledGuildIds?.includes(message.guild.id)) {
+    if (entry.selfDisabled || entry.selfDisabledGuildIds?.includes(message.guild.id)) {
       return sendInfo({ message }, 'Noprefix is already disabled for you.');
     }
     await client.db.setSelfNoPrefixDisabled(message.author.id, message.guild.id, true);

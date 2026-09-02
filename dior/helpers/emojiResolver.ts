@@ -63,7 +63,9 @@ async function resolveByName(
   guild?: any,
 ): Promise<any | null> {
   if (guild?.emojis?.fetch) {
-    await guild.emojis.fetch().catch(() => {});
+    const fetched = await guild.emojis.fetch().catch((): null => null);
+    const found = fetched?.find((e: any) => e.name?.toLowerCase() === nameLower);
+    if (found) return found;
   }
 
   if (guild) {

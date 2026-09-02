@@ -47,7 +47,10 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
       continue;
     }
 
-    const markdown = toMarkdown(emoji);
+    const currentEmoji = typeof emoji.fetch === 'function'
+      ? await emoji.fetch().catch(() => emoji)
+      : emoji;
+    const markdown = toMarkdown(currentEmoji);
     if (markdown) markdowns.push(`\`${markdown}\``);
   }
 

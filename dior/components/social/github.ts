@@ -17,7 +17,7 @@ const NO_MENTIONS = { parse: [] as any[] };
 
 function safe(value: string | null | undefined, max = 300): string {
   return String(value ?? '')
-    .replace(/([\\`*_{}[\]()<>#+\-.!|])/g, '\\$1')
+    .replace(/([\\`*_{}[\]()<>#+.!|])/g, '\\$1')
     .slice(0, max);
 }
 

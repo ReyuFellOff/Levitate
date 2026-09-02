@@ -582,8 +582,15 @@ export class Database {
         this.db = this.client;
         this.connected = true;
       } catch (err) {
-        console.error(`[DATABASE] Connection failed: ${(err as Error).message}`);
-        return;
+        const error = err as Error & { code?: string; detail?: string; cause?: Error };
+        const details = [
+          error.message,
+          error.code ? `code=${error.code}` : '',
+          error.detail ? `detail=${error.detail}` : '',
+          error.cause?.message ? `cause=${error.cause.message}` : '',
+        ].filter(Boolean).join(' | ');
+        console.error(`[DATABASE] Connection failed: ${details || String(err)}`);
+        throw err;
       }
     }
 
@@ -963,12 +970,12 @@ export class Database {
     const doc = await this.col<NoPrefixUserDoc>('noprefix_users').findOne({ user_id: userId });
     if (!doc) return false;
     // Auto-remove and deny if the entry has expired
-    if (doc.expiresAt && doc.expiresAt.getTime() < Date.now()) {
+    if (doc.expiresAt && doc.expiresAt.getTime() <= Date.now()) {
       await this.col<NoPrefixUserDoc>('noprefix_users').deleteOne({ user_id: userId });
       return false;
     }
-    // Respect user's own self-disable toggle ($mynop off)
-    if (guildId && doc.selfDisabledGuildIds?.includes(guildId)) return false;
+    // Respect user's own self-disable toggle ($nop off)
+    if (doc.selfDisabled || (guildId && doc.selfDisabledGuildIds?.includes(guildId))) return false;
     return true;
   }
 
@@ -979,6 +986,15 @@ export class Database {
       disabled
         ? { $addToSet: { selfDisabledGuildIds: guildId } }
         : { $pull: { selfDisabledGuildIds: guildId } },
+    );
+    return result.matchedCount > 0;
+  }
+
+  async setNoPrefixUserDisabled(userId: string, disabled: boolean): Promise<boolean> {
+    await this.connect();
+    const result = await this.col<NoPrefixUserDoc>('noprefix_users').updateOne(
+      { user_id: userId },
+      disabled ? { $set: { selfDisabled: true } } : { $unset: { selfDisabled: '' } },
     );
     return result.matchedCount > 0;
   }
@@ -1035,7 +1051,7 @@ export class Database {
     return this.col<NoPrefixDisabledGuildDoc>('noprefix_disabled_guilds').find().sort({ disabledAt: 1 }).toArray();
   }
 
-  /** Check if a developer has self-disabled their own noprefix via $mynop off. */
+  /** Check if a developer has self-disabled their own noprefix via $nop off. */
   async isDevNoprefixSelfDisabled(userId: string, guildId: string): Promise<boolean> {
     await this.connect();
     const doc = await this.col<{ _id?: string; user_ids: string[] }>('settings').findOne({ _id: 'noprefix_dev_self_disabled' } as any);

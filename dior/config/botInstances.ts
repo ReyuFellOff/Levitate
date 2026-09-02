@@ -93,8 +93,8 @@ export interface BotInstance {
 
 export const botInstances: BotInstance[] = [
   {
-    buildName: "Nomadic",
-    clientId: process.env["DISCORD_CLIENT_ID"] ?? "",
+    buildName: "Cassie",
+    clientId: "956120503523889172",
     name: "Main",
     displayStatus: "mobile",
     mode: "status",
@@ -118,18 +118,29 @@ export const botInstances: BotInstance[] = [
       { text: "\"Thirty four, thirty fiveeee\" ~Ariana Grande" },
       { text: "Dear Lord, when I get to Heaven, Please, LET ME BRING MY MAN!" },
       { text: "Goddamn bitch, I am not a Teen Choice."},
-      { text: "[ XOXOXOXOXOXOXOXO ]"},
+      { text: " XOXO "},
     ],
   },
   {
-    buildName: "Nomadic (TheSecond)",
-    clientId: "1471514482067902545",
+    buildName: "Sin (Testing)",
+    clientId: "1542129160346935336",
     name: "TheSecond",
-    displayStatus: "idle",
-    mode: "presence",
+    displayStatus: "dnd",
+    mode: "status",
     presenceRotation: "single",
     presenceEntries: [
       { activityType: "Listening", text: "$!help | {guilds} Servers" },
+    ],
+    statusRotation: "multi",
+    statusEntries: [
+      { text: "One time for my LA sisters," },
+      { text: "ONE TIME FOR MY LA HOES," },
+      { text: "Lame niggas can't tell the difference." },
+      { text: "ONE TIME FOR A NIGGA WHO KNOWS!" },
+      { text: "Don't save her, she don't wanna be saved." },
+      { text: "Don't save her, she don't wanna be saved." },
+      { text: "Don't save her, she don't wanna be saved." },
+      { text: "Don't save her, she don't wanna be saved." },
     ],
   },
   {

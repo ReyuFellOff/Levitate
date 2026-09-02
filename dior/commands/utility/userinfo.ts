@@ -16,6 +16,7 @@ import {
   type UserData,
 } from '../../components/utility/userinfo.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
+import { getDominantColor } from '../../helpers/dominantColor.js';
 
 export const options = {
   name:        'userinfo',
@@ -56,6 +57,7 @@ async function fetchUserData(
 
   const globalBannerUrl: string | null = fullUser.bannerURL({ size: 4096 }) ?? null;
   const serverBannerUrl: string | null = member?.bannerURL?.({ size: 4096 }) ?? null;
+  const dominantColor = await getDominantColor(serverAvatarUrl ?? globalAvatarUrl);
 
   const isOwner = guild ? guild.ownerId === fullUser.id : false;
 
@@ -151,6 +153,7 @@ async function fetchUserData(
     serverAvatarUrl,
     globalBannerUrl,
     serverBannerUrl,
+    dominantColor,
     tagGuildName,
     tagBadgeUrl,
     tagGuildIconUrl,

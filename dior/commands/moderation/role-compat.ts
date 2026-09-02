@@ -25,7 +25,21 @@ export const options = {
   usage:       'role add <user> [role]\nrole remove <user> [role]',
   category:    'moderation',
   owner:       false,
-  cooldown:    3,
+  cooldown: {
+    default: 0,
+    subcommands: {
+      all: 30,
+      'all-remove': 30,
+      hoist: 3,
+      rename: 3,
+      delete: 5,
+      mentionable: 3,
+      create: 5,
+      color: 3,
+      add: 0,
+      remove: 0,
+    },
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,6 +48,7 @@ export const options = {
 
 const BATCH_SIZE     = 10;
 const BATCH_DELAY_MS = 1000;
+const MAX_ROLE_NAME = 100;
 
 function validateRoleForSlash(guild: any, role: any, invokerMember?: any): string | null {
   if (!role) return 'Role not found.';
@@ -47,6 +62,28 @@ function validateRoleForSlash(guild: any, role: any, invokerMember?: any): strin
   if (!invokerIsOwner && invokerMember && role.position >= invokerMember.roles.highest.position)
     return "You can't manage a role that is at or above your own highest role.";
   return null;
+}
+
+async function removeRoleFromEveryoneSlash(interaction: any, role: any): Promise<any> {
+  let members: Map<string, any>;
+  try {
+    members = await interaction.guild.members.fetch();
+  } catch {
+    members = interaction.guild.members.cache;
+  }
+  const eligible = [...members.values()].filter((member: any) => member.roles.cache.has(role.id));
+  let removed = 0;
+  let failed = 0;
+  for (let index = 0; index < eligible.length; index += BATCH_SIZE) {
+    const batch = eligible.slice(index, index + BATCH_SIZE);
+    await Promise.all(batch.map((member: any) =>
+      member.roles.remove(role, `role all remove via /role all-remove by ${interaction.user.username}`)
+        .then(() => { removed++; }).catch(() => { failed++; }),
+    ));
+    if (index + BATCH_SIZE < eligible.length)
+      await new Promise<void>((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+  }
+  return sendSuccess({ interaction }, `Removed <@&${role.id}> from **${removed}** member${removed !== 1 ? 's' : ''}${failed ? `; **${failed}** failed.` : '.'}`);
 }
 
 export async function slashExecute(
@@ -70,6 +107,53 @@ export async function slashExecute(
   }
 
   const sub = interaction.options.getSubcommand() as string;
+
+  if (['hoist', 'rename', 'delete', 'mentionable', 'create', 'color', 'all-remove'].includes(sub)) {
+    await interaction.deferReply();
+
+    if (sub === 'create') {
+      const name = interaction.options.getString('name', true).trim();
+      try {
+        const role = await interaction.guild.roles.create({ name, reason: `Role created by ${interaction.user.username}` });
+        return sendSuccess(ctx, `Created <@&${role.id}>.`);
+      } catch {
+        return sendError(ctx, 'I could not create that role.');
+      }
+    }
+
+    const role = interaction.options.getRole('role', true) as any;
+    const err = validateRoleForSlash(interaction.guild, role, invokerMember);
+    if (err) return sendError(ctx, err);
+
+    if (sub === 'all-remove') return removeRoleFromEveryoneSlash(interaction, role);
+    if (sub === 'delete') {
+      const oldName = role.name;
+      await role.delete(`Role deleted by ${interaction.user.username}`);
+      return sendSuccess(ctx, `Deleted role **${oldName}**.`);
+    }
+    if (sub === 'rename') {
+      const name = interaction.options.getString('name', true).trim();
+      if (!name || name.length > MAX_ROLE_NAME) return sendError(ctx, 'Role name must be between 1 and 100 characters.');
+      const oldName = role.name;
+      await role.setName(name, `Role renamed by ${interaction.user.username}`);
+      return sendSuccess(ctx, `Renamed **${oldName}** to **${name}**.`);
+    }
+    if (sub === 'color') {
+      const color = interaction.options.getString('color', true).replace(/^#/, '');
+      if (!/^[0-9a-f]{6}$/i.test(color)) return sendError(ctx, 'Provide a valid 6-digit hex color, such as `#5865F2`.');
+      await role.setColor(`#${color}`, `Role color changed by ${interaction.user.username}`);
+      return sendSuccess(ctx, `Set <@&${role.id}> color to **#${color.toUpperCase()}**.`);
+    }
+
+    const property = sub === 'hoist' ? 'hoist' : 'mentionable';
+    const enabledArg = interaction.options.getBoolean('enabled', false);
+    const enabled = enabledArg ?? !role[property];
+    if (enabled === role[property]) {
+      return sendInfo(ctx, `${sub === 'hoist' ? 'Hoisting' : 'Mentionability'} is already **${enabled ? 'on' : 'off'}** for <@&${role.id}>.`);
+    }
+    await role.edit({ [property]: enabled }, `Role ${property} changed by ${interaction.user.username}`);
+    return sendSuccess(ctx, `${sub === 'hoist' ? 'Hoisting' : 'Mentionability'} for <@&${role.id}> is now **${enabled ? 'on' : 'off'}**.`);
+  }
 
   // ── /role add ──────────────────────────────────────────────────────────────
   if (sub === 'add') {

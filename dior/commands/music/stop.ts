@@ -7,7 +7,7 @@ import { clearRejoin } from '../../helpers/twentyFourSeven.js';
 
 export const options = {
   name: 'stop',
-  aliases: ['dc'] as string[],
+  aliases: [] as string[],
   description: 'Stop playback and disconnect the bot. In 24/7 mode, stops the queue and keeps the bot in the voice channel.',
   usage: 'stop',
   category: 'music',

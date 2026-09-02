@@ -33,4 +33,52 @@ export const data = new SlashCommandBuilder()
       .addRoleOption((o) =>
         o.setName('role').setDescription('Role to assign to all members.').setRequired(true),
       ),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('all-remove')
+      .setDescription('Remove a role from every member in the server.')
+      .addRoleOption((o) =>
+        o.setName('role').setDescription('Role to remove from all members.').setRequired(true),
+      ),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('hoist')
+      .setDescription('Show or hide a role separately in the member list.')
+      .addRoleOption((o) => o.setName('role').setDescription('Role to update.').setRequired(true))
+      .addBooleanOption((o) => o.setName('enabled').setDescription('Whether the role is hoisted. Omit to toggle.').setRequired(false)),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('rename')
+      .setDescription('Rename a role.')
+      .addRoleOption((o) => o.setName('role').setDescription('Role to rename.').setRequired(true))
+      .addStringOption((o) => o.setName('name').setDescription('New role name.').setMaxLength(100).setRequired(true)),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('delete')
+      .setDescription('Delete a role.')
+      .addRoleOption((o) => o.setName('role').setDescription('Role to delete.').setRequired(true)),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('mentionable')
+      .setDescription('Allow or prevent members from mentioning a role.')
+      .addRoleOption((o) => o.setName('role').setDescription('Role to update.').setRequired(true))
+      .addBooleanOption((o) => o.setName('enabled').setDescription('Whether the role is mentionable. Omit to toggle.').setRequired(false)),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('create')
+      .setDescription('Create a role.')
+      .addStringOption((o) => o.setName('name').setDescription('New role name.').setMaxLength(100).setRequired(true)),
+  )
+
+  .addSubcommand((sc) =>
+    sc.setName('color')
+      .setDescription('Set a role color.')
+      .addRoleOption((o) => o.setName('role').setDescription('Role to update.').setRequired(true))
+      .addStringOption((o) => o.setName('color').setDescription('Six-digit hex color, for example #5865F2.').setRequired(true)),
   );

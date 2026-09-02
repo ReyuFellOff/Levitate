@@ -17,6 +17,7 @@ import { withDeveloperPermissionBypass } from '../../helpers/developerPermission
 import { AmbiguousUserError } from '../../helpers/userResolver.js';
 import webhookLogger from '../../utils/webhookLogger.js';
 import { sendError, sendWarning, reservedForDeveloper } from '../../components/statusMessages.js';
+import { consumeCommandCooldown, getCommandCooldown } from '../../helpers/commandCooldown.js';
 import {
   debugSessions,
   resetDebugTimeout,
@@ -238,6 +239,17 @@ export async function execute(interaction: any, client: CassieClient): Promise<v
         await sendWarning({ interaction }, `${interaction.commandName} has been disabled by the developer. Reason: ${disabled.reason}`).catch((): null => null);
         return;
       }
+    }
+
+    const subcommand = interaction.options?.getSubcommand?.(false)?.toLowerCase();
+    const remainingCooldown = consumeCommandCooldown(client, command, interaction.user.id, subcommand);
+    if (remainingCooldown > 0) {
+      const configuredCooldown = getCommandCooldown(command, subcommand);
+      await sendWarning(
+        { interaction },
+        `Please wait **${remainingCooldown}s** before using this command again. Cooldown: **${configuredCooldown}s**.`,
+      ).catch((): null => null);
+      return;
     }
 
     // Build a readable string of slash options for the webhook log

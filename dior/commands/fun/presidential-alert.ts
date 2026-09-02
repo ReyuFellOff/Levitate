@@ -1,7 +1,7 @@
 import { config } from '../../config.js';
-// xoxo/commands/fun/iphone-alert.ts
+// xoxo/commands/fun/presidential-alert.ts
 //
-// $iphone-alert <text> — generate an iPhone presidential alert image.
+// $presidential-alert <text> — generate an iPhone presidential alert image.
 
 import {
   ContainerBuilder,
@@ -29,23 +29,23 @@ function buildPayload(imageBuffer: Buffer): any {
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL('attachment://iphone-alert.png'),
+        new MediaGalleryItemBuilder().setURL('attachment://presidential-alert.png'),
       ),
     );
 
   return {
     components: [container],
-    files: [{ attachment: imageBuffer, name: 'iphone-alert.png' }],
+    files: [{ attachment: imageBuffer, name: 'presidential-alert.png' }],
     flags: MessageFlags.IsComponentsV2,
     allowedMentions: { parse: [] },
   };
 }
 
 export const options = {
-  name: 'iphone-alert',
-  aliases: [] as string[],
+  name: 'presidential-alert',
+  aliases: ['pre-alert', 'funalert', 'fun-alert'] as string[],
   description: 'Create an iPhone presidential alert image.',
-  usage: 'iphone-alert <text>',
+  usage: 'presidential-alert <text>',
   category: 'fun',
   owner: false,
   cooldown: 5,
@@ -58,7 +58,7 @@ export async function prefixExecute(
 ): Promise<any> {
   const text = args.join(' ').trim();
   if (!text) {
-    return sendError({ message }, 'Please provide alert text. Usage: `$iphone-alert <text>`');
+    return sendError({ message }, 'Please provide alert text. Usage: `$presidential-alert <text>`');
   }
 
   const controller = new AbortController();

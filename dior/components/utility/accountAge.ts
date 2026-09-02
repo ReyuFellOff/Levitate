@@ -6,6 +6,7 @@ import {
   ThumbnailBuilder,
 } from 'discord.js';
 import { config } from '../../config.js';
+import type { DominantColor } from '../../helpers/dominantColor.js';
 
 const CV2_FLAGS = {
   flags: MessageFlags.IsComponentsV2,
@@ -78,16 +79,15 @@ export function formatAccountAge(createdAt: number, now = new Date()): string {
   return parts.length ? parts.join(', ').replace(/, ([^,]+)$/, ', and $1') : '**0** seconds';
 }
 
-export function buildAccountAgePayload(user: any, member: any): object {
+export function buildAccountAgePayload(user: any, member: any, dominantColor: DominantColor | null = null): object {
   const title = `## <@${user.id}> (\`${user.id}\`)`;
   const body = `This account has been alive for ${formatAccountAge(user.createdTimestamp)}.`;
 
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(config.defaultAccentColor.replace('#', ''), 16))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
+    .setAccentColor(parseInt((dominantColor?.hex ?? config.defaultAccentColor).replace('#', ''), 16))
     .addSectionComponents(
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(body))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${title}\n${body}`))
         .setThumbnailAccessory(new ThumbnailBuilder().setURL(bestAvatar(user, member))),
     );
 

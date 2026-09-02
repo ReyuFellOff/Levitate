@@ -1,4 +1,4 @@
-// xoxo/commands/developer/noprefix.ts
+// xoxo/commands/developer/glnoprefix.ts
 import type { CassieClient } from '../../structures/CassieClient.js';
 import { sendError, sendInfo, sendSuccess } from '../../components/statusMessages.js';
 import { sendWrongUsage } from '../../components/wrongUsage.js';
@@ -11,14 +11,18 @@ export const options = {
   name: 'glnoprefix',
   aliases: ['gnop'] as string[],
   description: 'Manage no-prefix access. (Developer only)',
-  usage: `noprefix add <user> [duration]   — e.g. 30m 2h 7d 1mo 1y (omit for permanent)
-  noprefix remove <user>
-  noprefix extend <user> <duration>
-  noprefix makeperm <user>
-  noprefix list
-  noprefix status <user>
-  noprefix enable / disable
-  noprefix server enable/disable/list [server id]`,
+  usage: `glnoprefix add <user> [duration]   — e.g. 30m 2h 7d 1mo 1y (omit for permanent)
+  glnoprefix remove <user>
+  glnoprefix extend <user> <duration>
+  glnoprefix makeperm <user>
+  glnoprefix list
+  glnoprefix status <user>
+  glnoprefix user <user> enable
+  glnoprefix user <user> disable
+  glnoprefix user <user> server enable
+  glnoprefix user <user> server disable
+  glnoprefix enable / disable
+  glnoprefix server enable/disable/list [server id]`,
   category: 'developer',
   owner: true,
   cooldown: 0,
@@ -159,6 +163,40 @@ async function handleServer(message: any, args: string[], client: CassieClient) 
   return sendSuccess({ message }, `Noprefix has been disabled in **${label}**.`);
 }
 
+async function handleUser(message: any, args: string[], client: CassieClient) {
+  if (args.length !== 3 && args.length !== 4) {
+    return sendWrongUsage({ message, client }, options.name, options.usage);
+  }
+
+  const target = await resolveUser(client, message.guild, args[1] ?? '');
+  if (!target) return sendError({ message }, 'Please provide a valid user ID, mention, or username.');
+
+  const scope = args.length === 4 ? args[2]?.toLowerCase() : 'global';
+  const action = args.length === 4 ? args[3]?.toLowerCase() : args[2]?.toLowerCase();
+  if ((scope !== 'global' && scope !== 'server') || !['enable', 'disable'].includes(action)) {
+    return sendWrongUsage({ message, client }, options.name, options.usage);
+  }
+
+  const entry = await client.db.getNoPrefixUserEntry(target.id);
+  if (!entry) return sendError({ message }, `<@${target.id}> does not have noprefix access.`);
+  if (entry.expiresAt && entry.expiresAt.getTime() <= Date.now()) {
+    return sendError({ message }, `<@${target.id}>'s noprefix access has expired.`);
+  }
+
+  const disabled = action === 'disable';
+  if (scope === 'global') {
+    await client.db.setNoPrefixUserDisabled(target.id, disabled);
+  } else {
+    await client.db.setSelfNoPrefixDisabled(target.id, message.guild.id, disabled);
+  }
+
+  const scopeLabel = scope === 'global' ? 'globally' : `in **${escapeMarkdown(message.guild.name)}**`;
+  return sendSuccess(
+    { message },
+    `Noprefix has been **${disabled ? 'disabled' : 'enabled'}** for <@${target.id}> ${scopeLabel}.`,
+  );
+}
+
 // ── Main execute ──────────────────────────────────────────────────────────────
 
 export async function prefixExecute(message: any, args: string[], client: CassieClient) {
@@ -172,6 +210,8 @@ export async function prefixExecute(message: any, args: string[], client: Cassie
     const isDeveloper = client.config.developers.some(([, id]: [string, string]) => id === target.id);
     return sendNoprefixStatus(message, client, isDeveloper, target.id, target);
   }
+
+  if (action === 'user') return handleUser(message, args, client);
 
   // ── add ────────────────────────────────────────────────────────────────────
   if (action === 'add') {

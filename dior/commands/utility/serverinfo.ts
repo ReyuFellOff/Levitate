@@ -16,6 +16,7 @@ import {
   type ServerState,
 } from '../../components/utility/serverinfo.js';
 import { authorOnlyFilter } from '../../helpers/panelGuard.js';
+import { getDominantColor } from '../../helpers/dominantColor.js';
 
 export const options = {
   name:        'serverinfo',
@@ -55,6 +56,7 @@ async function fetchServerData(client: CassieClient, guild: any): Promise<Server
   const bannerUrl           = guild.bannerURL?.({ size: 4096 }) ?? null;
   const splashUrl           = guild.splashURL?.({ size: 4096 }) ?? null;
   const discoverySplashUrl  = guild.discoverySplashURL?.({ size: 4096 }) ?? null;
+  const dominantColor = await getDominantColor(iconUrl);
 
   return {
     guild,
@@ -67,6 +69,7 @@ async function fetchServerData(client: CassieClient, guild: any): Promise<Server
     bannerUrl,
     splashUrl,
     discoverySplashUrl,
+    dominantColor,
   };
 }
 

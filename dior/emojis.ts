@@ -107,6 +107,9 @@ export const emojis = {
   workingClock: '<a:workingClock:1541079620646871110>',
   pinkFlowers: '<a:pinkFlowers:1542549868520931409>',
   whoWouldWin: '<a:whoWouldWin:1542709506692227223>',
+  redBulletPoint: '<:redBulletPoint:1544808634855333938>',
+  redDrink: '<:redDrink:1544812403177558146>',
+  redMinecraftHeart: '<:redMinecraftHeart:1544822859157741670>',
 
   // Honeypot
   honeypot:       '🍯',

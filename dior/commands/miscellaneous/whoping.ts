@@ -1,6 +1,6 @@
 // xoxo/commands/utility/whoping.ts
 //
-// Show the last 10 messages that directly pinged a user in this channel.
+// Show messages that directly pinged a user in this channel.
 // Only counts <@userId> mentions and reply-pings — not role mentions.
 //
 // Usage:
@@ -18,16 +18,14 @@ import { resolveUser }                  from '../../helpers/userResolver.js';
 export const options = {
   name:        'whoping',
   aliases:     ['wp', 'whoponged'] as string[],
-  description: 'Show the last 10 messages that pinged a user in this channel.',
+  description: 'Show messages that pinged a user in this channel.',
   usage:       'whoping [@user | user ID | username]',
   category:    'miscellaneous',
   owner:       false,
   cooldown:    5,
 };
 
-const FETCH_LIMIT  = 200;
-const RESULT_LIMIT = 10;
-
+const FETCH_LIMIT  = 1000;
 async function resolveTarget(
   args:    string[],
   message: any,
@@ -50,16 +48,15 @@ async function collectPings(
   try {
     let before: string | undefined;
 
-    for (let i = 0; i < 2; i++) {
+    while (fetched.length < FETCH_LIMIT) {
       const batch = await channel.messages.fetch({
-        limit: 100,
+        limit: Math.min(100, FETCH_LIMIT - fetched.length),
         ...(before ? { before } : {}),
       });
       if (!batch.size) break;
       const arr = [...batch.values()] as any[];
       fetched.push(...arr);
       before = arr[arr.length - 1]?.id;
-      if (fetched.length >= FETCH_LIMIT) break;
     }
   } catch {
     return { pings: [], scanned: 0 };
@@ -68,7 +65,6 @@ async function collectPings(
   const pings: PingEntry[] = [];
 
   for (const msg of fetched) {
-    if (pings.length >= RESULT_LIMIT) break;
     if (msg.author?.id === targetUserId) continue;
 
     const directlyMentioned: boolean =
@@ -101,6 +97,25 @@ export async function prefixExecute(
   }
 
   const { pings, scanned } = await collectPings(message.channel, target.userId);
+  let page = 0;
+  const response = await message.channel.send(buildWhopingPayload(target.userId, pings, scanned, page));
 
-  return message.channel.send(buildWhopingPayload(target.userId, pings, scanned));
+  if (pings.length <= 10) return response;
+
+  const collector = response.createMessageComponentCollector({
+    filter: (interaction: any) =>
+      interaction.user.id === message.author.id &&
+      ['whoping:previous', 'whoping:next'].includes(interaction.customId),
+    time: 5 * 60 * 1000,
+  });
+
+  collector.on('collect', async (interaction: any) => {
+    const pageCount = Math.ceil(pings.length / 10);
+    page = interaction.customId === 'whoping:next'
+      ? Math.min(page + 1, pageCount - 1)
+      : Math.max(page - 1, 0);
+    await interaction.update(buildWhopingPayload(target.userId, pings, scanned, page));
+  });
+
+  return response;
 }
